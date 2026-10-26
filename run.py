@@ -27,7 +27,11 @@ DEFAULT_SCRIPT = [
 
 
 def _rel(p: Path) -> str:
-    return Path(p).resolve().relative_to(ROOT).as_posix()
+    p = Path(p).resolve()
+    try:
+        return p.relative_to(ROOT).as_posix()
+    except ValueError:
+        return p.as_posix()
 
 
 def _git(*args: str) -> str:
@@ -44,9 +48,10 @@ def _test_ids() -> list[str]:
 
 
 def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model: str, out_root: Path | str,
-               collect_tests: bool = True) -> Path:
+               collect_tests: bool = True, prompt_path: Path | str = PROMPT_PATH) -> Path:
     """client_factory(case_id) -> client. Returns the manifest path."""
     corpus_path = Path(corpus_path).resolve()
+    prompt_path = Path(prompt_path).resolve()
     cases = [json.loads(ln) for ln in corpus_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
     run_dir = Path(out_root) / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     (run_dir / "traces").mkdir(parents=True)
@@ -55,7 +60,7 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
     by_rule: dict[str, int] = {}
     for case in cases:
         sb = Sandbox()
-        out = run_conversation(client_factory(case["id"]), sb, case["turns"], model=model)
+        out = run_conversation(client_factory(case["id"]), sb, case["turns"], model=model, prompt_path=prompt_path)
         state = sb.state()
         violations = check_all(sb.trace, state, out["reply"])
         tpath = run_dir / "traces" / f"{case['id']}.json"
@@ -71,13 +76,15 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
     rpath = run_dir / "results.jsonl"
     rpath.write_text("".join(json.dumps(r) + "\n" for r in results), encoding="utf-8")
 
-    inputs = [POLICY_PATH, ORDERS_PATH, PROMPT_PATH, corpus_path] + ([SCRIPTED_PATH] if client_name == "scripted" else [])
+    inputs = [POLICY_PATH, ORDERS_PATH, prompt_path, corpus_path] + ([SCRIPTED_PATH] if client_name == "scripted" else [])
     manifest = {
         "manifest_version": 1,
         "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_commit": _git("rev-parse", "HEAD"),
         "git_dirty": bool(_git("status", "--porcelain")),
         "client": client_name,
+        "prompt_path": _rel(prompt_path),
+        "prompt_sha256": sha256_file(prompt_path),
         "model": model if client_name == "meta" else "scripted",
         "seed": "unavailable",
         "verifier_version": VERIFIER_VERSION,
@@ -97,6 +104,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--client", choices=["scripted", "meta"], required=True)
     ap.add_argument("--corpus", required=True)
     ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--prompt", default=str(PROMPT_PATH), help="system prompt file (default: agent/prompts/v1.txt)")
     ap.add_argument("--max-calls", type=int, default=60, help="model call budget for the whole run (meta)")
     ap.add_argument("--out", default=str(ROOT / "runs"))
     a = ap.parse_args(argv)
@@ -112,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         factory = lambda cid: shared  # noqa: E731
     try:
-        mpath = run_corpus(a.corpus, a.client, factory, a.model, a.out)
+        mpath = run_corpus(a.corpus, a.client, factory, a.model, a.out, prompt_path=a.prompt)
     except (MetaAPIError, RuntimeError) as e:
         print(f"run aborted: {e}")
         return 2

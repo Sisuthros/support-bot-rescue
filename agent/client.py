@@ -38,7 +38,7 @@ class ScriptExhausted(RuntimeError):
 
 class MetaClient:
     def __init__(self, max_calls: int = 50, key_path: Path | str = KEY_PATH, api_key: str | None = None,
-                 base_url: str = BASE_URL) -> None:
+                 base_url: str = BASE_URL, model: str = DEFAULT_MODEL) -> None:
         from openai import OpenAI
 
         if api_key is None:
@@ -50,6 +50,7 @@ class MetaClient:
                 raise MetaAPIError(None, "Meta API key file is empty")
         # max_retries=0 so the call budget counts real attempts
         self.raw = OpenAI(base_url=base_url, api_key=api_key, max_retries=0)
+        self.model = model
         self.max_calls = max_calls
         self.calls = 0
         self.responses = SimpleNamespace(create=self._create)
@@ -60,6 +61,7 @@ class MetaClient:
         if self.calls >= self.max_calls:
             raise BudgetExceeded(f"model call budget of {self.max_calls} reached")
         self.calls += 1
+        kwargs.setdefault("model", self.model)
         try:
             return self.raw.responses.create(**kwargs)
         except APIStatusError as e:

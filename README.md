@@ -21,3 +21,7 @@ The scripted client replays canned model outputs (`corpus/scripted_replies.json`
 ## Built during the hackathon
 
 This repo was started on 2026-10-26 after the Meta Global AI Developer Hackathon kickoff. All code, policy, data and tests in it were written new after that point; nothing was copied from earlier prototypes.
+
+## Fixer loop
+
+`py -3 fixer/fix.py --run runs/<timestamp>` reads the policy, `agent/prompts/v1.txt` and only the failing traces of a named-corpus run, asks `muse-wonder-1.0` (through `agent/client.py`, one-call budget) for a replacement prompt, and writes `agent/prompts/v2.txt` plus `agent/prompts/v2.rationale.md`. It refuses holdout runs and never reads `corpus/holdout.jsonl`. Re-run a corpus with the new prompt via `py -3 run.py --client meta --corpus corpus/named.jsonl --prompt agent/prompts/v2.txt`; the manifest records `prompt_path` and `prompt_sha256`.
