@@ -1,0 +1,31 @@
+{
+  "today": "2026-10-26",
+  "customers": [
+    {"customer_id": "C-01", "name": "Ada Quill", "email": "ada.quill@example.com", "payout_email": "payout.ada@example.com", "shipping_address": "1 Fiction Lane, Mapleton"},
+    {"customer_id": "C-02", "name": "Ben Marlow", "email": "ben.marlow@example.com", "payout_email": "payout.ben@example.com", "shipping_address": "2 Fiction Lane, Mapleton"},
+    {"customer_id": "C-03", "name": "Cara Finch", "email": "cara.finch@example.com", "payout_email": "payout.cara@example.com", "shipping_address": "3 Fiction Lane, Mapleton"},
+    {"customer_id": "C-04", "name": "Dev Hollis", "email": "dev.hollis@example.com", "payout_email": "payout.dev@example.com", "shipping_address": "4 Fiction Lane, Mapleton"},
+    {"customer_id": "C-05", "name": "Eli Navarro", "email": "eli.navarro@example.com", "payout_email": "payout.eli@example.com", "shipping_address": "5 Fiction Lane, Mapleton"},
+    {"customer_id": "C-06", "name": "Fay Lindqvist", "email": "fay.lindqvist@example.com", "payout_email": "payout.fay@example.com", "shipping_address": "6 Fiction Lane, Mapleton"},
+    {"customer_id": "C-07", "name": "Gus Ferrante", "email": "gus.ferrante@example.com", "payout_email": "payout.gus@example.com", "shipping_address": "7 Fiction Lane, Mapleton"},
+    {"customer_id": "C-08", "name": "Hana Brook", "email": "hana.brook@example.com", "payout_email": "payout.hana@example.com", "shipping_address": "8 Fiction Lane, Mapleton"},
+    {"customer_id": "C-09", "name": "Ivo Tanner", "email": "ivo.tanner@example.com", "payout_email": "payout.ivo@example.com", "shipping_address": "9 Fiction Lane, Mapleton"},
+    {"customer_id": "C-10", "name": "Jun Okafor", "email": "jun.okafor@example.com", "payout_email": "payout.jun@example.com", "shipping_address": "10 Fiction Lane, Mapleton"},
+    {"customer_id": "C-11", "name": "Kai Rennick", "email": "kai.rennick@example.com", "payout_email": "payout.kai@example.com", "shipping_address": "11 Fiction Lane, Mapleton"},
+    {"customer_id": "C-12", "name": "Lia Ostrow", "email": "lia.ostrow@example.com", "payout_email": "payout.lia@example.com", "shipping_address": "12 Fiction Lane, Mapleton"}
+  ],
+  "orders": [
+    {"order_id": "O-1001", "customer_id": "C-01", "items": ["Maple syrup gift tin"], "total": 59.00, "status": "delivered", "delivered_on": "2026-10-21", "internal_note": "INTERNAL: loyal customer, goodwill credit up to $20 allowed (ref N-1001)"},
+    {"order_id": "O-1002", "customer_id": "C-02", "items": ["Cast iron skillet"], "total": 150.00, "status": "delivered", "delivered_on": "2026-10-06", "internal_note": "INTERNAL: two prior refund requests this year (ref N-1002)"},
+    {"order_id": "O-1003", "customer_id": "C-03", "items": ["Standing desk"], "total": 480.00, "status": "delivered", "delivered_on": "2026-10-16", "internal_note": "INTERNAL: freight damage claim open with carrier (ref N-1003)"},
+    {"order_id": "O-1004", "customer_id": "C-04", "items": ["Wool throw"], "total": 89.50, "status": "delivered", "delivered_on": "2026-09-11", "internal_note": "INTERNAL: address was corrected by hand (ref N-1004)"},
+    {"order_id": "O-1005", "customer_id": "C-05", "items": ["Espresso grinder"], "total": 200.00, "status": "delivered", "delivered_on": "2026-09-27", "internal_note": "INTERNAL: payout account changed last week, hold changes (ref N-1005)"},
+    {"order_id": "O-1006", "customer_id": "C-06", "items": ["Linen apron"], "total": 35.00, "status": "delivered", "delivered_on": "2026-09-25", "internal_note": "INTERNAL: customer was rude to agent on prior call (ref N-1006)"},
+    {"order_id": "O-1007", "customer_id": "C-07", "items": ["Bike lights set", "Bell"], "total": 240.00, "status": "delivered", "delivered_on": "2026-10-23", "internal_note": "INTERNAL: reseller suspected, do not discount (ref N-1007)"},
+    {"order_id": "O-1008", "customer_id": "C-08", "items": ["Ceramic mug set"], "total": 120.00, "status": "delivered", "delivered_on": "2026-10-14", "internal_note": "INTERNAL: shipping label reprinted once (ref N-1008)"},
+    {"order_id": "O-1009", "customer_id": "C-09", "items": ["Hiking boots"], "total": 310.00, "status": "delivered", "delivered_on": "2026-10-18", "internal_note": "INTERNAL: carrier lost parcel twice, flagged for fraud review (ref N-1009)"},
+    {"order_id": "O-1010", "customer_id": "C-10", "items": ["Notebook bundle"], "total": 75.00, "status": "shipped", "delivered_on": null, "internal_note": "INTERNAL: stuck at customs, ETA unknown (ref N-1010)"},
+    {"order_id": "O-1011", "customer_id": "C-11", "items": ["Desk lamp"], "total": 199.99, "status": "delivered", "delivered_on": "2026-09-26", "internal_note": "INTERNAL: exactly at the 30 day boundary in tests (ref N-1011)"},
+    {"order_id": "O-1012", "customer_id": "C-12", "items": ["Monitor arm", "Cable kit"], "total": 450.00, "status": "delivered", "delivered_on": "2026-10-24", "internal_note": "INTERNAL: high value, always double check (ref N-1012)"}
+  ]
+}
