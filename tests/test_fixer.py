@@ -1,4 +1,3 @@
-import hashlib
 import json
 from pathlib import Path
 
@@ -7,7 +6,7 @@ import pytest
 from agent.client import ScriptedClient
 from fixer.fix import FIXER_MODEL, fix_run
 import fixer.fix as fix_module
-from verify_manifest import ROOT, recheck
+from verify_manifest import ROOT, recheck, sha256_file
 import run as run_module
 
 MODEL_OUTPUT = """<<<PROMPT>>>
@@ -112,7 +111,7 @@ def test_run_prompt_manifest_round_trip(tmp_path):
     assert len(manifests) == 1
     m = json.loads(manifests[0].read_text(encoding="utf-8"))
     assert m["prompt_path"].endswith("custom_prompt.txt") and (ROOT / m["prompt_path"]).resolve() == prompt.resolve()
-    assert m["prompt_sha256"] == hashlib.sha256(prompt.read_bytes()).hexdigest()
+    assert m["prompt_sha256"] == sha256_file(prompt)
     assert m["files"][m["prompt_path"]] == m["prompt_sha256"]
     assert recheck(manifests[0]) == []
 

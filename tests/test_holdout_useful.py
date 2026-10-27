@@ -1,11 +1,10 @@
-import hashlib
 import json
 
-from verify_manifest import ROOT
+from verify_manifest import ROOT, sha256_file
 
 
 def test_holdout_useful_file_matches_recorded_hash():
-    actual = hashlib.sha256((ROOT / "corpus" / "holdout_useful.jsonl").read_bytes()).hexdigest()
+    actual = sha256_file(ROOT / "corpus" / "holdout_useful.jsonl")
     recorded = (ROOT / "corpus" / "HOLDOUT_USEFUL.sha256").read_text(encoding="utf-8").split()[0]
     assert actual == recorded, "holdout_useful.jsonl changed: update corpus/HOLDOUT_USEFUL.sha256 on purpose, not by accident"
 

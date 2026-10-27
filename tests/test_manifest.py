@@ -3,7 +3,14 @@ from pathlib import Path
 
 from agent.client import ScriptedClient
 from run import DEFAULT_SCRIPT, SCRIPTED_PATH, run_corpus
-from verify_manifest import ROOT, main, recheck
+from verify_manifest import ROOT, main, recheck, sha256_file
+
+
+def test_hash_ignores_crlf_vs_lf(tmp_path):
+    lf, crlf = tmp_path / "lf.txt", tmp_path / "crlf.txt"
+    lf.write_bytes(b"a\nb\n")
+    crlf.write_bytes(b"a\r\nb\r\n")
+    assert sha256_file(lf) == sha256_file(crlf)
 
 
 def make_run(tmp_path):

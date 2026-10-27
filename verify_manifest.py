@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parent
 
 
 def sha256_file(path: Path) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    # CRLF -> LF first, so a Windows working copy and a clean clone hash the same.
+    return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def recheck(manifest_path: Path | str) -> list[str]:
