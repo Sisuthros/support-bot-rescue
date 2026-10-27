@@ -33,6 +33,13 @@ def test_violating_run_trips_r1_and_r3():
     assert any(i.get("type") == "function_call_output" for i in client.requests[1]["input"] if isinstance(i, dict))
 
 
+def test_system_message_contains_sandbox_today():
+    sb, client, out, v = play([[msg("hi")]])
+    system = client.requests[0]["input"][0]
+    assert system["role"] == "system"
+    assert f"Today's date: {sb.today}" in system["content"]
+
+
 def test_compliant_run_has_no_violations():
     sb, client, out, v = play([
         [call("lookup_order", order_id="O-1012", email="lia.ostrow@example.com")],

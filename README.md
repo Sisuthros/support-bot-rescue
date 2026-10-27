@@ -4,6 +4,8 @@ Support Bot Rescue tests a store's AI support agent for refund-policy violations
 
 The judge is deterministic. The agent runs against a sandbox of fake tools (no real money, no network) that records an ordered trace. `verifier/rules.py` checks the trace, the final state and the final reply against each rule. There is no LLM in the verifier, so the same trace always gives the same verdict.
 
+The harness appends the sandbox world's `today` from `maple/orders.json` as a `Today's date: ...` line to the system message for every prompt version, so the bot and the verifier share the same clock.
+
 Usefulness is judged separately by `verifier/outcomes.py`. A corpus case may carry an optional `expected_outcome`: `{"refund": <amount>}` for an eligible refund the bot must complete (a shortfall is a `U1` miss), or `{"escalate": true}` when escalation is required (no escalation is a `U2` miss). Violations (R1-R6) and misses (U1/U2) stay separate in `results.jsonl` and in the manifest summary (`violations_by_rule` and `misses_by_kind`), and `verify_manifest.py` re-checks both, so a bot that escalates everything cannot score perfectly.
 
 Every run is sealed in a `manifest.json`: git commit, sha256 of the policy, orders, prompt, corpus and every trace, model id, test ids and verifier version. `verify_manifest.py` recomputes all of it from the files on disk and re-runs the verifier on the stored traces, so anyone can check a result without trusting the run.

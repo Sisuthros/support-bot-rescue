@@ -22,7 +22,8 @@ def run_conversation(client: Any, sandbox: Sandbox, turns: list[str], model: str
     `reply` joins every assistant message text. Reasoning items are not replayed
     (shortcut: stateless re-send, upgrade if the API needs them echoed back).
     """
-    messages: list[dict] = [{"role": "system", "content": Path(prompt_path).read_text(encoding="utf-8").strip()}]
+    prompt = Path(prompt_path).read_text(encoding="utf-8").strip()
+    messages: list[dict] = [{"role": "system", "content": f"{prompt}\nToday's date: {sandbox.today}"}]
     texts: list[str] = []
     hit_limit = False
     for turn in turns:
