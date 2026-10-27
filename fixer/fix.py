@@ -5,7 +5,7 @@ Usage: py -3 fixer/fix.py --run runs/<timestamp>
 Reads only the policy, the current prompt and the FAILING traces in the given
 run directory (which must come from corpus/named.jsonl). Failing includes
 both policy violations (R1-R6) and usefulness misses (U1/U2). It never reads
-corpus/holdout.jsonl. Writes the output prompt (default agent/prompts/v2.txt)
+corpus/holdout.jsonl or corpus/holdout_useful.jsonl. Writes the output prompt (default agent/prompts/v2.txt)
 plus a matching .rationale.md file.
 """
 from __future__ import annotations
@@ -29,6 +29,7 @@ OUT_PROMPT_PATH = ROOT / "agent" / "prompts" / "v2.txt"
 OUT_RATIONALE_PATH = ROOT / "agent" / "prompts" / "v2.rationale.md"
 NAMED_CORPUS_REL = "corpus/named.jsonl"
 FORBIDDEN_NAME = "holdout.jsonl"
+FORBIDDEN_NAMES = {FORBIDDEN_NAME, "holdout_useful.jsonl"}
 
 PROMPT_MARKER = "<<<PROMPT>>>"
 RATIONALE_MARKER = "<<<RATIONALE>>>"
@@ -36,8 +37,8 @@ END_MARKER = "<<<END>>>"
 
 
 def _check_not_forbidden(path: Path) -> None:
-    if Path(path).name == FORBIDDEN_NAME:
-        raise ValueError(f"refusing to read {FORBIDDEN_NAME}")
+    if Path(path).name in FORBIDDEN_NAMES:
+        raise ValueError(f"refusing to read {Path(path).name}")
 
 
 def _read(path: Path) -> str:
@@ -52,7 +53,7 @@ def load_failing(run_dir: Path) -> tuple[list[dict], list[dict]]:
     if manifest_path.is_file():
         manifest = json.loads(_read(manifest_path))
         files = manifest.get("files", {})
-        if any(Path(k).name == FORBIDDEN_NAME for k in files):
+        if any(Path(k).name in FORBIDDEN_NAMES for k in files):
             raise ValueError("refusing to fix from a run that used the holdout corpus")
         corpus = [k for k in files if k.startswith("corpus/") and k.endswith(".jsonl")]
         if corpus and corpus != [NAMED_CORPUS_REL]:

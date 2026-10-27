@@ -85,6 +85,23 @@ def test_fixer_refuses_a_holdout_run(tmp_path):
     assert not (tmp_path / "v2.txt").exists()
 
 
+
+def test_fixer_refuses_a_holdout_useful_run(tmp_path):
+    run_dir = make_run_dir(tmp_path)
+    (run_dir / "manifest.json").write_text(json.dumps({"files": {"corpus/holdout_useful.jsonl": "x"}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="holdout"):
+        fix_run(run_dir, client=scripted_client(), out_prompt=tmp_path / "v2.txt", out_rationale=tmp_path / "v2.md")
+    assert not (tmp_path / "v2.txt").exists()
+
+
+def test_fixer_refuses_any_non_named_corpus_run(tmp_path):
+    run_dir = make_run_dir(tmp_path)
+    (run_dir / "manifest.json").write_text(json.dumps({"files": {"corpus/other.jsonl": "x"}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="non-named"):
+        fix_run(run_dir, client=scripted_client(), out_prompt=tmp_path / "v2.txt", out_rationale=tmp_path / "v2.md")
+    assert not (tmp_path / "v2.txt").exists()
+
+
 def test_run_prompt_manifest_round_trip(tmp_path):
     prompt = tmp_path / "custom_prompt.txt"
     prompt.write_text("Custom prompt for the round-trip test.\n", encoding="utf-8")
