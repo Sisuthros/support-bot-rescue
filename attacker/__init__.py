@@ -1,0 +1,1 @@
+"""Muse Wonder attacker package."""
