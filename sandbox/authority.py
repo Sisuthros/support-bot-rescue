@@ -154,17 +154,18 @@ class RefundAuthority:
             return False
         expected_email = str(order.get("email", "")).strip().lower()
         for entry in self.sandbox.trace:
-            if entry.get("name") != "lookup_order":
+            if not isinstance(entry, dict) or entry.get("name") != "lookup_order":
                 continue
-            result = entry.get("result") or {}
-            if result.get("ok") is not True:
+            result = entry.get("result")
+            if not isinstance(result, dict) or result.get("ok") is not True:
                 continue
             entry_args = entry.get("args") or {}
             if not isinstance(entry_args, dict) or entry_args.get("order_id") != order_id:
                 continue
             if str(entry_args.get("email", "")).strip().lower() != expected_email:
                 continue
-            if (result.get("order") or {}).get("order_id") == order_id:
+            looked_up = result.get("order")
+            if isinstance(looked_up, dict) and looked_up.get("order_id") == order_id:
                 return True
         return False
 

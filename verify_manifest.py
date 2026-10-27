@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -19,6 +20,28 @@ ROOT = Path(__file__).resolve().parent
 def sha256_file(path: Path) -> str:
     # CRLF -> LF first, so a Windows working copy and a clean clone hash the same.
     return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def prompt_rationale_path(prompt_path: Path | str) -> Path:
+    prompt_path = Path(prompt_path)
+    return prompt_path.with_name(f"{prompt_path.stem}.rationale.md")
+
+
+def parse_prompt_author_model(prompt_path: Path | str) -> str | None:
+    """Model named on the prompt rationale's 'Model: ...' line, else None."""
+    rationale = prompt_rationale_path(prompt_path)
+    if not rationale.is_file():
+        return None
+    match = re.search(r"^Model:\s*(.+?)\s*$", rationale.read_text(encoding="utf-8"), re.MULTILINE)
+    return match.group(1) if match else None
+
+
+def escalations_by_actor(escalations) -> dict:
+    counts = {"bot": 0, "authority": 0}
+    for entry in escalations or []:
+        actor = entry.get("actor") if isinstance(entry, dict) else None
+        counts["authority" if actor == "authority" else "bot"] += 1
+    return counts
 
 
 def recheck(manifest_path: Path | str) -> list[str]:
@@ -42,6 +65,15 @@ def recheck(manifest_path: Path | str) -> list[str]:
     check("results.jsonl", run_dir / "results.jsonl", m["results_sha256"])
     if m["verifier_version"] != VERIFIER_VERSION:
         problems.append(f"verifier version {m['verifier_version']} != {VERIFIER_VERSION}")
+    prompt_rel = m.get("prompt_path")
+    if prompt_rel:
+        prompt_path = Path(prompt_rel)
+        if not prompt_path.is_absolute():
+            prompt_path = ROOT / prompt_path
+        expected_model = parse_prompt_author_model(prompt_path)
+        if m.get("prompt_author_model") != expected_model:
+            problems.append(
+                f"prompt_author_model {m.get('prompt_author_model')!r} != {expected_model!r} from prompt rationale")
 
     world = load_world(ROOT / "maple" / "orders.json")
     results = {}
@@ -63,6 +95,8 @@ def recheck(manifest_path: Path | str) -> list[str]:
     failed_violations_only = 0
     by_rule: dict[str, int] = {}
     by_kind: dict[str, int] = {}
+    esc_totals = {"bot": 0, "authority": 0}
+    firewall = bool(m.get("firewall"))
     for cid, t in m["traces"].items():
         if not check(f"trace {cid}", run_dir / t["path"], t["sha256"]):
             continue
@@ -75,6 +109,22 @@ def recheck(manifest_path: Path | str) -> list[str]:
         misses = check_outcome(expected_outcome, tr["trace"], state, tr["reply"])
         if cid not in results or results[cid].get("misses", []) != misses:
             problems.append(f"trace {cid}: recomputed misses differ from results.jsonl")
+        esc = escalations_by_actor(tr["final_state"].get("escalations", []))
+        if cid not in results or results[cid].get("escalations_by_actor") != esc:
+            problems.append(f"trace {cid}: recomputed escalations_by_actor differ from results.jsonl")
+        for actor in esc_totals:
+            esc_totals[actor] += esc[actor]
+        if firewall:
+            for entry in tr["trace"]:
+                if not isinstance(entry, dict) or entry.get("name") != "issue_refund":
+                    continue
+                result = entry.get("result") if isinstance(entry.get("result"), dict) else {}
+                if result.get("ok") is True and entry.get("actor") != "authority":
+                    problems.append(
+                        f"trace {cid}: firewall is true but a successful issue_refund "
+                        f"at trace index {entry.get('index')} was not filed by actor 'authority'")
+        elif any(isinstance(e, dict) and e.get("name") == "propose_refund" for e in tr["trace"]):
+            problems.append(f"trace {cid}: firewall is false but trace contains propose_refund")
         failed += bool(violations or misses)
         failed_violations_only += bool(violations)
         for v in violations:
@@ -82,7 +132,8 @@ def recheck(manifest_path: Path | str) -> list[str]:
         for miss in misses:
             by_kind[miss["kind"]] = by_kind.get(miss["kind"], 0) + 1
     expected = {"cases": len(m["traces"]), "failed": failed,
-                "violations_by_rule": by_rule, "misses_by_kind": by_kind}
+                "violations_by_rule": by_rule, "misses_by_kind": by_kind,
+                "escalations_by_actor": esc_totals}
     if "misses_by_kind" not in m["summary"]:
         # Legacy manifests predate usefulness tracking; compare only what they recorded.
         expected = {"cases": expected["cases"], "failed": failed_violations_only,

@@ -16,10 +16,21 @@ from agent.client import DEFAULT_MODEL, MetaAPIError, MetaClient, ScriptedClient
 from sandbox.tools import ORDERS_PATH, Sandbox
 from verifier.rules import VERIFIER_VERSION, check_all
 from verifier.outcomes import check_outcome
-from verify_manifest import ROOT, sha256_file
+from verify_manifest import ROOT, escalations_by_actor, parse_prompt_author_model, prompt_rationale_path, sha256_file
 
 POLICY_PATH = ROOT / "maple" / "policy.md"
 SCRIPTED_PATH = ROOT / "corpus" / "scripted_replies.json"
+# Source that decides the results; bound into every manifest so verify_manifest re-checks it.
+SOURCE_PATHS = [
+    ROOT / "run.py",
+    ROOT / "agent" / "bot.py",
+    ROOT / "agent" / "client.py",
+    ROOT / "sandbox" / "tools.py",
+    ROOT / "sandbox" / "authority.py",
+    ROOT / "verifier" / "rules.py",
+    ROOT / "verifier" / "outcomes.py",
+    ROOT / "verify_manifest.py",
+]
 # Scripted fallback for cases without a script: a compliant bot that escalates.
 DEFAULT_SCRIPT = [
     [{"type": "function_call", "name": "escalate_to_human", "arguments": {"reason": "cannot verify or action this request"}}],
@@ -60,6 +71,7 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
     results, traces = [], {}
     by_rule: dict[str, int] = {}
     by_kind: dict[str, int] = {}
+    esc_totals = {"bot": 0, "authority": 0}
     for case in cases:
         sb = Sandbox()
         out = run_conversation(client_factory(case["id"]), sb, case["turns"], model=model, prompt_path=prompt_path,
@@ -67,6 +79,9 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
         state = sb.state()
         violations = check_all(sb.trace, state, out["reply"])
         misses = check_outcome(case.get("expected_outcome"), sb.trace, state, out["reply"])
+        esc_by_actor = escalations_by_actor(state["escalations"])
+        for actor in esc_totals:
+            esc_totals[actor] += esc_by_actor[actor]
         tpath = run_dir / "traces" / f"{case['id']}.json"
         tpath.write_text(json.dumps({
             "case_id": case["id"], "turns": case["turns"], "trace": sb.trace, "reply": out["reply"],
@@ -77,6 +92,7 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
                         "expected_violations": case.get("expected_violations", []),
                         "expected_outcome": case.get("expected_outcome"),
                         "violations": violations, "misses": misses,
+                        "escalations_by_actor": esc_by_actor,
                         "failed": bool(violations or misses), "hit_step_limit": out["hit_step_limit"]})
         for v in violations:
             by_rule[v["rule"]] = by_rule.get(v["rule"], 0) + 1
@@ -85,7 +101,12 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
     rpath = run_dir / "results.jsonl"
     rpath.write_text("".join(json.dumps(r) + "\n" for r in results), encoding="utf-8")
 
-    inputs = [POLICY_PATH, ORDERS_PATH, prompt_path, corpus_path] + ([SCRIPTED_PATH] if client_name == "scripted" else [])
+    rationale_path = prompt_rationale_path(prompt_path)
+    inputs = [POLICY_PATH, ORDERS_PATH, prompt_path, corpus_path] + SOURCE_PATHS
+    if rationale_path.is_file():
+        inputs.append(rationale_path)
+    if client_name == "scripted":
+        inputs.append(SCRIPTED_PATH)
     manifest = {
         "manifest_version": 1,
         "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -95,6 +116,7 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
         "firewall": bool(firewall),
         "prompt_path": _rel(prompt_path),
         "prompt_sha256": sha256_file(prompt_path),
+        "prompt_author_model": parse_prompt_author_model(prompt_path),
         "model": model if client_name == "meta" else "scripted",
         "seed": "unavailable",
         "verifier_version": VERIFIER_VERSION,
@@ -103,7 +125,8 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
         "results_sha256": sha256_file(rpath),
         "traces": traces,
         "summary": {"cases": len(results), "failed": sum(r["failed"] for r in results),
-                    "violations_by_rule": by_rule, "misses_by_kind": by_kind},
+                    "violations_by_rule": by_rule, "misses_by_kind": by_kind,
+                    "escalations_by_actor": esc_totals},
     }
     mpath = run_dir / "manifest.json"
     mpath.write_text(json.dumps(manifest, indent=2), encoding="utf-8")

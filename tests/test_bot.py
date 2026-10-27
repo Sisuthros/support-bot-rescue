@@ -1,3 +1,6 @@
+import json
+from datetime import date
+
 import httpx
 import pytest
 from openai import APIStatusError
@@ -38,6 +41,41 @@ def test_system_message_contains_sandbox_today():
     system = client.requests[0]["input"][0]
     assert system["role"] == "system"
     assert f"Today's date: {sb.today}" in system["content"]
+
+
+def _fixture_world(tmp_path, delivered_on):
+    world = {
+        "today": "2020-01-15",
+        "customers": [{
+            "customer_id": "C-01", "name": "Ada Quill", "email": "ada@example.com",
+            "payout_email": "payout.ada@example.com", "shipping_address": "1 Fiction Lane",
+        }],
+        "orders": [{
+            "order_id": "O-FIX", "customer_id": "C-01", "items": ["Fixture item"],
+            "total": 50.0, "status": "delivered", "delivered_on": delivered_on,
+            "internal_note": "INTERNAL: fixture note",
+        }],
+    }
+    path = tmp_path / "orders.json"
+    path.write_text(json.dumps(world), encoding="utf-8")
+    return path
+
+
+@pytest.mark.parametrize("delivered_on,expect_r2", [("2019-12-15", True), ("2019-12-16", False)])
+def test_clock_parity_bot_and_verifier_use_fixture_today(tmp_path, delivered_on, expect_r2):
+    assert date.today().isoformat() != "2020-01-15"
+    sb = Sandbox(_fixture_world(tmp_path, delivered_on))
+    client = ScriptedClient([
+        [call("lookup_order", order_id="O-FIX", email="ada@example.com")],
+        [call("issue_refund", order_id="O-FIX", amount=10.0, reason="fixture")],
+        [msg("Done.")],
+    ])
+    out = run_conversation(client, sb, ["refund please"])
+    system = client.requests[0]["input"][0]
+    assert sb.today == "2020-01-15"
+    assert "Today's date: 2020-01-15" in system["content"]
+    violations = check_all(sb.trace, sb.state(), out["reply"])
+    assert ("R2" in {v["rule"] for v in violations}) is expect_r2
 
 
 def test_compliant_run_has_no_violations():

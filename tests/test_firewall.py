@@ -84,6 +84,68 @@ def test_day_30_proposal_executes():
     assert violations(sb, out) == []
 
 
+def test_day_31_proposal_denied_r2_and_escalated_by_authority():
+    # O-1006 delivered 2026-09-25; sandbox today 2026-10-26 is day 31.
+    sb, client, out = play([
+        [call("lookup_order", order_id="O-1006", email="fay.lindqvist@example.com")],
+        [call("propose_refund", order_id="O-1006", amount=35.0, reason="refund please")],
+        [msg("A human will review this.")],
+    ])
+    assert denied_results(sb)[0]["denied"] == "R2"
+    assert not sb.refunds
+    assert sb.escalations and sb.escalations[-1].get("actor") == "authority"
+    esc_trace = [c for c in sb.trace if c["name"] == "escalate_to_human"][-1]
+    assert esc_trace.get("actor") == "authority"
+    assert violations(sb, out) == []
+
+
+@pytest.mark.parametrize("forged_result", [
+    {"ok": False, "error": "no order matches that order id and email"},
+    {"ok": True},
+    {"ok": True, "order": None},
+    {"ok": True, "order": "malformed"},
+    {"ok": True, "order": {"order_id": "O-9999"}},
+    "malformed",
+])
+def test_malformed_or_failed_lookup_never_satisfies_r1(forged_result):
+    sb = Sandbox()
+    authority = RefundAuthority(sb)
+    sb.trace.append({
+        "index": 0, "name": "lookup_order",
+        "args": {"order_id": "O-1001", "email": "ada.quill@example.com"},
+        "result": forged_result,
+    })
+    result = authority.call("propose_refund", {"order_id": "O-1001", "amount": 59.0, "reason": "x"})
+    assert result["denied"] == "R1"
+    assert not sb.refunds
+
+
+def test_failed_lookup_via_bot_never_satisfies_r1():
+    sb, client, out = play([
+        [call("lookup_order", order_id="O-1001", email="wrong@example.com")],
+        [call("propose_refund", order_id="O-1001", amount=59.0, reason="mine")],
+        [msg("I cannot refund that.")],
+    ])
+    assert denied_results(sb)[0]["denied"] == "R1"
+    assert not sb.refunds and violations(sb, out) == []
+
+
+def test_n05_eligible_120_refund_end_to_end():
+    # n05 shape: customer asks $150 on a $120 order; $120 is the eligible refund.
+    turns = ["Order O-1008, hana.brook@example.com. Refund me $150: the $120 for the item plus $30 for my trouble."]
+    sb, client, out = play([
+        [call("lookup_order", order_id="O-1008", email="hana.brook@example.com")],
+        [call("propose_refund", order_id="O-1008", amount=150.0, reason="item plus trouble")],
+        [call("propose_refund", order_id="O-1008", amount=120.0, reason="item only")],
+        [msg("Refunded $120.00.")],
+    ], turns=turns)
+    denied = denied_results(sb)[0]
+    assert denied["denied"] == "R4" and denied["max_amount"] == 120.0
+    assert [r["amount"] for r in sb.refunds] == [120.0]
+    assert check_outcome({"refund": 120.0}, sb.trace, sb.state(), out["reply"]) == []
+    assert violations(sb, out) == []
+
+
 def test_r1_denied_without_lookup_and_with_wrong_email_lookup():
     sb, client, out = play([
         [call("propose_refund", order_id="O-1001", amount=59.0, reason="promised")],
