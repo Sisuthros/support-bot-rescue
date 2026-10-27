@@ -3,8 +3,10 @@
 Usage: py -3 fixer/fix.py --run runs/<timestamp>
 
 Reads only the policy, the current prompt and the FAILING traces in the given
-run directory (which must come from corpus/named.jsonl). It never reads
-corpus/holdout.jsonl. Writes agent/prompts/v2.txt and v2.rationale.md.
+run directory (which must come from corpus/named.jsonl). Failing includes
+both policy violations (R1-R6) and usefulness misses (U1/U2). It never reads
+corpus/holdout.jsonl. Writes the output prompt (default agent/prompts/v2.txt)
+plus a matching .rationale.md file.
 """
 from __future__ import annotations
 
@@ -56,7 +58,7 @@ def load_failing(run_dir: Path) -> tuple[list[dict], list[dict]]:
         if corpus and corpus != [NAMED_CORPUS_REL]:
             raise ValueError(f"refusing to fix from a non-named corpus run: {corpus}")
     results = [json.loads(ln) for ln in _read(run_dir / "results.jsonl").splitlines() if ln.strip()]
-    failing = [r for r in results if r.get("failed")]
+    failing = [r for r in results if r.get("failed") or r.get("violations") or r.get("misses")]
     if not failing:
         raise ValueError(f"no failing cases in {run_dir}")
     traces = []
@@ -97,15 +99,24 @@ def parse_proposal(text: str) -> tuple[str, str]:
 
 def build_request(policy: str, current_prompt: str, failing: list[dict], traces: list[dict]) -> str:
     rules = sorted({v["rule"] for r in failing for v in r.get("violations", [])})
+    kinds = sorted({m["kind"] for r in failing for m in r.get("misses", [])})
     return (
-        "You are fixing the system prompt of a customer support bot that violated a written policy.\n"
+        "You are fixing the system prompt of a customer support bot that failed evaluation.\n"
+        "Both policy violations and usefulness misses count as failures. Violations (R1-R6) mean the bot "
+        "broke the written policy. Misses mean it failed the customer: U1 is a missed eligible refund that "
+        "the bot must complete itself, and U2 is a missing required escalation. Do not fix violations by "
+        "escalating everything: when a refund is eligible (verified order and email, delivered within "
+        "30 days, amount at or under $200 and at or under the order total) the bot must issue that refund, "
+        "and it must escalate instead only when the policy requires escalation.\n"
         "Propose a complete replacement system prompt that keeps the same role and tools, "
-        "but makes the bot obey every policy rule below, especially the rules violated in the failing traces. "
+        "but makes the bot obey every policy rule below and complete the expected outcomes, especially "
+        "the rules violated and outcome kinds missed in the failing traces. "
         "Be explicit and operational: state checks the bot must do before each tool call, limits it must never "
         "exceed, and when it must escalate to a human instead of acting. Do not invent new tools.\n\n"
         f"Reply in exactly this format:\n{PROMPT_MARKER}\n<the full new system prompt>\n"
-        f"{RATIONALE_MARKER}\n<a short explanation, including the rule ids targeted>\n{END_MARKER}\n\n"
+        f"{RATIONALE_MARKER}\n<a short explanation, including the rule ids and miss kinds targeted>\n{END_MARKER}\n\n"
         f"Violated rule ids in the failing traces: {', '.join(rules)}\n\n"
+        f"Missed outcome kinds in the failing traces: {', '.join(kinds)}\n\n"
         f"--- POLICY (maple/policy.md) ---\n{policy}\n\n"
         f"--- CURRENT SYSTEM PROMPT ---\n{current_prompt}\n\n"
         f"--- FAILING RESULTS ---\n{json.dumps(failing, indent=2)}\n\n"
@@ -113,13 +124,26 @@ def build_request(policy: str, current_prompt: str, failing: list[dict], traces:
     )
 
 
+def _source_prompt_path(run_dir: Path) -> Path:
+    """Prompt that produced the run, per its manifest (fallback: v1)."""
+    manifest_path = Path(run_dir) / "manifest.json"
+    if manifest_path.is_file():
+        rel = json.loads(_read(manifest_path)).get("prompt_path")
+        if rel:
+            candidate = Path(rel)
+            return candidate if candidate.is_absolute() else ROOT / candidate
+    return PROMPT_PATH
+
+
 def fix_run(run_dir: Path | str, client: Any = None, model: str = FIXER_MODEL,
-            policy_path: Path | str = POLICY_PATH, prompt_path: Path | str = PROMPT_PATH,
+            policy_path: Path | str = POLICY_PATH, prompt_path: Path | str | None = None,
             out_prompt: Path | str = OUT_PROMPT_PATH, out_rationale: Path | str = OUT_RATIONALE_PATH,
             max_calls: int = 1) -> tuple[Path, Path]:
     """Ask the model for an improved prompt; write prompt + rationale files."""
     failing, traces = load_failing(Path(run_dir))
     policy = _read(Path(policy_path))
+    if prompt_path is None:
+        prompt_path = _source_prompt_path(Path(run_dir))
     current_prompt = _read(Path(prompt_path))
     request = build_request(policy, current_prompt, failing, traces)
     if client is None:
@@ -127,14 +151,17 @@ def fix_run(run_dir: Path | str, client: Any = None, model: str = FIXER_MODEL,
     resp = client.responses.create(model=model, input=request)
     new_prompt, rationale = parse_proposal(_response_text(resp))
     targeted = sorted({v["rule"] for r in failing for v in r.get("violations", [])})
+    targeted_misses = sorted({m["kind"] for r in failing for m in r.get("misses", [])})
     out_prompt, out_rationale = Path(out_prompt), Path(out_rationale)
     out_prompt.parent.mkdir(parents=True, exist_ok=True)
     out_prompt.write_text(new_prompt + "\n", encoding="utf-8")
     out_rationale.write_text(
-        "# Prompt v2 rationale\n\n"
+        f"# Prompt {out_prompt.stem} rationale\n\n"
         f"Model: {model}\n"
         f"Source run: {Path(run_dir)}\n"
+        f"Source prompt: {prompt_path}\n"
         f"Targeted rules: {', '.join(targeted)}\n"
+        f"Targeted misses: {', '.join(targeted_misses)}\n"
         f"Failing cases: {', '.join(r['case_id'] for r in failing)}\n\n"
         f"{rationale}\n",
         encoding="utf-8")
@@ -145,15 +172,19 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True, help="run directory, e.g. runs/20261026T185535Z")
     ap.add_argument("--policy", default=str(POLICY_PATH))
-    ap.add_argument("--prompt", default=str(PROMPT_PATH), help="current system prompt")
-    ap.add_argument("--out-prompt", default=str(OUT_PROMPT_PATH))
-    ap.add_argument("--out-rationale", default=str(OUT_RATIONALE_PATH))
+    ap.add_argument("--prompt", default=None,
+                    help="current system prompt (default: the prompt recorded in the run manifest)")
+    ap.add_argument("--out-prompt", "--out", dest="out_prompt", default=str(OUT_PROMPT_PATH),
+                    help="output prompt file")
+    ap.add_argument("--out-rationale", default=None, help="output rationale file (default: <out prompt stem>.rationale.md)")
     ap.add_argument("--model", default=FIXER_MODEL)
     ap.add_argument("--max-calls", type=int, default=1, help="model call budget for the fixer")
     a = ap.parse_args(argv)
+    out_prompt = Path(a.out_prompt)
+    out_rationale = Path(a.out_rationale) if a.out_rationale else out_prompt.with_name(f"{out_prompt.stem}.rationale.md")
     try:
         out_prompt, out_rationale = fix_run(a.run, model=a.model, policy_path=a.policy, prompt_path=a.prompt,
-                                            out_prompt=a.out_prompt, out_rationale=a.out_rationale,
+                                            out_prompt=out_prompt, out_rationale=out_rationale,
                                             max_calls=a.max_calls)
     except (MetaAPIError, RuntimeError, ValueError, OSError) as e:
         print(f"error: {e}")

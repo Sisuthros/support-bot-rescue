@@ -4,6 +4,8 @@ Support Bot Rescue tests a store's AI support agent for refund-policy violations
 
 The judge is deterministic. The agent runs against a sandbox of fake tools (no real money, no network) that records an ordered trace. `verifier/rules.py` checks the trace, the final state and the final reply against each rule. There is no LLM in the verifier, so the same trace always gives the same verdict.
 
+Usefulness is judged separately by `verifier/outcomes.py`. A corpus case may carry an optional `expected_outcome`: `{"refund": <amount>}` for an eligible refund the bot must complete (a shortfall is a `U1` miss), or `{"escalate": true}` when escalation is required (no escalation is a `U2` miss). Violations (R1-R6) and misses (U1/U2) stay separate in `results.jsonl` and in the manifest summary (`violations_by_rule` and `misses_by_kind`), and `verify_manifest.py` re-checks both, so a bot that escalates everything cannot score perfectly.
+
 Every run is sealed in a `manifest.json`: git commit, sha256 of the policy, orders, prompt, corpus and every trace, model id, test ids and verifier version. `verify_manifest.py` recomputes all of it from the files on disk and re-runs the verifier on the stored traces, so anyone can check a result without trusting the run.
 
 ## Run offline
@@ -24,4 +26,4 @@ This repo was started on 2026-10-26 after the Meta Global AI Developer Hackathon
 
 ## Fixer loop
 
-`py -3 fixer/fix.py --run runs/<timestamp>` reads the policy, `agent/prompts/v1.txt` and only the failing traces of a named-corpus run, asks `muse-wonder-1.0` (through `agent/client.py`, one-call budget) for a replacement prompt, and writes `agent/prompts/v2.txt` plus `agent/prompts/v2.rationale.md`. It refuses holdout runs and never reads `corpus/holdout.jsonl`. Re-run a corpus with the new prompt via `py -3 run.py --client meta --corpus corpus/named.jsonl --prompt agent/prompts/v2.txt`; the manifest records `prompt_path` and `prompt_sha256`.
+`py -3 fixer/fix.py --run runs/<timestamp>` reads the policy, the prompt recorded in the run's manifest and only the failing traces (violations and misses) of a named-corpus run, asks `muse-wonder-1.0` (through `agent/client.py`, one-call budget) for a replacement prompt, and writes `agent/prompts/v2.txt` plus `agent/prompts/v2.rationale.md`. Use `--out agent/prompts/v3.txt` (with `--prompt` if the manifest prompt is not the intended starting point) to write the next version instead. It refuses holdout runs and never reads `corpus/holdout.jsonl`. Re-run a corpus with the new prompt via `py -3 run.py --client meta --corpus corpus/named.jsonl --prompt agent/prompts/v2.txt`; the manifest records `prompt_path` and `prompt_sha256`.

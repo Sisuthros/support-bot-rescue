@@ -6,6 +6,7 @@ import pytest
 
 from agent.client import ScriptedClient
 from fixer.fix import FIXER_MODEL, fix_run
+import fixer.fix as fix_module
 from verify_manifest import ROOT, recheck
 import run as run_module
 
@@ -97,3 +98,40 @@ def test_run_prompt_manifest_round_trip(tmp_path):
     assert m["prompt_sha256"] == hashlib.sha256(prompt.read_bytes()).hexdigest()
     assert m["files"][m["prompt_path"]] == m["prompt_sha256"]
     assert recheck(manifests[0]) == []
+
+
+def test_fixer_receives_miss_traces_and_counts_misses(tmp_path):
+    run_dir = make_run_dir(tmp_path)
+    # Add a miss-only failure: no violation, but an eligible refund was escalated away.
+    results_path = run_dir / "results.jsonl"
+    results = [json.loads(ln) for ln in results_path.read_text(encoding="utf-8").splitlines()]
+    results.append({"case_id": "u01_missed", "title": "eligible refund escalated", "expected_violations": [],
+                    "expected_outcome": {"refund": 59.0}, "violations": [],
+                    "misses": [{"kind": "U1", "trace_index": None, "detail": "expected refund $59.00"}],
+                    "failed": True, "hit_step_limit": False})
+    results_path.write_text("".join(json.dumps(r) + "\n" for r in results), encoding="utf-8")
+    (run_dir / "traces" / "u01_missed.json").write_text(
+        json.dumps({"case_id": "u01_missed", "turns": ["MISSMARK-U01"], "trace": [], "reply": "MISSMARK-U01",
+                    "final_state": {}}), encoding="utf-8")
+    client = scripted_client()
+    out_prompt, out_rationale = fix_run(run_dir, client=client, out_prompt=tmp_path / "v3.txt",
+                                        out_rationale=tmp_path / "v3.rationale.md")
+    request = client.requests[0]["input"]
+    assert "MISSMARK-U01" in request  # the failing trace for the miss is given to the model
+    assert "U1" in request and "both" in request.lower() and "escalating everything" in request
+    rationale = out_rationale.read_text(encoding="utf-8")
+    assert "Targeted misses: U1" in rationale
+
+
+def test_fixer_cli_out_derives_rationale_and_starts_from_run_prompt(tmp_path, monkeypatch):
+    run_dir = make_run_dir(tmp_path)
+    source_prompt = tmp_path / "v2.txt"
+    source_prompt.write_text("SOURCE-V2-PROMPT\n", encoding="utf-8")
+    (run_dir / "manifest.json").write_text(
+        json.dumps({"files": {"corpus/named.jsonl": "x"}, "prompt_path": str(source_prompt)}), encoding="utf-8")
+    client = scripted_client()
+    monkeypatch.setattr(fix_module, "MetaClient", lambda **kw: client)
+    out = tmp_path / "agent" / "prompts" / "v3.txt"
+    assert fix_module.main(["--run", str(run_dir), "--out", str(out)]) == 0
+    assert out.is_file() and (tmp_path / "agent" / "prompts" / "v3.rationale.md").is_file()
+    assert "SOURCE-V2-PROMPT" in client.requests[0]["input"]  # v3 starts from the run's prompt, not v1
