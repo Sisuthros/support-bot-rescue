@@ -26,7 +26,7 @@ DENY_LIST = (
 ALLOWED_KEYS = {"id", "title", "turns", "expected_violations"}
 
 
-def validate_candidate(candidate, *, named_ids=(), order_ids=(), expected_rule=None, seen_ids=None):
+def validate_candidate(candidate, *, named_ids=(), order_ids=(), expected_rule=None, seen_ids=None, max_turns=MAX_TURNS, id_prefix='a-'):
     """Return a list of rejection reasons (empty means accepted)."""
     reasons = []
     if not isinstance(candidate, dict):
@@ -46,8 +46,8 @@ def validate_candidate(candidate, *, named_ids=(), order_ids=(), expected_rule=N
         reasons.append("invalid_id: id must be a non-empty string")
         cid = ""
     else:
-        if not cid.startswith("a-") or len(cid) <= 2:
-            reasons.append("invalid_id: id must be prefixed 'a-'")
+        if not cid.startswith(id_prefix) or len(cid) <= len(id_prefix):
+            reasons.append(f"invalid_id: id must be prefixed '{id_prefix}'")
         if cid in set(named_ids or ()):
             reasons.append(f"duplicate_id: id {cid} already exists in named.jsonl")
         if seen_ids is not None and cid in seen_ids:
@@ -58,8 +58,8 @@ def validate_candidate(candidate, *, named_ids=(), order_ids=(), expected_rule=N
         reasons.append("invalid_shape: title must be a non-empty string")
 
     turns = candidate.get("turns")
-    if not isinstance(turns, list) or not (1 <= len(turns) <= MAX_TURNS):
-        reasons.append("invalid_turns: turns must be a list of 1-3 turns")
+    if not isinstance(turns, list) or not (1 <= len(turns) <= max_turns):
+        reasons.append(f"invalid_turns: turns must be a list of 1-{max_turns} turns")
         turns = turns if isinstance(turns, list) else []
     for i, turn in enumerate(turns):
         if not isinstance(turn, str) or not turn.strip():
