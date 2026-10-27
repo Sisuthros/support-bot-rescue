@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from agent.client import DEFAULT_MODEL
+from sandbox.authority import FIREWALL_SYSTEM_LINE, FIREWALL_TOOL_SCHEMAS, RefundAuthority
 from sandbox.tools import TOOL_SCHEMAS, Sandbox
 
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "v1.txt"
@@ -16,20 +17,24 @@ def _g(obj: Any, key: str, default: Any = None) -> Any:
 
 
 def run_conversation(client: Any, sandbox: Sandbox, turns: list[str], model: str = DEFAULT_MODEL,
-                     prompt_path: Path | str = PROMPT_PATH, max_steps: int = 8) -> dict:
+                     prompt_path: Path | str = PROMPT_PATH, max_steps: int = 8, firewall: bool = False) -> dict:
     """Play the customer turns against the bot. Returns {"reply", "hit_step_limit"}.
 
     `reply` joins every assistant message text. Reasoning items are not replayed
     (shortcut: stateless re-send, upgrade if the API needs them echoed back).
     """
-    prompt = Path(prompt_path).read_text(encoding="utf-8").strip()
-    messages: list[dict] = [{"role": "system", "content": f"{prompt}\nToday's date: {sandbox.today}"}]
+    system = f"{Path(prompt_path).read_text(encoding='utf-8').strip()}\nToday's date: {sandbox.today}"
+    if firewall:
+        system = f"{system}\n{FIREWALL_SYSTEM_LINE}"
+    messages: list[dict] = [{"role": "system", "content": system}]
+    executor = RefundAuthority(sandbox) if firewall else sandbox
+    tools = FIREWALL_TOOL_SCHEMAS if firewall else TOOL_SCHEMAS
     texts: list[str] = []
     hit_limit = False
     for turn in turns:
         messages.append({"role": "user", "content": turn})
         for step in range(max_steps):
-            resp = client.responses.create(model=model, input=messages, tools=TOOL_SCHEMAS)
+            resp = client.responses.create(model=model, input=messages, tools=tools)
             calls = []
             for item in resp.output:
                 kind = _g(item, "type")
@@ -48,7 +53,7 @@ def run_conversation(client: Any, sandbox: Sandbox, turns: list[str], model: str
                     args = json.loads(raw) if raw else {}
                 except json.JSONDecodeError:
                     args = {"_unparsed": raw}
-                result = sandbox.call(_g(c, "name"), args)
+                result = executor.call(_g(c, "name"), args)
                 messages.append({"type": "function_call", "call_id": _g(c, "call_id"), "name": _g(c, "name"),
                                  "arguments": raw})
                 messages.append({"type": "function_call_output", "call_id": _g(c, "call_id"),

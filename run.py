@@ -49,7 +49,7 @@ def _test_ids() -> list[str]:
 
 
 def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model: str, out_root: Path | str,
-               collect_tests: bool = True, prompt_path: Path | str = PROMPT_PATH) -> Path:
+               collect_tests: bool = True, prompt_path: Path | str = PROMPT_PATH, firewall: bool = False) -> Path:
     """client_factory(case_id) -> client. Returns the manifest path."""
     corpus_path = Path(corpus_path).resolve()
     prompt_path = Path(prompt_path).resolve()
@@ -62,7 +62,8 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
     by_kind: dict[str, int] = {}
     for case in cases:
         sb = Sandbox()
-        out = run_conversation(client_factory(case["id"]), sb, case["turns"], model=model, prompt_path=prompt_path)
+        out = run_conversation(client_factory(case["id"]), sb, case["turns"], model=model, prompt_path=prompt_path,
+                               firewall=firewall)
         state = sb.state()
         violations = check_all(sb.trace, state, out["reply"])
         misses = check_outcome(case.get("expected_outcome"), sb.trace, state, out["reply"])
@@ -91,6 +92,7 @@ def run_corpus(corpus_path: Path | str, client_name: str, client_factory, model:
         "git_commit": _git("rev-parse", "HEAD"),
         "git_dirty": bool(_git("status", "--porcelain")),
         "client": client_name,
+        "firewall": bool(firewall),
         "prompt_path": _rel(prompt_path),
         "prompt_sha256": sha256_file(prompt_path),
         "model": model if client_name == "meta" else "scripted",
@@ -115,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--prompt", default=str(PROMPT_PATH), help="system prompt file (default: agent/prompts/v1.txt)")
     ap.add_argument("--max-calls", type=int, default=60, help="model call budget for the whole run (meta)")
+    ap.add_argument("--firewall", action="store_true", help="route refunds through the deterministic refund authority")
     ap.add_argument("--out", default=str(ROOT / "runs"))
     a = ap.parse_args(argv)
 
@@ -129,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         factory = lambda cid: shared  # noqa: E731
     try:
-        mpath = run_corpus(a.corpus, a.client, factory, a.model, a.out, prompt_path=a.prompt)
+        mpath = run_corpus(a.corpus, a.client, factory, a.model, a.out, prompt_path=a.prompt, firewall=a.firewall)
     except (MetaAPIError, RuntimeError) as e:
         print(f"run aborted: {e}")
         return 2
