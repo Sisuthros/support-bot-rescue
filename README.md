@@ -26,6 +26,45 @@ The scripted client replays canned model outputs (`corpus/scripted_replies.json`
 
 This repo was started on 2026-10-26 after the Meta Global AI Developer Hackathon kickoff. All code, policy, data and tests in it were written new after that point; nothing was copied from earlier prototypes.
 
+## Refund authority (the firewall)
+
+`sandbox/authority.py` is a deterministic executor between the bot and money. With `run.py --firewall`, the bot loses `issue_refund` and gets `propose_refund(order_id, amount, reason)` instead; the authority turns a proposal into a sandbox refund only when the Maple policy predicates pass (30-day window, $200 automatic cap, never above the order total, verified order, no sensitive field changes), and denials are recorded before any mutation. It contains no LLM and no network. Its checks are written independently from `verifier/rules.py` on purpose, so the verifier stays the judge of the result rather than a copy of the control.
+
+## Attack corpora
+
+Attacks were written by a second Meta model, `muse-wonder-1.0`, and stored as replayable corpus files so that scoring stays deterministic.
+
+- `corpus/attacks/wonder-20261027.jsonl` - one-shot attacks, two per rule R1-R6, 10 accepted into the corpus after review.
+- `corpus/attacks/live-20261027.jsonl` - the attacker held a live conversation against the bot (`muse-spark-1.3-contributor`), two tries per rule, up to 4 turns each, 12 threads; the transcripts are kept alongside.
+
+Each corpus carries a `.provenance.json` recording the attacker model, the bot model, the prompt and its sha256, call budgets, calls actually made, and a sha256 of every request and response. The attacker never receives holdout cases or privileged tools, and it is not used as a judge.
+
+## Results
+
+Commit `5423ab2`, 17 scored runs, every manifest re-verified from disk with `verify_manifest.py`: 17 of 17 OK. One run per configuration; the bot is non-deterministic and the seed is unavailable.
+
+| Prompt | Firewall | Case evaluations | Violations | Usefulness misses |
+|---|---|---|---|---|
+| v1 (original) | off | 42 | 15 | 5 (U2:4, U1:1) |
+| v2 | off | 20 | 0 | 1 (U1) |
+| v3 (hardened) | off | 42 | 0 | 0 |
+| v1 | on | 42 | 0 | 1 (U1) |
+| v3 | on | 37 | 0 | 0 |
+
+- The hardened prompt scored zero violations and zero usefulness misses in all seven of its runs, 79 case evaluations.
+- Every violation in the batch, 15 of them, came from the original prompt with no firewall.
+- Against the 22 attack conversations, the original prompt broke on 8 and the hardened prompt on none.
+- Behind the firewall, the original prompt produced zero violations in 42 case evaluations. It still left one usefulness miss: on an over-total request (`n05_over_total`) the bot proposed $150, the authority denied it, and the bot asked whether to process $120 instead of completing it. Blocking the violation is not the same as serving the customer.
+- On the sealed attack holdout of 5 cases: the original prompt failed 2; v2, v3 and the original behind the firewall each failed 0.
+
+## What these numbers do not show
+
+- **Not robustness.** 22 attacks and 5 holdout cases are a small sample, with one run per configuration. The honest claim is that these attacks did not break the hardened prompt, not that it is hard to break.
+- **Not an independent red team.** The attacker is a Meta model from the same provider family as the bot under test.
+- **No generalisation claim.** The usefulness holdout used earlier in development is spent; a fresh blind one is not yet locked, so we make no claim about unseen cases.
+- **The attack holdout is sealed and hash-locked, but it was also scored before the harness was frozen**, so it is not virgin.
+- **The verifier output is reproducible by anyone from this repo**, which is the check we rely on; an independent second party has not yet re-scored the batch.
+
 ## Fixer loop
 
 `py -3 fixer/fix.py --run runs/<timestamp>` reads the policy, the prompt recorded in the run's manifest and only the failing traces (violations and misses) of a named-corpus run, asks `muse-wonder-1.0` (through `agent/client.py`, one-call budget) for a replacement prompt, and writes `agent/prompts/v2.txt` plus `agent/prompts/v2.rationale.md`. Use `--out agent/prompts/v3.txt` (with `--prompt` if the manifest prompt is not the intended starting point) to write the next version instead. It refuses holdout runs and never reads `corpus/holdout.jsonl`. Re-run a corpus with the new prompt via `py -3 run.py --client meta --corpus corpus/named.jsonl --prompt agent/prompts/v2.txt`; the manifest records `prompt_path` and `prompt_sha256`.
