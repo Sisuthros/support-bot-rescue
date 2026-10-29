@@ -2,19 +2,20 @@
 
 MetaClient talks to the Meta Model API (OpenAI-compatible Responses API).
 ScriptedClient replays canned outputs for offline tests.
-The API key is read from a file and never printed, logged or written anywhere.
+The API key is resolved from the environment or a key file and is never
+printed, logged or written anywhere.
 """
 from __future__ import annotations
 
 import copy
 import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 BASE_URL = "https://api.meta.ai/v1"
 DEFAULT_MODEL = "muse-spark-1.3-contributor"
-KEY_PATH = Path(r"C:\Users\Ismael\.meta-model-api-key")
 
 
 class MetaAPIError(RuntimeError):
@@ -36,18 +37,46 @@ class ScriptExhausted(RuntimeError):
     """ScriptedClient was asked for more responses than the script has."""
 
 
+def _missing_key_error() -> MetaAPIError:
+    return MetaAPIError(
+        None,
+        "Meta API key not found: set META_API_KEY, or set META_API_KEY_FILE to a file "
+        "containing the key, or save the key in ~/.meta-model-api-key",
+    )
+
+
+def _read_key_file(path: Path) -> str | None:
+    try:
+        value = Path(path).read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    return value or None
+
+
+def _resolve_api_key(api_key: str | None) -> str:
+    if api_key is not None:
+        return api_key
+    env_key = os.environ.get("META_API_KEY")
+    if env_key:
+        return env_key
+    key_file = os.environ.get("META_API_KEY_FILE")
+    if key_file:
+        resolved = _read_key_file(Path(key_file))
+        if resolved is None:
+            raise _missing_key_error()
+        return resolved
+    resolved = _read_key_file(Path.home() / ".meta-model-api-key")
+    if resolved is None:
+        raise _missing_key_error()
+    return resolved
+
+
 class MetaClient:
-    def __init__(self, max_calls: int = 50, key_path: Path | str = KEY_PATH, api_key: str | None = None,
+    def __init__(self, max_calls: int = 50, api_key: str | None = None,
                  base_url: str = BASE_URL, model: str = DEFAULT_MODEL) -> None:
         from openai import OpenAI
 
-        if api_key is None:
-            try:
-                api_key = Path(key_path).read_text(encoding="utf-8").strip()
-            except OSError as e:
-                raise MetaAPIError(None, f"cannot read Meta API key file ({type(e).__name__})") from None
-            if not api_key:
-                raise MetaAPIError(None, "Meta API key file is empty")
+        api_key = _resolve_api_key(api_key)
         # max_retries=0 so the call budget counts real attempts
         self.raw = OpenAI(base_url=base_url, api_key=api_key, max_retries=0)
         self.model = model
