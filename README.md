@@ -25,6 +25,16 @@ The scripted client replays canned model outputs (`corpus/scripted_replies.json`
 
 `corpus/holdout.jsonl` is the 5-case attack holdout, kept away from the fixer and the attacker; its hash is in `corpus/HOLDOUT.sha256` and a test fails if the file changes without that hash being updated. It was scored before the harness was frozen, so it is not virgin (see Results). The default system prompt is `agent/prompts/v1.txt`, a generic deploy prompt that lists the tools and contains none of the refund policy; later prompts show up as a diff against it.
 
+## Final blind holdout
+
+Photon seals the fresh usefulness holdout (`k07`-`k12`) with sha256 and posts the hash; nobody opens the cases before scoring. Score the exact sealed bytes with one command (substituting the file and hash Photon posts):
+
+```
+py -3 score_final.py --cases <photon-cases-file> --sha256 <hash-posted-by-photon> --live
+```
+
+Without `--live` the command prints the plan (sha256, case count, the four variants `v1`, `v2`, `v3` and `v1 --firewall`, and the `--max-calls` budget, 200 per variant by default) and constructs no client. With `--live` it writes `runs/final-<UTC timestamp>/SUMMARY.md` and `SUMMARY.json` and re-verifies every variant manifest. Exit codes: `0` = dry-run plan printed, or live scoring finished with every manifest re-verified; `1` = live scoring finished but a manifest failed `verify_manifest.recheck`; `2` = `REFUSED: sha256 mismatch` (nothing was parsed), or a live run could not start or finish; `3` = the cases file fails the k07-k12 schema (first problem reported). This holdout has not been scored yet.
+
 ## Built during the hackathon
 
 This repo was started on 2026-10-26, the evening of the Meta Global AI Developer Hackathon kickoff; the first commit, `0bb03c1`, is at 19:39 (UTC+2). All code, policy, data and tests in it were written after the kickoff. An earlier exploratory prototype motivated the idea; none of the 54 files tracked at commit `298ed8f` is byte-identical to any of its 36 files (`git hash-object` comparison).
