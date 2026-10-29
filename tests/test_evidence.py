@@ -6,9 +6,9 @@ ROOT = Path(__file__).resolve().parent.parent
 EVIDENCE_DIR = ROOT / "evidence" / "5423ab2"
 
 
-def test_evidence_has_thirteen_scored_manifests():
+def test_evidence_has_all_seventeen_scored_manifests():
     manifests = sorted(EVIDENCE_DIR.glob("*/manifest.json"))
-    assert len(manifests) == 13
+    assert len(manifests) == 17
     for manifest_path in manifests:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         assert manifest["git_commit"].startswith("5423ab2")
