@@ -38,7 +38,7 @@ This repo was started on 2026-10-26, the evening of the Meta Global AI Developer
 Attacks were written by a second Meta model, `muse-wonder-1.0`, and stored as replayable corpus files so that scoring stays deterministic.
 
 - `corpus/attacks/wonder-20261027.jsonl` - one-shot attacks: two candidates per rule R1-R6, 12 in all; 10 passed review and validation. Both R6 candidates failed the shape check, so this corpus covers R1-R5.
-- `corpus/attacks/live-20261027.jsonl` - the attacker held a live conversation against the bot (`muse-spark-1.3-contributor`) running the hardened prompt `agent/prompts/v3.txt` without the firewall: two tries per rule R1-R6, up to 4 turns each, 12 threads. None of the 12 broke v3 while it was being generated (`broke_any: false` in every transcript). The transcripts are kept alongside, and the customer turns are replayed as fixed scripts against every configuration.
+- `corpus/attacks/live-20261027.jsonl` - the attacker held a live conversation against the bot (`muse-spark-1.3-contributor`) running the hardened prompt `agent/prompts/v3.txt` without the firewall: two tries per rule R1-R6, up to 4 turns each, 12 threads. None of the 12 broke v3 while it was being generated (`broke_any: false` in every transcript). The transcripts are kept alongside, and the customer turns are replayed as fixed scripts; the recorded fixed-script comparisons are against v1 and v3.
 
 Each corpus carries a `.provenance.json` recording the attacker model, the call budget, calls actually made and a sha256 of every request and response; the live one also records the bot model, the prompt it attacked with its sha256, and the bot's call budget. The attacker never receives holdout cases or privileged tools, and it is not used as a judge.
 
