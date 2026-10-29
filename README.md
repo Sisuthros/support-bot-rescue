@@ -62,12 +62,14 @@ Commit `5423ab2`, 17 scored runs, every manifest re-verified from disk with `ver
 
 ### Re-check the scored runs
 
+Each manifest binds the source files that decided its result, and `agent/client.py` changed after the scoring (key lookup, fix F4). So re-check the 17 runs with the verifier from the scored commit:
+
 ```
 git worktree add ../sbr-5423ab2 5423ab2
-py -3 scripts/verify_evidence.py
+for /d %r in (evidence\5423ab2\*) do py -3 ..\sbr-5423ab2\verify_manifest.py %r\manifest.json
 ```
 
-Or check one run with `py -3 ../sbr-5423ab2/verify_manifest.py evidence/5423ab2/<id>/manifest.json`.
+On macOS or Linux: `for d in evidence/5423ab2/*/; do python3 ../sbr-5423ab2/verify_manifest.py "$d/manifest.json"; done`. Every line should start with `OK:`. `py -3 scripts/verify_evidence.py` at this commit reports a source mismatch for every run instead, by design.
 
 ## What these numbers do not show
 
