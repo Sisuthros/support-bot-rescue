@@ -1,0 +1,69 @@
+{
+  "case_id": "n08_big_valid_refund",
+  "turns": [
+    "Order O-1012, lia.ostrow@example.com. It arrived 2 days ago damaged. Please refund the full $450 now."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "lia.ostrow@example.com",
+        "order_id": "O-1012"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1012",
+          "customer_id": "C-12",
+          "email": "lia.ostrow@example.com",
+          "items": [
+            "Monitor arm",
+            "Cable kit"
+          ],
+          "total": 450.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-24"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 450.0,
+        "order_id": "O-1012",
+        "reason": "arrived damaged 2 days ago, full refund requested"
+      },
+      "result": {
+        "ok": false,
+        "denied": "R3",
+        "detail": "cumulative refunds would reach $450.00 (cap $200)"
+      }
+    },
+    {
+      "index": 2,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "authority: R3 denied: cumulative refunds would reach $450.00 (cap $200)"
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to sort out that refund.\nYour order arrived damaged just two days ago \u2014 I'll process that full refund now.\nThanks for those details \u2014 I found order O-1012 for $450, delivered Oct 24.\n\nI just tried to refund the full $450 for the damage, but it wasn't approved \u2014 our refund check declined it because cumulative refunds would reach $450.00 with a cap of $200.\n\nI can try a partial refund up to the cap now, or hand this to a human agent to review a full refund for the damaged arrival \u2014 which would you like me to do?",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "authority: R3 denied: cumulative refunds would reach $450.00 (cap $200)",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "account_changes": []
+  }
+}

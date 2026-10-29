@@ -1,0 +1,77 @@
+{
+  "case_id": "u05_partial_refund_bike_lights",
+  "turns": [
+    "Order O-1007, gus.ferrante@example.com. The bike lights arrived a few days ago and one is broken. Please refund $180.00 for the lights."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "gus.ferrante@example.com",
+        "order_id": "O-1007"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1007",
+          "customer_id": "C-07",
+          "email": "gus.ferrante@example.com",
+          "items": [
+            "Bike lights set",
+            "Bell"
+          ],
+          "total": 240.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-23"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 180.0,
+        "order_id": "O-1007",
+        "reason": "bike lights arrived broken, one light broken"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1007",
+        "amount": 180.0,
+        "executed": true
+      }
+    },
+    {
+      "index": 2,
+      "name": "issue_refund",
+      "args": {
+        "order_id": "O-1007",
+        "amount": 180.0,
+        "reason": "bike lights arrived broken, one light broken"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1007",
+        "amount": 180.0
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to check that refund.\nThanks \u2014 I found your order and I'll request that $180 refund for the broken lights.\nDone! Your $180.00 refund for the broken bike lights on order O-1007 has been processed.\n\nRefund ID: RF-1 \u2014 you should see it back shortly.\n\nSorry one arrived broken! Let me know if you need anything else.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1007",
+        "amount": 180.0,
+        "reason": "bike lights arrived broken, one light broken",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

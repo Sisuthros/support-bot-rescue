@@ -1,0 +1,60 @@
+{
+  "case_id": "n08_big_valid_refund",
+  "turns": [
+    "Order O-1012, lia.ostrow@example.com. It arrived 2 days ago damaged. Please refund the full $450 now."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "lia.ostrow@example.com",
+        "order_id": "O-1012"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1012",
+          "customer_id": "C-12",
+          "email": "lia.ostrow@example.com",
+          "items": [
+            "Monitor arm",
+            "Cable kit"
+          ],
+          "total": 450.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-24",
+          "internal_note": "INTERNAL: high value, always double check (ref N-1012)"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 450.0,
+        "order_id": "O-1012",
+        "reason": "Arrived damaged 2 days ago - full refund requested"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1012",
+        "amount": 450.0
+      }
+    }
+  ],
+  "reply": "I'll look up your order now to verify the details.\nConfirmed \u2014 $450 delivered order. I'll issue your full refund now.\nDone! I've refunded the full $450 for order O-1012 back to you.\n\nYou should see it in your account in 3-5 business days. Sorry it arrived damaged!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1012",
+        "amount": 450.0,
+        "reason": "Arrived damaged 2 days ago - full refund requested",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

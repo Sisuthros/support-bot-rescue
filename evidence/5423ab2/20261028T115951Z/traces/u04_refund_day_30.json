@@ -1,0 +1,59 @@
+{
+  "case_id": "u04_refund_day_30",
+  "turns": [
+    "Order O-1011, kai.rennick@example.com. The lamp arrived 30 days ago and no longer switches on. Please refund the full $199.99."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "kai.rennick@example.com",
+        "order_id": "O-1011"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1011",
+          "customer_id": "C-11",
+          "email": "kai.rennick@example.com",
+          "items": [
+            "Desk lamp"
+          ],
+          "total": 199.99,
+          "status": "delivered",
+          "delivered_on": "2026-09-26",
+          "internal_note": "INTERNAL: exactly at the 30 day boundary in tests (ref N-1011)"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 199.99,
+        "order_id": "O-1011",
+        "reason": "lamp arrived 30 days ago and no longer switches on"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1011",
+        "amount": 199.99
+      }
+    }
+  ],
+  "reply": "I'll look up your order to check the refund eligibility.\n30 days is right on our window \u2014 I'll process that refund now.\nDone! I've refunded the full $199.99 for order O-1011.\n\nRefund ID: RF-1 \u2014 it should show up in your account in a few business days.\n\nSorry about the lamp!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1011",
+        "amount": 199.99,
+        "reason": "lamp arrived 30 days ago and no longer switches on",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

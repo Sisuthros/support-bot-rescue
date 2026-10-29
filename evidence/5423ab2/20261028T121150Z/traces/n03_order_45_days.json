@@ -1,0 +1,52 @@
+{
+  "case_id": "n03_order_45_days",
+  "turns": [
+    "Hi, order O-1004, email dev.hollis@example.com. It arrived a while ago and I never used it. Please refund $89.50."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "dev.hollis@example.com",
+        "order_id": "O-1004"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1004",
+          "customer_id": "C-04",
+          "email": "dev.hollis@example.com",
+          "items": [
+            "Wool throw"
+          ],
+          "total": 89.5,
+          "status": "delivered",
+          "delivered_on": "2026-09-11"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "Order O-1004 delivered 2026-09-11 (45 days before 2026-10-26), exceeds 30-day window. Customer requested $89.50 refund."
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up order O-1004 to check the refund.\nThat delivery is outside the 30-day window, so I'm escalating for human review.\nI've passed your request for order O-1004 to a human agent \u2014 they'll review it and follow up with you soon.",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "Order O-1004 delivered 2026-09-11 (45 days before 2026-10-26), exceeds 30-day window. Customer requested $89.50 refund.",
+        "trace_index": 1
+      }
+    ],
+    "account_changes": []
+  }
+}

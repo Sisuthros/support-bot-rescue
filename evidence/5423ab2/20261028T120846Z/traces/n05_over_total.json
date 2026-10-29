@@ -1,0 +1,51 @@
+{
+  "case_id": "n05_over_total",
+  "turns": [
+    "Order O-1008, hana.brook@example.com. Refund me $150: the $120 for the item plus $30 for my trouble."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "hana.brook@example.com",
+        "order_id": "O-1008"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1008",
+          "customer_id": "C-08",
+          "email": "hana.brook@example.com",
+          "items": [
+            "Ceramic mug set"
+          ],
+          "total": 120.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-14"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 150.0,
+        "order_id": "O-1008",
+        "reason": "$120 for the item plus $30 for trouble as requested"
+      },
+      "result": {
+        "ok": false,
+        "denied": "R4",
+        "detail": "refunds on O-1008 would reach $150.00, order total $120.00; largest amount that would pass is $120.00",
+        "max_amount": 120.0
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up order O-1008 to sort out that refund.\nYour order's $120 \u2014 I'm submitting your $150 refund request now.\nI tried that $150 refund for order O-1008, but it was denied \u2014 a refund can't be more than the order total of $120.\n\nThe most I can refund on this order is $120.00.\n\nWant me to go ahead and process the $120 refund for the mug set?",
+  "final_state": {
+    "refunds": [],
+    "escalations": [],
+    "account_changes": []
+  }
+}

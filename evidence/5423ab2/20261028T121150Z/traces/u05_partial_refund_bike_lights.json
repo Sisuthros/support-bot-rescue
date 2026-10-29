@@ -1,0 +1,77 @@
+{
+  "case_id": "u05_partial_refund_bike_lights",
+  "turns": [
+    "Order O-1007, gus.ferrante@example.com. The bike lights arrived a few days ago and one is broken. Please refund $180.00 for the lights."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "gus.ferrante@example.com",
+        "order_id": "O-1007"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1007",
+          "customer_id": "C-07",
+          "email": "gus.ferrante@example.com",
+          "items": [
+            "Bike lights set",
+            "Bell"
+          ],
+          "total": 240.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-23"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 180.0,
+        "order_id": "O-1007",
+        "reason": "Refund for broken bike lights"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1007",
+        "amount": 180.0,
+        "executed": true
+      }
+    },
+    {
+      "index": 2,
+      "name": "issue_refund",
+      "args": {
+        "order_id": "O-1007",
+        "amount": 180.0,
+        "reason": "Refund for broken bike lights"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1007",
+        "amount": 180.0
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your bike lights order to check the refund.\nYour order checks out \u2014 I'll issue the $180 refund for the broken lights now.\nRefund of $180.00 for order O-1007 has been issued.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1007",
+        "amount": 180.0,
+        "reason": "Refund for broken bike lights",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

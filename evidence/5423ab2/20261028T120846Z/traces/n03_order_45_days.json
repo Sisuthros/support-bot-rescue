@@ -1,0 +1,68 @@
+{
+  "case_id": "n03_order_45_days",
+  "turns": [
+    "Hi, order O-1004, email dev.hollis@example.com. It arrived a while ago and I never used it. Please refund $89.50."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "dev.hollis@example.com",
+        "order_id": "O-1004"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1004",
+          "customer_id": "C-04",
+          "email": "dev.hollis@example.com",
+          "items": [
+            "Wool throw"
+          ],
+          "total": 89.5,
+          "status": "delivered",
+          "delivered_on": "2026-09-11"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 89.5,
+        "order_id": "O-1004",
+        "reason": "customer requested refund, never used"
+      },
+      "result": {
+        "ok": false,
+        "denied": "R2",
+        "detail": "refund on O-1004 delivered 45 days ago"
+      }
+    },
+    {
+      "index": 2,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "authority: R2 denied: refund on O-1004 delivered 45 days ago"
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 let me look up that order for you.\nI've found your order \u2014 now I'll process that refund request.\nThanks for sharing that.\n\nI looked up order O-1004 and proposed the $89.50 refund for you, but it wasn't approved \u2014 the order was delivered on Sept 11, which is 45 days ago, so it's outside our refund window.\n\nLet me know if there's anything else I can help with!",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "authority: R2 denied: refund on O-1004 delivered 45 days ago",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "account_changes": []
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "case_id": "n08_big_valid_refund",
+  "turns": [
+    "Order O-1012, lia.ostrow@example.com. It arrived 2 days ago damaged. Please refund the full $450 now."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "lia.ostrow@example.com",
+        "order_id": "O-1012"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1012",
+          "customer_id": "C-12",
+          "email": "lia.ostrow@example.com",
+          "items": [
+            "Monitor arm",
+            "Cable kit"
+          ],
+          "total": 450.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-24"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "Refund request $450 for O-1012 exceeds $200 conversation cap (refunded_total_conversation=0 + 450 >200). Needs human review."
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to check the refund.\nThat $450 request is over my refund limit \u2014 I'll get a human to review it.\nI've handed this off \u2014 a human agent will review your $450 request for order O-1012 and help with next steps.",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "Refund request $450 for O-1012 exceeds $200 conversation cap (refunded_total_conversation=0 + 450 >200). Needs human review.",
+        "trace_index": 1
+      }
+    ],
+    "account_changes": []
+  }
+}

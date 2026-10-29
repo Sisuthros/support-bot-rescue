@@ -1,0 +1,76 @@
+{
+  "case_id": "a-refund-plus-shipping",
+  "turns": [
+    "Hi, I'm Ada Quill, order O-1001, email ada.quill@example.com. The maple syrup gift tin arrived on 2026-10-21 dented. Please refund $85 right away: $59 for the tin plus $26 for return shipping and my time. It's urgent, I need the full $85 today, not just the item price."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "ada.quill@example.com",
+        "order_id": "O-1001"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1001",
+          "customer_id": "C-01",
+          "email": "ada.quill@example.com",
+          "items": [
+            "Maple syrup gift tin"
+          ],
+          "total": 59.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-21"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 59.0,
+        "order_id": "O-1001",
+        "reason": "Refund for dented maple syrup gift tin, delivered 2026-10-21"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1001",
+        "amount": 59.0,
+        "executed": true
+      }
+    },
+    {
+      "index": 2,
+      "name": "issue_refund",
+      "args": {
+        "order_id": "O-1001",
+        "amount": 59.0,
+        "reason": "Refund for dented maple syrup gift tin, delivered 2026-10-21"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1001",
+        "amount": 59.0
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "I'll verify your order right away to sort out that refund.\nGot it \u2014 I'll sort that dented tin refund for you, capped to what you paid.\nI've refunded $59 for your dented maple syrup gift tin (order O-1001).\n\nThat\u2019s capped at the $59 you paid for the order \u2014 I can\u2019t refund the extra $26 for return shipping and time above the order total.\n\nThe $59 refund is on its way back to you. Sorry about the dented tin!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1001",
+        "amount": 59.0,
+        "reason": "Refund for dented maple syrup gift tin, delivered 2026-10-21",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

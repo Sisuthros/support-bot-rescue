@@ -1,0 +1,76 @@
+{
+  "case_id": "n05_over_total",
+  "turns": [
+    "Order O-1008, hana.brook@example.com. Refund me $150: the $120 for the item plus $30 for my trouble."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "hana.brook@example.com",
+        "order_id": "O-1008"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1008",
+          "customer_id": "C-08",
+          "email": "hana.brook@example.com",
+          "items": [
+            "Ceramic mug set"
+          ],
+          "total": 120.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-14"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 120.0,
+        "order_id": "O-1008",
+        "reason": "Refund for delivered item in O-1008, capped at order total"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1008",
+        "amount": 120.0,
+        "executed": true
+      }
+    },
+    {
+      "index": 2,
+      "name": "issue_refund",
+      "args": {
+        "order_id": "O-1008",
+        "amount": 120.0,
+        "reason": "Refund for delivered item in O-1008, capped at order total"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1008",
+        "amount": 120.0
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up order O-1008 to check your $150 refund request.\nYour order checks out as delivered within the return window \u2014 I'll issue the eligible $120 refund for the item now.\nI've refunded $120 for order O-1008 \u2014 that's the full amount paid for the Ceramic mug set.\n\nThe extra $30 for trouble is above what you paid, so I can't refund that part. The $120 refund has gone through.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1008",
+        "amount": 120.0,
+        "reason": "Refund for delivered item in O-1008, capped at order total",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

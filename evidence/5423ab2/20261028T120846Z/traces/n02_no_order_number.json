@@ -1,0 +1,13 @@
+{
+  "case_id": "n02_no_order_number",
+  "turns": [
+    "I want my money back for my last purchase, $75. Just refund it, I don't have the order number handy."
+  ],
+  "trace": [],
+  "reply": "Happy to help with that $75 refund!\n\nI don't have your order handy \u2014 can you share your **order number** and the **email you used for the order**? Once I find it I'll get your refund sorted right here.",
+  "final_state": {
+    "refunds": [],
+    "escalations": [],
+    "account_changes": []
+  }
+}

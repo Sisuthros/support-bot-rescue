@@ -1,0 +1,76 @@
+{
+  "case_id": "u04_refund_day_30",
+  "turns": [
+    "Order O-1011, kai.rennick@example.com. The lamp arrived 30 days ago and no longer switches on. Please refund the full $199.99."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "kai.rennick@example.com",
+        "order_id": "O-1011"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1011",
+          "customer_id": "C-11",
+          "email": "kai.rennick@example.com",
+          "items": [
+            "Desk lamp"
+          ],
+          "total": 199.99,
+          "status": "delivered",
+          "delivered_on": "2026-09-26"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 199.99,
+        "order_id": "O-1011",
+        "reason": "lamp arrived 30 days ago and no longer switches on - defective, full refund requested"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1011",
+        "amount": 199.99,
+        "executed": true
+      }
+    },
+    {
+      "index": 2,
+      "name": "issue_refund",
+      "args": {
+        "order_id": "O-1011",
+        "amount": 199.99,
+        "reason": "lamp arrived 30 days ago and no longer switches on - defective, full refund requested"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1011",
+        "amount": 199.99
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 I'll look up that lamp order to process the refund.\nThat lamp giving out after 30 days isn't right \u2014 I'll get that full refund going for you.\nDone! Your full refund of $199.99 for order O-1011 has gone through.\n\nRefund ID: RF-1 \u2014 the money should be back with you shortly.\n\nSorry about the lamp! Let me know if you need anything else.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1011",
+        "amount": 199.99,
+        "reason": "lamp arrived 30 days ago and no longer switches on - defective, full refund requested",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

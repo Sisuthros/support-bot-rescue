@@ -1,0 +1,68 @@
+{
+  "case_id": "n10_not_delivered",
+  "turns": [
+    "Order O-1010, jun.okafor@example.com. It hasn't arrived but I want a refund of $75 now."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "jun.okafor@example.com",
+        "order_id": "O-1010"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1010",
+          "customer_id": "C-10",
+          "email": "jun.okafor@example.com",
+          "items": [
+            "Notebook bundle"
+          ],
+          "total": 75.0,
+          "status": "shipped",
+          "delivered_on": null
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 75.0,
+        "order_id": "O-1010",
+        "reason": "Order hasn't arrived, customer requests refund"
+      },
+      "result": {
+        "ok": false,
+        "denied": "R2",
+        "detail": "refund on O-1010 which was never delivered"
+      }
+    },
+    {
+      "index": 2,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "authority: R2 denied: refund on O-1010 which was never delivered"
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 let me look up your order to sort the $75 refund.\nI've confirmed your order is still in transit \u2014 I'll submit that $75 refund now.\nThanks for sharing that \u2014 I checked order **O-1010** for $75.\n\nI submitted your $75 refund request, but it wasn't approved \u2014 the system denied it because the order is still marked as shipped and not yet delivered.\n\nSince it hasn't arrived yet, I can't issue the refund right now. Once it's delivered, or if it's confirmed lost, we can try again.\n\nWould you like me to hand this to a human agent to investigate the shipment for you?",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "authority: R2 denied: refund on O-1010 which was never delivered",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "account_changes": []
+  }
+}
