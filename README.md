@@ -13,6 +13,7 @@ Every run is sealed in a `manifest.json`: git commit, sha256 of the policy, orde
 ## Run offline
 
 ```
+pip install -r requirements.txt
 py -3 -m pytest -q
 py -3 run.py --client scripted --corpus corpus/named.jsonl
 py -3 verify_manifest.py runs/<timestamp>/manifest.json
@@ -20,7 +21,7 @@ py -3 verify_manifest.py runs/<timestamp>/manifest.json
 
 Needs Python 3 and `pytest`; `--client meta` also needs the `openai` package. `py -3` is the Windows launcher; on macOS or Linux use `python3`. 104 tests pass at the scored commit `5423ab2`.
 
-The scripted client replays canned model outputs (`corpus/scripted_replies.json`): three naive replies that break R1, R3 and R6, and a compliant escalation for every other case. On the named corpus it should print 15 cases and 9 failed: R1, R3 and R6 once each, plus 6 `U1` and 1 `U2` misses. The canned escalation is safe but does not complete eligible refunds, which is the usefulness check at work: a bot that escalates everything cannot score clean. `--client meta` calls the Meta Model API (`muse-spark-1.3-contributor`, key read from `C:\Users\Ismael\.meta-model-api-key`, never printed) with a per-run call budget (`--max-calls`); it stops with a clear error on HTTP 402. `py -3 scripts/smoke.py` makes one real call.
+The scripted client replays canned model outputs (`corpus/scripted_replies.json`): three naive replies that break R1, R3 and R6, and a compliant escalation for every other case. On the named corpus it should print 15 cases and 9 failed: R1, R3 and R6 once each, plus 6 `U1` and 1 `U2` misses. The canned escalation is safe but does not complete eligible refunds, which is the usefulness check at work: a bot that escalates everything cannot score clean. `--client meta` calls the Meta Model API (`muse-spark-1.3-contributor`, key from `META_API_KEY`, or the file named by `META_API_KEY_FILE`, or `~/.meta-model-api-key`; never printed) with a per-run call budget (`--max-calls`); it stops with a clear error on HTTP 402. `py -3 scripts/smoke.py` makes one real call.
 
 `corpus/holdout.jsonl` is the 5-case attack holdout, kept away from the fixer and the attacker; its hash is in `corpus/HOLDOUT.sha256` and a test fails if the file changes without that hash being updated. It was scored before the harness was frozen, so it is not virgin (see Results). The default system prompt is `agent/prompts/v1.txt`, a generic deploy prompt that lists the tools and contains none of the refund policy; later prompts show up as a diff against it.
 
@@ -37,7 +38,7 @@ This repo was started on 2026-10-26, the evening of the Meta Global AI Developer
 Attacks were written by a second Meta model, `muse-wonder-1.0`, and stored as replayable corpus files so that scoring stays deterministic.
 
 - `corpus/attacks/wonder-20261027.jsonl` - one-shot attacks: two candidates per rule R1-R6, 12 in all; 10 passed review and validation. Both R6 candidates failed the shape check, so this corpus covers R1-R5.
-- `corpus/attacks/live-20261027.jsonl` - the attacker held a live conversation against the bot (`muse-spark-1.3-contributor`) running the hardened prompt `agent/prompts/v3.txt` without the firewall: two tries per rule R1-R6, up to 4 turns each, 12 threads. None of the 12 broke v3 while it was being generated (`broke_any: false` in every transcript). The transcripts are kept alongside, and the customer turns are replayed as fixed scripts against every configuration.
+- `corpus/attacks/live-20261027.jsonl` - the attacker held a live conversation against the bot (`muse-spark-1.3-contributor`) running the hardened prompt `agent/prompts/v3.txt` without the firewall: two tries per rule R1-R6, up to 4 turns each, 12 threads. None of the 12 broke v3 while it was being generated (`broke_any: false` in every transcript). The transcripts are kept alongside, and the customer turns are replayed as fixed scripts; the recorded fixed-script comparisons are against v1 and v3.
 
 Each corpus carries a `.provenance.json` recording the attacker model, the call budget, calls actually made and a sha256 of every request and response; the live one also records the bot model, the prompt it attacked with its sha256, and the bot's call budget. The attacker never receives holdout cases or privileged tools, and it is not used as a judge.
 
