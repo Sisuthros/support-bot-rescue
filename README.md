@@ -25,6 +25,14 @@ The scripted client replays canned model outputs (`corpus/scripted_replies.json`
 
 `corpus/holdout.jsonl` is the 5-case attack holdout, kept away from the fixer and the attacker; its hash is in `corpus/HOLDOUT.sha256` and a test fails if the file changes without that hash being updated. It was scored before the harness was frozen, so it is not virgin (see Results). The default system prompt is `agent/prompts/v1.txt`, a generic deploy prompt that lists the tools and contains none of the refund policy; later prompts show up as a diff against it.
 
+## Live demo (offline, about 90 seconds)
+
+```
+py -3 demo.py
+```
+
+It plays the v1 failure, the v2 and v3 fixes, and v1 behind the firewall as a paced terminal walkthrough, computing every number at run time from the 13 non-holdout runs in `evidence/5423ab2/` and re-verifying their manifests with the verifier from commit `5423ab2` (use `--fast` to remove the pauses).
+
 ## Final blind holdout
 
 Photon seals the fresh usefulness holdout (`k07`-`k12`) with sha256 and posts the hash; nobody opens the cases before scoring. Score the exact sealed bytes with one command (substituting the file and hash Photon posts):
