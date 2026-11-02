@@ -1,0 +1,18 @@
+{
+  "model": "muse-wonder-1.0",
+  "model_requested": "muse-wonder-1.0",
+  "response_ids": [
+    "resp_6ae8cc030158ed49624243be"
+  ],
+  "timestamp": "2026-11-02T17:44:36+00:00",
+  "cases_file": "k13-k18.jsonl",
+  "cases_sha256": "668eb4569eea40920fb9cf913c1a1c9ab69aae2582f2486547a1588faecd3216",
+  "case_ids": [
+    "k13",
+    "k14",
+    "k15",
+    "k16",
+    "k17",
+    "k18"
+  ]
+}

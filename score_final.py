@@ -6,7 +6,7 @@ Usage:
 Exit codes:
   0  dry-run plan printed, or live scoring completed and every manifest re-verified
   2  sha256 mismatch (refused before parsing the file), or a live run could not start/finish
-  3  the cases file does not match the required k07-k12 schema
+  3  the cases file does not match the required schema (k07-k12 by default, or --ids)
   1  live scoring finished but a manifest failed verify_manifest.recheck
 """
 from __future__ import annotations
@@ -43,15 +43,16 @@ def compute_sha256(path: Path | str) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def validate_cases(data: bytes) -> list[dict]:
+def validate_cases(data: bytes, expected_ids: list[str] | None = None) -> list[dict]:
     """Validate the sealed-case schema; raise SchemaError on the first problem."""
+    expected_ids = list(expected_ids) if expected_ids is not None else list(EXPECTED_IDS)
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError as e:
         raise SchemaError(f"INVALID: file is not valid UTF-8: {e}") from None
     lines = [ln for ln in text.splitlines() if ln.strip()]
-    if len(lines) != 6:
-        raise SchemaError(f"INVALID: expected exactly 6 cases (JSON lines), got {len(lines)}")
+    if len(lines) != len(expected_ids):
+        raise SchemaError(f"INVALID: expected exactly {len(expected_ids)} cases (JSON lines), got {len(lines)}")
     cases: list[dict] = []
     for i, line in enumerate(lines, start=1):
         try:
@@ -70,14 +71,14 @@ def validate_cases(data: bytes) -> list[dict]:
         if cid in seen:
             raise SchemaError(f"INVALID: duplicate id {cid!r} on lines {seen[cid]} and {i}")
         seen[cid] = i
-    unexpected = sorted(set(seen) - set(EXPECTED_IDS))
+    unexpected = sorted(set(seen) - set(expected_ids))
     if unexpected:
         raise SchemaError(
-            f"INVALID: unexpected id {unexpected[0]!r}: ids must be exactly {', '.join(EXPECTED_IDS)}")
-    missing = [cid for cid in EXPECTED_IDS if cid not in seen]
+            f"INVALID: unexpected id {unexpected[0]!r}: ids must be exactly {', '.join(expected_ids)}")
+    missing = [cid for cid in expected_ids if cid not in seen]
     if missing:
         raise SchemaError(
-            f"INVALID: missing id {missing[0]!r}: ids must be exactly {', '.join(EXPECTED_IDS)}")
+            f"INVALID: missing id {missing[0]!r}: ids must be exactly {', '.join(expected_ids)}")
 
     for case in cases:
         cid = case["id"]
@@ -114,10 +115,11 @@ def validate_cases(data: bytes) -> list[dict]:
     return cases
 
 
-def _print_plan(cases_path: Path, actual: str, case_count: int, max_calls: int) -> None:
+def _print_plan(cases_path: Path, actual: str, case_count: int, max_calls: int, expected_ids: list[str] | None = None) -> None:
     print(f"cases: {cases_path}")
     print(f"sha256: {actual}")
     print(f"case count: {case_count}")
+    print(f"case ids: {', '.join(expected_ids or EXPECTED_IDS)}")
     print(f"max-calls per variant: {max_calls}")
     print(f"max-calls budget: {max_calls} per variant, {max_calls * len(VARIANTS)} total across {len(VARIANTS)} variants")
     print("variants:")
@@ -216,11 +218,12 @@ def _run_live(cases_path: Path, actual: str, cases: list[dict], max_calls: int, 
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Score the final blind holdout (k07-k12) for four variants.")
+    ap = argparse.ArgumentParser(description="Score the final blind holdout (k07-k12 by default, or --ids) for four variants.")
     ap.add_argument("--cases", required=True, help="path to the sealed JSONL cases file")
     ap.add_argument("--sha256", required=True, help="expected sha256 hex of the exact cases file bytes")
     ap.add_argument("--live", action="store_true", help="actually run the Meta client (default: dry-run plan only)")
     ap.add_argument("--max-calls", type=int, default=200, help="model call budget per variant (default: 200)")
+    ap.add_argument("--ids", default=None, help="comma-separated expected case ids (default: k07,k08,k09,k10,k11,k12)")
     ap.add_argument("--out", default="runs", help="output root for run dirs and SUMMARY files (default: runs)")
     a = ap.parse_args(argv)
 
@@ -235,13 +238,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"REFUSED: sha256 mismatch: expected {a.sha256.strip().lower()} but file hashes to {actual}")
         return 2
 
+    if a.ids is None:
+        expected_ids = list(EXPECTED_IDS)
+    else:
+        expected_ids = [part.strip() for part in a.ids.split(",") if part.strip()]
+        if not expected_ids or len(set(expected_ids)) != len(expected_ids):
+            print("INVALID: --ids must be a comma-separated list of unique case ids")
+            return 3
     try:
-        cases = validate_cases(data)
+        cases = validate_cases(data, expected_ids)
     except SchemaError as e:
         print(str(e))
         return 3
 
-    _print_plan(cases_path, actual, len(cases), a.max_calls)
+    _print_plan(cases_path, actual, len(cases), a.max_calls, expected_ids)
     if not a.live:
         print("dry-run: no client constructed, no network calls; pass --live to score")
         return 0

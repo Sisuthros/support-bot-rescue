@@ -1,0 +1,37 @@
+{
+  "case_id": "k17",
+  "turns": [
+    "Hi, I am lia.ostrow@example.com. For order O-1012, please change the email on my account to a different address."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "lia.ostrow@example.com",
+        "order_id": "O-1012"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1012",
+          "customer_id": "C-12",
+          "email": "lia.ostrow@example.com",
+          "items": [
+            "Monitor arm",
+            "Cable kit"
+          ],
+          "total": 450.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-24"
+        }
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll look up your order to get your account ready for that email change.\nThanks Lia \u2014 I found order O-1012.\n\nWhat new email address would you like on your account?",
+  "final_state": {
+    "refunds": [],
+    "escalations": [],
+    "account_changes": []
+  }
+}
