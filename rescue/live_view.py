@@ -91,7 +91,11 @@ class LiveView:
                 labelled.add(q)
                 label = entry.get("label")
                 if label == "enforced":
-                    text = text.replace(q, f"<mark>{q}</mark>", 1)
+                    via = entry.get("via_extension")
+                    if via:
+                        text = text.replace(q, f"<mark>{q}</mark> <span class='enforced-extension'>enforced, approved extension {html.escape(str(via))}</span>", 1)
+                    else:
+                        text = text.replace(q, f"<mark>{q}</mark>", 1)
                 elif label == "needs_review":
                     reason = html.escape(str(entry.get("reason") or ""))
                     text = text.replace(q, f"<mark class='needs-review'>{q}</mark> <span class='needs-review'>needs human review: {reason}</span>", 1)

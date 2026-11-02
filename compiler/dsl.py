@@ -6,7 +6,10 @@ vocabulary is rejected here, before any judging happens.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import re
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -60,8 +63,10 @@ PRIMITIVES: dict[str, dict[str, str]] = {
 }
 
 _ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
-_TOP_KEYS = {"version", "provenance", "rules", "uncovered", "informational"}
-_PROVENANCE_KEYS = {"model", "policy_sha256", "timestamp", "response_id"}
+_TOP_KEYS = {"version", "provenance", "rules", "uncovered", "informational", "extensions"}
+_PROVENANCE_KEYS = {"model", "policy_sha256", "timestamp", "response_id", "extensions"}
+_EXTENSION_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+PARAM_TYPE_TAGS = {"string", "positive_int", "positive_number", "string_list"}
 _RULE_KEYS = {"id", "primitive", "quote", "params"}
 
 
@@ -71,6 +76,132 @@ class Rule:
     primitive: str
     quote: str
     params: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class Extension:
+    """A human-approved extension primitive, with its gated checker source."""
+
+    name: str
+    params: dict[str, str]
+    checker_source: str
+    checker_sha256: str
+    approval: dict[str, Any]
+    description: str = ""
+
+
+def checker_sha256(checker_source: str) -> str:
+    """Return the sha256 approval is bound to for a checker source string."""
+    return hashlib.sha256(checker_source.encode("utf-8")).hexdigest()
+
+
+def _coerce_extension(raw: Any, key_hint: str | None = None) -> Extension:
+    if isinstance(raw, Extension):
+        if checker_sha256(raw.checker_source) != raw.checker_sha256:
+            raise SpecError(f"extension {raw.name!r}: checker sha256 does not match its approval")
+        return raw
+    if isinstance(raw, dict) and isinstance(raw.get("proposal"), dict):
+        merged = dict(raw["proposal"])
+        for key, value in raw.items():
+            if key != "proposal":
+                merged[key] = value
+        raw = merged
+    if not isinstance(raw, dict):
+        raise SpecError("extension must be an approved proposal object")
+    name = raw.get("primitive") or raw.get("name") or key_hint
+    if not isinstance(name, str) or not _EXTENSION_NAME_RE.match(name):
+        raise SpecError(f"extension primitive name must be snake_case: {name!r}")
+    if name in PRIMITIVES:
+        raise SpecError(f"extension {name!r} collides with a built-in primitive")
+    schema = raw.get("params")
+    if not isinstance(schema, dict) or any(not isinstance(k, str) or v not in PARAM_TYPE_TAGS for k, v in schema.items()):
+        raise SpecError(f"extension {name!r}: params must map names to DSL type tags")
+    source = raw.get("checker_source")
+    if not isinstance(source, str) or not source.strip():
+        raise SpecError(f"extension {name!r}: checker_source must be a non-empty string")
+    status = raw.get("status")
+    if status is not None and status != "approved":
+        raise SpecError(f"extension {name!r} is not approved (status={status!r})")
+    approval = raw.get("approval")
+    if not isinstance(approval, dict):
+        raise SpecError(f"extension {name!r} is not approved: missing approval record")
+    by = approval.get("by")
+    timestamp = approval.get("timestamp") or approval.get("approved_at")
+    approved_sha = approval.get("checker_sha256") or approval.get("checker_sha") or approval.get("sha256")
+    if not isinstance(by, str) or not by.strip() or not isinstance(timestamp, str) or not timestamp.strip():
+        raise SpecError(f"extension {name!r} is not approved: approval needs by and timestamp")
+    actual_sha = checker_sha256(source)
+    if approved_sha != actual_sha:
+        raise SpecError(
+            f"extension {name!r}: checker sha256 {actual_sha} does not match approved sha256 {approved_sha!r}")
+    description = raw.get("description")
+    return Extension(name=name, params=dict(schema), checker_source=source,
+                     checker_sha256=actual_sha,
+                     approval={"by": by, "timestamp": timestamp, "checker_sha256": actual_sha},
+                     description=description if isinstance(description, str) else "")
+
+
+def _extension_records(source: Any) -> tuple[list[Any], bool]:
+    """Return (records, came_from_directory); directories skip unapproved files."""
+    if isinstance(source, (str, Path)):
+        path = Path(source)
+        if path.is_dir():
+            records: list[Any] = []
+            for file in sorted(path.glob("*.json")):
+                try:
+                    record = json.loads(file.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as exc:
+                    raise SpecError(f"cannot read extension proposal {file}: {exc}") from None
+                if isinstance(record, dict) and record.get("status") == "approved":
+                    records.append(record)
+                elif isinstance(record, dict) and isinstance(record.get("approval"), dict):
+                    records.append(record)
+            return records, True
+        if path.is_file():
+            try:
+                return [json.loads(path.read_text(encoding="utf-8"))], False
+            except (OSError, json.JSONDecodeError) as exc:
+                raise SpecError(f"cannot read extension proposal {path}: {exc}") from None
+    return [source], False
+
+
+def extension_map(extensions: Any = None) -> dict[str, Extension]:
+    """Normalise approved extensions from records, mappings, lists, or a directory.
+
+    Directly supplied records must be approved and their checker sha256 must
+    match the approval. A proposals directory contributes only its approved
+    records (proposed/declined/gate_failed files are skipped, but a tampered
+    approved record is rejected).
+    """
+    if extensions is None:
+        return {}
+    records: list[tuple[Any, str | None]] = []
+    if isinstance(extensions, dict) and not any(
+            key in extensions for key in ("primitive", "name", "checker_source", "proposal")):
+        if isinstance(extensions.get("extensions"), list):
+            records = [(item, None) for item in extensions["extensions"]]
+        else:
+            records = [(value, key if isinstance(key, str) else None)
+                       for key, value in extensions.items()]
+    elif isinstance(extensions, (list, tuple, set)):
+        for item in extensions:
+            sub_records, _from_dir = _extension_records(item)
+            records.extend((item_record, None) for item_record in sub_records)
+    else:
+        sub_records, _from_dir = _extension_records(extensions)
+        records = [(item, None) for item in sub_records]
+    out: dict[str, Extension] = {}
+    for raw, hint in records:
+        extension = _coerce_extension(raw, key_hint=hint)
+        if extension.name in out:
+            raise SpecError(f"duplicate extension primitive: {extension.name!r}")
+        out[extension.name] = extension
+    return out
+
+
+def load_extensions(source: Any = None) -> dict[str, Extension]:
+    """Load approved extensions from a proposals directory or record collection."""
+    return extension_map(source)
 
 
 @dataclass(frozen=True)
@@ -86,6 +217,7 @@ class Spec:
     provenance: dict[str, Any] = field(default_factory=dict)
     uncovered: tuple[Uncovered, ...] = ()
     informational: tuple[str, ...] = ()
+    extensions: dict[str, Extension] = field(default_factory=dict)
 
 
 def _check_value(rule_id: str, name: str, value: Any, tag: str) -> None:
@@ -106,7 +238,7 @@ def _check_value(rule_id: str, name: str, value: Any, tag: str) -> None:
         raise AssertionError(tag)
 
 
-def validate_spec(data: Any, policy_text: str | None = None) -> Spec:
+def validate_spec(data: Any, policy_text: str | None = None, extensions: Any = None) -> Spec:
     """Validate raw parsed JSON against the closed DSL; return a Spec."""
     if not isinstance(data, dict):
         raise SpecError("spec must be a JSON object")
@@ -115,12 +247,29 @@ def validate_spec(data: Any, policy_text: str | None = None) -> Spec:
         raise SpecError(f"unknown top-level keys: {sorted(unknown)}")
     if data.get("version") != SPEC_VERSION:
         raise SpecError(f"spec version must be {SPEC_VERSION!r}")
+    ext_map = extension_map(extensions)
     provenance = data.get("provenance", {})
     if not isinstance(provenance, dict) or set(provenance) - _PROVENANCE_KEYS:
-        raise SpecError("provenance must be an object with only model/policy_sha256/timestamp/response_id")
+        raise SpecError("provenance must be an object with only model/policy_sha256/timestamp/response_id/extensions")
     for key, value in provenance.items():
+        if key == "extensions":
+            if not isinstance(value, list) or any(
+                    not isinstance(item, dict) or set(item) != {"name", "checker_sha256"}
+                    or not isinstance(item.get("name"), str) or not item["name"]
+                    or not isinstance(item.get("checker_sha256"), str) or not item["checker_sha256"]
+                    for item in value):
+                raise SpecError("provenance extensions must be a list of {name, checker_sha256} objects")
+            continue
         if value is not None and not isinstance(value, str):
             raise SpecError(f"provenance {key!r} must be a string or null")
+    top_extensions = data.get("extensions")
+    if top_extensions is not None and (
+            not isinstance(top_extensions, list) or any(
+                not isinstance(item, dict) or set(item) != {"name", "checker_sha256"}
+                or not isinstance(item.get("name"), str) or not item["name"]
+                or not isinstance(item.get("checker_sha256"), str) or not item["checker_sha256"]
+                for item in top_extensions)):
+        raise SpecError("extensions must be a list of {name, checker_sha256} objects")
     raw_rules = data.get("rules")
     if not isinstance(raw_rules, list) or not raw_rules:
         raise SpecError("spec rules must be a non-empty list")
@@ -137,7 +286,7 @@ def validate_spec(data: Any, policy_text: str | None = None) -> Spec:
             raise SpecError(f"duplicate rule id: {rid}")
         seen.add(rid)
         primitive = raw.get("primitive")
-        if primitive not in PRIMITIVES:
+        if primitive not in PRIMITIVES and primitive not in ext_map:
             raise SpecError(f"rule {rid}: unknown primitive: {primitive!r}")
         quote = raw.get("quote")
         if not isinstance(quote, str) or not quote.strip():
@@ -147,7 +296,7 @@ def validate_spec(data: Any, policy_text: str | None = None) -> Spec:
         params = raw.get("params")
         if not isinstance(params, dict):
             raise SpecError(f"rule {rid}: params must be an object")
-        expected = PRIMITIVES[primitive]
+        expected = PRIMITIVES[primitive] if primitive in PRIMITIVES else ext_map[primitive].params
         if set(params) != set(expected):
             raise SpecError(
                 f"rule {rid}: params for {primitive} must be exactly {sorted(expected)}, got {sorted(params)}")
@@ -181,13 +330,25 @@ def validate_spec(data: Any, policy_text: str | None = None) -> Spec:
             raise SpecError("informational entry: quote is not verbatim in the policy text")
         informational.append(item)
     return Spec(version=SPEC_VERSION, rules=tuple(rules), provenance=dict(provenance),
-                uncovered=tuple(uncovered), informational=tuple(informational))
+                uncovered=tuple(uncovered), informational=tuple(informational),
+                extensions=dict(ext_map))
 
 
 def spec_to_dict(spec: Spec) -> dict[str, Any]:
     out: dict[str, Any] = {"version": spec.version}
     if spec.provenance:
         out["provenance"] = dict(spec.provenance)
+    if spec.extensions:
+        used = []
+        for rule in spec.rules:
+            if rule.primitive in spec.extensions and rule.primitive not in used:
+                used.append(rule.primitive)
+        if used:
+            provenance_out = dict(out.get("provenance") or {})
+            provenance_out.setdefault("extensions", [
+                {"name": name, "checker_sha256": spec.extensions[name].checker_sha256}
+                for name in used])
+            out["provenance"] = provenance_out
     out["rules"] = [
         {"id": r.id, "primitive": r.primitive, "quote": r.quote, "params": dict(r.params)}
         for r in spec.rules

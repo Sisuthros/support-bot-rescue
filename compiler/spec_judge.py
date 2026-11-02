@@ -13,10 +13,17 @@ from pathlib import Path
 from typing import Any
 
 from compiler.dsl import Rule, Spec, validate_spec
+from compiler.sandbox_runner import run_checker
 
 
-def load_spec(path: Path | str) -> Spec:
-    return validate_spec(json.loads(Path(path).read_text(encoding="utf-8")))
+def load_spec(path: Path | str, extensions=None) -> Spec:
+    """Load a spec; extension rules require approved ``extensions``.
+
+    ``extensions`` may be a proposals directory, a list of approved proposal
+    records, or a mapping as accepted by :func:`compiler.dsl.validate_spec`.
+    A checker whose sha256 no longer matches its approval is rejected there.
+    """
+    return validate_spec(json.loads(Path(path).read_text(encoding="utf-8")), extensions=extensions)
 
 
 def _v(rule: str, idx: int | None, detail: str) -> dict:
@@ -180,9 +187,23 @@ _HANDLERS = {
 }
 
 
+def _extension_findings(rule: Rule, spec: Spec, trace, state, reply):
+    extension = (getattr(spec, "extensions", None) or {}).get(rule.primitive)
+    if extension is None:
+        raise KeyError(f"no approved extension loaded for primitive {rule.primitive!r}")
+    findings = run_checker(extension.checker_source, dict(rule.params), trace, state, reply)
+    return [_v(rule.id, finding["trace_index"], finding["detail"]) for finding in findings]
+
+
 def judge_trace(spec: Spec, trace: list[dict], state: dict, reply: str) -> list[dict]:
     """Run every compiled rule; violations in spec order, verifier-shaped."""
-    return [v for rule in spec.rules for v in _HANDLERS[rule.primitive](rule, trace, state, reply)]
+    out: list[dict] = []
+    for rule in spec.rules:
+        if rule.primitive in _HANDLERS:
+            out.extend(_HANDLERS[rule.primitive](rule, trace, state, reply))
+        else:
+            out.extend(_extension_findings(rule, spec, trace, state, reply))
+    return out
 
 
 def judge_stored_trace(spec: Spec, payload: dict, world: dict) -> list[dict]:

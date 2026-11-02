@@ -35,13 +35,13 @@ def _counts(results: list[dict]) -> dict:
             "violations_by_rule": by_rule, "misses_by_kind": by_kind}
 
 
-def rejudge(run_dir: Path | str) -> list[str]:
+def rejudge(run_dir: Path | str, extensions=None) -> list[str]:
     """Return problem lines; empty means every count matches."""
     run_dir = Path(run_dir)
     problems: list[str] = []
     report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
     manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
-    spec = load_spec(run_dir / "spec.json")
+    spec = load_spec(run_dir / "spec.json", extensions=extensions)
     local_world = run_dir / "world.json"
     orders_path = local_world if local_world.is_file() else ROOT / "stores" / report["store"] / "orders.json"
     world = load_world(orders_path)

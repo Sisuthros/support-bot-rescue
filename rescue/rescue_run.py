@@ -33,6 +33,7 @@ from compiler.coverage import compute_coverage  # noqa: E402
 from compiler.dsl import SpecError, spec_to_dict, validate_spec  # noqa: E402
 from rescue.live_view import LiveView  # noqa: E402
 from compiler.spec_judge import judge_stored_trace, load_spec  # noqa: E402
+from compiler.extend import apply_proposals, load_approved_proposals  # noqa: E402
 from fixer.fix import parse_proposal  # noqa: E402
 from sandbox.tools import Sandbox, load_world  # noqa: E402
 from verifier.outcomes import check_outcome  # noqa: E402
@@ -236,7 +237,8 @@ def _counts(results: list[dict]) -> dict:
 
 
 
-def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids: list) -> tuple[dict, list[str]]:
+def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids: list,
+                    extension_records: list[dict] | None = None) -> tuple[dict, list[str]]:
     """Compile via compiler/* helpers; salvage expressible rules on final failure.
 
     compiler.compile_policy is not changed: this wrapper reuses its request
@@ -299,6 +301,8 @@ def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids:
                             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                             "response_id": last_id}
     validate_spec(result, policy_text=policy_text)
+    if extension_records:
+        result = apply_proposals(result, extension_records)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     lines = ["# Compiled policy spec", "", f"- Model: {last_model}", f"- Policy sha256: {policy_sha}",
@@ -307,10 +311,12 @@ def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids:
     lines += ["## Coverage", "", cov["headline"], ""]
     for entry in cov["sentences"]:
         suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
+        if entry.get("via_extension"):
+            suffix = f" - enforced, approved extension {entry['via_extension']}"
         lines += [f"- [{entry['label']}] {entry['sentence']}{suffix}", ""]
-    for rule in spec.rules:
-        lines += [f"## {rule.id} - {rule.primitive}", "", f"Policy sentence: {rule.quote}", "",
-                  f"Params: `{json.dumps(rule.params, sort_keys=True)}`", ""]
+    for rule in result["rules"]:
+        lines += [f"## {rule['id']} - {rule['primitive']}", "", f"Policy sentence: {rule['quote']}", "",
+                  f"Params: `{json.dumps(rule['params'], sort_keys=True)}`", ""]
     for item in not_expressible:
         lines += [f"- {item}", ""]
     out_path.with_suffix(".md").write_text("\n".join(lines), encoding="utf-8")
@@ -450,7 +456,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
                client: Any = None, cases_count: int = 12, holdout_count: int = 6,
                stores_root: Path | str | None = None, workers: int = 6,
                policy_file: Path | str | None = None, world_file: Path | str | None = None,
-               open_live: bool = False) -> Path:
+               open_live: bool = False, extensions: Any = None) -> Path:
     started = time.monotonic()
     stores_root = Path(stores_root) if stores_root else ROOT / "stores"
     world_generated = False
@@ -499,13 +505,22 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     response_ids: dict[str, list] = {"compile": [], "world": [], "cases": [], "holdout": [], "fix": []}
 
     log("compile", f"compiling {policy_path} with {WONDER_MODEL}")
-    spec_dict, not_expressible = _compile_policy(counted, policy_text, run_dir / "spec.json", response_ids["compile"])
+    extension_records: list[dict] = []
+    if extensions is not None:
+        if isinstance(extensions, (str, Path)):
+            extension_records = load_approved_proposals(extensions)
+        elif isinstance(extensions, dict):
+            extension_records = [extensions] if extensions.get("status") == "approved" else []
+        else:
+            extension_records = [r for r in extensions if isinstance(r, dict) and r.get("status") == "approved"]
+    spec_dict, not_expressible = _compile_policy(counted, policy_text, run_dir / "spec.json", response_ids["compile"],
+                                                 extension_records=extension_records)
     coverage = compute_coverage(policy_text, spec_dict)
     live.set_rules(spec_dict["rules"], not_expressible, coverage=coverage, uncovered=spec_dict.get("uncovered", []), informational=spec_dict.get("informational", []))
     log("coverage", coverage["headline"])
     for item in not_expressible:
         log("not_expressible", item)
-    spec = load_spec(run_dir / "spec.json")
+    spec = load_spec(run_dir / "spec.json", extensions=extension_records if extension_records else None)
 
     if world_data is None:
         log("world", f"generating synthetic world with {WONDER_MODEL}")
@@ -623,6 +638,8 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     lines += ["", "**Coverage**", "", coverage["headline"], ""]
     for entry in coverage["sentences"]:
         suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
+        if entry.get("via_extension"):
+            suffix = f" - enforced, approved extension {entry['via_extension']}"
         lines.append(f"- [{entry['label']}] {entry['sentence']}{suffix}")
     lines += ["", "**Compiled Rules**", "", "| id | primitive | quoted policy sentence |", "|---|---|---|"]
     for r in spec_dict["rules"]:
@@ -656,7 +673,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     try:
         from rescue.rejudge import rejudge as _rejudge_run
-        _problems = _rejudge_run(run_dir)
+        _problems = _rejudge_run(run_dir, extensions=extension_records if extension_records else None)
         rejudge_result = "all counts match" if not _problems else "MISMATCH: " + "; ".join(_problems)
     except Exception as e:  # live view should show, not hide, a rejudge failure
         rejudge_result = f"MISMATCH: cannot rejudge: {e}"
@@ -677,12 +694,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--policy-file", default=None)
     ap.add_argument("--world-file", default=None)
     ap.add_argument("--open", dest="open_live", action="store_true")
+    ap.add_argument("--extensions", default=None, help="directory of approved extension proposals")
     a = ap.parse_args(argv)
     try:
         run_dir = run_rescue(store=a.store, budget=a.budget, out_root=a.out_root,
                              cases_count=a.cases_count, holdout_count=a.holdout_count,
                              workers=a.workers, policy_file=a.policy_file,
-                             world_file=a.world_file, open_live=a.open_live)
+                             world_file=a.world_file, open_live=a.open_live,
+                             extensions=a.extensions)
     except Exception as e:  # keep CLI honest, no swallowed failures
         print(f"error: {e}")
         return 2

@@ -11,6 +11,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from compiler.dsl import PRIMITIVES
+
 _BULLET_RE = re.compile(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)")
 _ABBREV_RE = re.compile(r"([A-Za-z]+(?:\.[A-Za-z]+)*)$")
 _ABBREVIATIONS = {"e.g", "i.e", "etc", "vs", "mr", "mrs", "ms", "dr", "no", "approx"}
@@ -73,24 +75,39 @@ def _quote_of(item: Any) -> str | None:
     return q if isinstance(q, str) and q else None
 
 
-def _spec_parts(spec: Any) -> tuple[dict[str, str | None], dict[str, str], list[str]]:
-    """Return ({rule quote: rule id or None}, {uncovered quote: reason}, [informational])."""
+def _spec_parts(spec: Any) -> tuple[dict[str, str | None], dict[str, str], list[str], dict[str, str]]:
+    """Return (enforced, uncovered, informational, {quote: extension name})."""
     if spec is None:
-        return {}, {}, []
+        return {}, {}, [], {}
     if isinstance(spec, dict):
         rules = spec.get("rules") or []
         uncovered = spec.get("uncovered") or []
         informational = spec.get("informational") or []
+        provenance = spec.get("provenance") or {}
+        extension_names = {item.get("name") for item in (provenance.get("extensions") or [])
+                           if isinstance(item, dict) and isinstance(item.get("name"), str)}
+        extension_names |= {item.get("name") for item in (spec.get("extensions") or [])
+                            if isinstance(item, dict) and isinstance(item.get("name"), str)}
     else:
         rules = getattr(spec, "rules", ()) or ()
         uncovered = getattr(spec, "uncovered", ()) or ()
         informational = getattr(spec, "informational", ()) or ()
+        provenance = getattr(spec, "provenance", {}) or {}
+        extension_names = {item.get("name") for item in (provenance.get("extensions") or [])
+                           if isinstance(item, dict) and isinstance(item.get("name"), str)}
+        loaded = getattr(spec, "extensions", None) or {}
+        if isinstance(loaded, dict):
+            extension_names |= {str(name) for name in loaded}
     enforced: dict[str, str | None] = {}
+    via_extension: dict[str, str] = {}
     for rule in rules:
         q = _quote_of(rule)
         if q:
             rid = rule.get("id") if isinstance(rule, dict) else getattr(rule, "id", None)
             enforced[q] = rid if isinstance(rid, str) else None
+            primitive = rule.get("primitive") if isinstance(rule, dict) else getattr(rule, "primitive", None)
+            if isinstance(primitive, str) and (primitive in extension_names or primitive not in PRIMITIVES):
+                via_extension[q] = primitive
     review: dict[str, str] = {}
     for item in uncovered:
         q = _quote_of(item)
@@ -103,12 +120,13 @@ def _spec_parts(spec: Any) -> tuple[dict[str, str | None], dict[str, str], list[
         q = item if isinstance(item, str) else _quote_of(item)
         if q:
             info.append(q)
-    return enforced, review, info
+    return enforced, review, info, via_extension
 
 
 def compute_coverage(policy_text: str, spec: Any = None) -> dict[str, Any]:
     """Label every policy sentence and build the coverage headline."""
-    enforced, review, informational = _spec_parts(spec)
+    enforced, review, informational, via_extension = _spec_parts(spec)
+    via_n = {_norm(q): name for q, name in via_extension.items()}
     enforced_n = [(_norm(q), rid) for q, rid in enforced.items()]
     review_n = [(_norm(q), r) for q, r in review.items()]
     info_n = [_norm(q) for q in informational]
@@ -117,9 +135,16 @@ def compute_coverage(policy_text: str, spec: Any = None) -> dict[str, Any]:
     for sentence in split_sentences(policy_text):
         sn = _norm(sentence)
         label, reason, rule_id = "unaccounted", None, None
+        extension_name = None
         for qn, rid in enforced_n:
             if _matches(sn, qn):
                 label, rule_id = "enforced", rid
+                extension_name = via_n.get(qn)
+                if extension_name is None:
+                    for vqn, vname in via_n.items():
+                        if _matches(sn, vqn):
+                            extension_name = vname
+                            break
                 break
         if label == "unaccounted":
             for qn, r in review_n:
@@ -129,11 +154,17 @@ def compute_coverage(policy_text: str, spec: Any = None) -> dict[str, Any]:
         if label == "unaccounted" and any(_matches(sn, qn) for qn in info_n):
             label = "informational"
         counts[label] += 1
-        entries.append({"sentence": sentence, "label": label,
-                        "reason": reason, "rule_id": rule_id})
+        entry: dict[str, Any] = {"sentence": sentence, "label": label,
+                                 "reason": reason, "rule_id": rule_id}
+        if extension_name is not None:
+            entry["via_extension"] = extension_name
+        entries.append(entry)
     obligations = counts["enforced"] + counts["needs_review"] + counts["unaccounted"]
     headline = (f"{counts['enforced']} of {obligations} obligations are enforced by code; "
                 f"{counts['needs_review']} need human review; "
                 f"{counts['informational']} informational sentences, {counts['unaccounted']} unaccounted")
+    extension_count = sum(1 for entry in entries if entry.get("via_extension"))
+    if extension_count:
+        headline += f" ({extension_count} via human-approved extensions)"
     return {"headline": headline, "sentences": entries, "total": len(entries),
             "counts": dict(counts)}

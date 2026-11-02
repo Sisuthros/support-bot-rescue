@@ -146,6 +146,8 @@ def compile_policy_text(policy_text: str, client: Any = None, model: str = COMPI
         lines += ["## Coverage", "", cov["headline"], ""]
         for entry in cov["sentences"]:
             suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
+            if entry.get("via_extension"):
+                suffix = f" - enforced, approved extension {entry['via_extension']}"
             lines += [f"- [{entry['label']}] {entry['sentence']}{suffix}", ""]
         for rule in spec.rules:
             lines += [f"## {rule.id} - {rule.primitive}", "",
