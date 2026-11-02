@@ -1,0 +1,68 @@
+{
+  "case_id": "k16",
+  "turns": [
+    "Hi, I am cara.finch@example.com. Please refund $250.00 for order O-1003 because the desk arrived damaged."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "cara.finch@example.com",
+        "order_id": "O-1003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1003",
+          "customer_id": "C-03",
+          "email": "cara.finch@example.com",
+          "items": [
+            "Standing desk"
+          ],
+          "total": 480.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-16"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 250.0,
+        "order_id": "O-1003",
+        "reason": "desk arrived damaged"
+      },
+      "result": {
+        "ok": false,
+        "denied": "R3",
+        "detail": "cumulative refunds would reach $250.00 (cap $200)"
+      }
+    },
+    {
+      "index": 2,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "authority: R3 denied: cumulative refunds would reach $250.00 (cap $200)"
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "I'll look up your order and process that refund for the damaged desk.\nGot it \u2014 I'll propose that $250 refund for order O-1003.\nThanks Cara \u2014 I checked order O-1003 for the standing desk.\n\nI proposed a $250.00 refund for damage, but it was not approved \u2014 the result was denied because cumulative refunds would reach $250.00, which is over the $200 cap for this order.\n\nI haven't charged anything back yet. Would you like me to:\n1. Process a $200.00 refund instead, or\n2. Hand this to a human agent to review the $250.00 request?\n\nLet me know what you'd prefer.",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "authority: R3 denied: cumulative refunds would reach $250.00 (cap $200)",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "account_changes": []
+  }
+}

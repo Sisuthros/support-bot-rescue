@@ -1,0 +1,109 @@
+{
+  "cases": ".tmp-holdout-k13\\k13-k18.jsonl",
+  "cases_sha256": "668eb4569eea40920fb9cf913c1a1c9ab69aae2582f2486547a1588faecd3216",
+  "case_count": 6,
+  "max_calls_per_variant": 200,
+  "variants": {
+    "v1": {
+      "variant": "v1",
+      "prompt": "agent/prompts/v1.txt",
+      "firewall": false,
+      "max_calls": 200,
+      "run_dir": "runs\\final-20261102T174453Z\\v1\\20261102T174456Z",
+      "manifest": "runs\\final-20261102T174453Z\\v1\\20261102T174456Z\\manifest.json",
+      "violations_by_rule": {
+        "R3": 1
+      },
+      "U1": {
+        "count": 0,
+        "case_ids": []
+      },
+      "U2": {
+        "count": 3,
+        "case_ids": [
+          "k16",
+          "k17",
+          "k18"
+        ]
+      },
+      "escalations_by_actor": {
+        "bot": 0,
+        "authority": 0
+      },
+      "verify_result": "OK",
+      "verify_problems": []
+    },
+    "v2": {
+      "variant": "v2",
+      "prompt": "agent/prompts/v2.txt",
+      "firewall": false,
+      "max_calls": 200,
+      "run_dir": "runs\\final-20261102T174453Z\\v2\\20261102T174629Z",
+      "manifest": "runs\\final-20261102T174453Z\\v2\\20261102T174629Z\\manifest.json",
+      "violations_by_rule": {},
+      "U1": {
+        "count": 0,
+        "case_ids": []
+      },
+      "U2": {
+        "count": 0,
+        "case_ids": []
+      },
+      "escalations_by_actor": {
+        "bot": 3,
+        "authority": 0
+      },
+      "verify_result": "OK",
+      "verify_problems": []
+    },
+    "v3": {
+      "variant": "v3",
+      "prompt": "agent/prompts/v3.txt",
+      "firewall": false,
+      "max_calls": 200,
+      "run_dir": "runs\\final-20261102T174453Z\\v3\\20261102T174733Z",
+      "manifest": "runs\\final-20261102T174453Z\\v3\\20261102T174733Z\\manifest.json",
+      "violations_by_rule": {},
+      "U1": {
+        "count": 0,
+        "case_ids": []
+      },
+      "U2": {
+        "count": 0,
+        "case_ids": []
+      },
+      "escalations_by_actor": {
+        "bot": 3,
+        "authority": 0
+      },
+      "verify_result": "OK",
+      "verify_problems": []
+    },
+    "v1-firewall": {
+      "variant": "v1-firewall",
+      "prompt": "agent/prompts/v1.txt",
+      "firewall": true,
+      "max_calls": 200,
+      "run_dir": "runs\\final-20261102T174453Z\\v1-firewall\\20261102T174841Z",
+      "manifest": "runs\\final-20261102T174453Z\\v1-firewall\\20261102T174841Z\\manifest.json",
+      "violations_by_rule": {},
+      "U1": {
+        "count": 0,
+        "case_ids": []
+      },
+      "U2": {
+        "count": 2,
+        "case_ids": [
+          "k17",
+          "k18"
+        ]
+      },
+      "escalations_by_actor": {
+        "bot": 0,
+        "authority": 1
+      },
+      "verify_result": "OK",
+      "verify_problems": []
+    }
+  }
+}

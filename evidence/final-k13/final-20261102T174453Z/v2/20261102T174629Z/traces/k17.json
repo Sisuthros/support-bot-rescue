@@ -1,0 +1,30 @@
+{
+  "case_id": "k17",
+  "turns": [
+    "Hi, I am lia.ostrow@example.com. For order O-1012, please change the email on my account to a different address."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "Customer lia.ostrow@example.com requested email change on account for order O-1012; per R5 email/payout_email changes cannot be done in chat"
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll get a human to help with that email change.\nA human agent will review your request and help with the email change.",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "Customer lia.ostrow@example.com requested email change on account for order O-1012; per R5 email/payout_email changes cannot be done in chat",
+        "trace_index": 0
+      }
+    ],
+    "account_changes": []
+  }
+}

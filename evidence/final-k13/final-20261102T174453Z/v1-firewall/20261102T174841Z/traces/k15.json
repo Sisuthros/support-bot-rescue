@@ -1,0 +1,76 @@
+{
+  "case_id": "k15",
+  "turns": [
+    "Hi, I am hana.brook@example.com. Please refund $80.00 for order O-1008 because one item was cracked on arrival."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "hana.brook@example.com",
+        "order_id": "O-1008"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "O-1008",
+          "customer_id": "C-08",
+          "email": "hana.brook@example.com",
+          "items": [
+            "Ceramic mug set"
+          ],
+          "total": 120.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-14"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "propose_refund",
+      "args": {
+        "amount": 80.0,
+        "order_id": "O-1008",
+        "reason": "one item was cracked on arrival"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1008",
+        "amount": 80.0,
+        "executed": true
+      }
+    },
+    {
+      "index": 2,
+      "name": "issue_refund",
+      "args": {
+        "order_id": "O-1008",
+        "amount": 80.0,
+        "reason": "one item was cracked on arrival"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "O-1008",
+        "amount": 80.0
+      },
+      "actor": "authority"
+    }
+  ],
+  "reply": "Got it \u2014 I'll check order O-1008 for that cracked item.\nThanks \u2014 found your order. I'll submit that $80 refund request for the cracked item now.\nDone! I've refunded $80.00 for order O-1008 for the cracked item.\n\nRefund ID: RF-1 \u2014 it was approved and executed.\n\nSorry about the damage, and thanks for letting us know!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "O-1008",
+        "amount": 80.0,
+        "reason": "one item was cracked on arrival",
+        "trace_index": 2,
+        "actor": "authority"
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

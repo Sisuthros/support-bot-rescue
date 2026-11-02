@@ -2,3 +2,6 @@
 
 # Rescue runs are sealed evidence: keep their bytes exactly as written so holdout.sha256 and manifest hashes verify in a clean clone.
 runs_rescue/** -text
+
+# Final blind holdout k13-k18 and its scored runs: sealed evidence, keep the bytes exactly.
+evidence/final-k13/** -text

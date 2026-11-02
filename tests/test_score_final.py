@@ -115,6 +115,19 @@ def test_dry_run_prints_plan_and_constructs_no_client(capsys, monkeypatch):
     assert "--firewall" in text
 
 
+
+def test_ids_flag_scores_new_ids_in_dry_run(tmp_path, capsys):
+    cases = _baseline()
+    for case, new_id in zip(cases, [f'k{i}' for i in range(13, 19)]):
+        case['id'] = new_id
+    path = _write(tmp_path, cases)
+    rc, text = _run(capsys, ['--cases', str(path), '--sha256', _sha(path), '--ids', 'k13,k14,k15,k16,k17,k18'])
+    assert rc == 0, text
+    assert 'k13' in text and 'k18' in text
+    # The same file is refused under the default k07-k12 ids.
+    rc2, text2 = _run(capsys, ['--cases', str(path), '--sha256', _sha(path)])
+    assert rc2 == 3, text2
+
 def test_score_final_never_opens_holdout_files(capsys, monkeypatch):
     orig_read_bytes = Path.read_bytes
     orig_read_text = Path.read_text
