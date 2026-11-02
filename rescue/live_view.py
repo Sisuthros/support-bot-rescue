@@ -18,7 +18,7 @@ class LiveView:
         self.run_dir = Path(run_dir); self.path = self.run_dir / "live.html"
         self.policy_text = policy_text; self.store = store
         self.stage = "starting"; self.rules: list[dict] = []; self.not_expressible: list[str] = []
-        self.coverage: dict | None = None; self.uncovered: list[dict] = []
+        self.coverage: dict | None = None; self.uncovered: list[dict] = []; self.informational: list = []
         self.seal_sha: str | None = None; self.sealed_at: str | None = None
         self.counts = {s: _empty() for s in STAGES}
         self.lines: list[str] = []; self.last_tool: str = "none yet"; self.last_verdict: str = ""
@@ -34,15 +34,17 @@ class LiveView:
     def add_line(self, line: str, write: bool = True) -> None:
         self.lines.append(line); self.lines = self.lines[-30:]
         if write: self.write()
-    def set_rules(self, rules: list[dict], not_expressible: list[str] | None = None, coverage: dict | None = None, uncovered: list[dict] | None = None) -> None:
+    def set_rules(self, rules: list[dict], not_expressible: list[str] | None = None, coverage: dict | None = None, uncovered: list[dict] | None = None, informational: list | None = None) -> None:
         self.rules = list(rules)
         if not_expressible is not None: self.not_expressible = list(not_expressible)
         if uncovered is not None: self.uncovered = list(uncovered)
+        if informational is not None: self.informational = list(informational)
         if coverage is not None: self.coverage = coverage
         self.write()
-    def set_coverage(self, coverage: dict | None, uncovered: list[dict] | None = None) -> None:
+    def set_coverage(self, coverage: dict | None, uncovered: list[dict] | None = None, informational: list | None = None) -> None:
         self.coverage = coverage
         if uncovered is not None: self.uncovered = list(uncovered)
+        if informational is not None: self.informational = list(informational)
         self.write()
     def set_seal(self, sha: str) -> None:
         self.seal_sha = sha; self.sealed_at = datetime.now(timezone.utc).isoformat(timespec="seconds"); self.write()
@@ -72,7 +74,7 @@ class LiveView:
             return self.coverage
         try:
             from compiler.coverage import compute_coverage
-            spec = {"rules": self.rules, "uncovered": self.uncovered}
+            spec = {"rules": self.rules, "uncovered": self.uncovered, "informational": self.informational}
             return compute_coverage(self.policy_text, spec)
         except Exception:
             return {"headline": "", "sentences": []}
@@ -93,8 +95,10 @@ class LiveView:
                 elif label == "needs_review":
                     reason = html.escape(str(entry.get("reason") or ""))
                     text = text.replace(q, f"<mark class='needs-review'>{q}</mark> <span class='needs-review'>needs human review: {reason}</span>", 1)
+                elif label == "informational":
+                    text = text.replace(q, f"<span class='informational'>{q}</span> <span class='informational'>no obligation (model)</span>", 1)
                 else:
-                    text = text.replace(q, f"<span class='not-addressed'>{q}</span> <span class='not-addressed'>compiler said nothing</span>", 1)
+                    text = text.replace(q, f"<span class='unaccounted'>{q}</span> <span class='unaccounted'>compiler said nothing</span>", 1)
             return text
         for r in self.rules:
             q = html.escape(str(r.get("quote","")))
@@ -123,7 +127,7 @@ class LiveView:
 body{{background:#14161a;color:#e8e6e1;font-family:Georgia,'Times New Roman',serif;margin:2rem auto;max-width:980px;padding:0 1rem;line-height:1.5}}
 h1,h2{{font-weight:normal}} code,pre,table{{font-family:Consolas,monospace;font-size:.9em}}
 table{{border-collapse:collapse;width:100%}} td,th{{border-bottom:1px solid #333;padding:.35rem .5rem;text-align:left}}
-mark{{background:#3a4a2f;color:#e8e6e1;padding:.05rem .15rem}} mark.needs-review,.needs-review{{background:#6b5016;color:#ffdf9e;padding:.05rem .15rem}} .not-addressed{{color:#9a9a9a;background:#26292f;padding:.05rem .15rem}} .violation{{color:#d98c8c}} .miss{{color:#e0b36a}} .ok{{color:#9fc49f}}
+mark{{background:#3a4a2f;color:#e8e6e1;padding:.05rem .15rem}} mark.needs-review,.needs-review{{background:#6b5016;color:#ffdf9e;padding:.05rem .15rem}} .informational{{color:#9a9a9a}} .unaccounted{{color:#e8a0a0;outline:2px solid #c0392b;outline-offset:1px;padding:.05rem .15rem}} .violation{{color:#d98c8c}} .miss{{color:#e0b36a}} .ok{{color:#9fc49f}}
 pre{{white-space:pre-wrap;background:#1c1f24;padding:1rem}} tr.current td{{background:#1f242c}}
 </style></head><body>
 <h1>Support Bot Rescue - live</h1>

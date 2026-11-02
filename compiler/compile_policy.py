@@ -68,10 +68,13 @@ def build_request(policy_text: str, retry_error: str | None = None) -> str:
         "set quote to exactly one sentence copied verbatim from the policy (exact characters, including backticks; "
         "do not include the bullet's rule label or heading in the quote); "
         "fill params with exactly the parameters named for the chosen primitive. "
-        "Every obligation sentence in the policy must end up either as a rule quote or in an optional top-level "
-        "uncovered list: add {quote, reason} for each obligation sentence no listed primitive can express, where "
-        "quote is exactly one sentence copied verbatim from the policy and reason is a short explanation of why "
-        "no primitive can express it. Never force a sentence into a primitive whose semantics do not match.\n\n"
+        "Every sentence of the policy must end up in exactly one place: as a rule quote, in an optional top-level "
+        "uncovered list, or in an optional top-level informational list. Add {quote, reason} to uncovered for each "
+        "obligation sentence no listed primitive can express, where quote is exactly one sentence copied verbatim "
+        "from the policy and reason is a short explanation of why no primitive can express it. Add to informational "
+        "(a list of sentences copied verbatim from the policy) each sentence that states no obligation at all, such "
+        "as greetings, explanations or thanks. Never force a sentence into a primitive whose semantics do not match, "
+        "and never list the same sentence in more than one place.\n\n"
         f"{_SEMANTICS}\n\n{_WORLD}\n\n"
         f"--- DSL JSON SCHEMA ---\n{json.dumps(json_schema(), indent=2)}\n\n"
         f"--- POLICY ---\n{policy_text}\n"
@@ -142,7 +145,7 @@ def compile_policy_text(policy_text: str, client: Any = None, model: str = COMPI
         cov = compute_coverage(policy_text, result)
         lines += ["## Coverage", "", cov["headline"], ""]
         for entry in cov["sentences"]:
-            suffix = f" - needs human review: {entry['reason']}" if entry["label"] == "needs_review" else (" - compiler said nothing" if entry["label"] == "not_addressed" else "")
+            suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
             lines += [f"- [{entry['label']}] {entry['sentence']}{suffix}", ""]
         for rule in spec.rules:
             lines += [f"## {rule.id} - {rule.primitive}", "",

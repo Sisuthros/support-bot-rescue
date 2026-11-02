@@ -282,10 +282,10 @@ def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids:
                     except SpecError:
                         spec = None
                     else:
-                        if isinstance(candidate.get("uncovered"), list):
+                        extra = {k: candidate[k] for k in ("uncovered", "informational") if isinstance(candidate.get(k), list)}
+                        if extra:
                             try:
-                                spec = validate_spec({"version": "1.0", "rules": kept,
-                                                      "uncovered": candidate["uncovered"]}, policy_text=policy_text)
+                                spec = validate_spec({"version": "1.0", "rules": kept, **extra}, policy_text=policy_text)
                             except SpecError:
                                 pass
                         not_expressible = [
@@ -306,7 +306,7 @@ def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids:
     cov = compute_coverage(policy_text, result)
     lines += ["## Coverage", "", cov["headline"], ""]
     for entry in cov["sentences"]:
-        suffix = f" - needs human review: {entry['reason']}" if entry["label"] == "needs_review" else (" - compiler said nothing" if entry["label"] == "not_addressed" else "")
+        suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
         lines += [f"- [{entry['label']}] {entry['sentence']}{suffix}", ""]
     for rule in spec.rules:
         lines += [f"## {rule.id} - {rule.primitive}", "", f"Policy sentence: {rule.quote}", "",
@@ -501,7 +501,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     log("compile", f"compiling {policy_path} with {WONDER_MODEL}")
     spec_dict, not_expressible = _compile_policy(counted, policy_text, run_dir / "spec.json", response_ids["compile"])
     coverage = compute_coverage(policy_text, spec_dict)
-    live.set_rules(spec_dict["rules"], not_expressible, coverage=coverage, uncovered=spec_dict.get("uncovered", []))
+    live.set_rules(spec_dict["rules"], not_expressible, coverage=coverage, uncovered=spec_dict.get("uncovered", []), informational=spec_dict.get("informational", []))
     log("coverage", coverage["headline"])
     for item in not_expressible:
         log("not_expressible", item)
@@ -599,7 +599,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
         "response_ids": response_ids,
         "bot_response_ids": "not captured by agent/bot.py (it discards response objects)",
         "counts": counts,
-        "spec": {"rules": spec_dict["rules"], "uncovered": spec_dict.get("uncovered", []), "provenance": spec_dict.get("provenance", {})},
+        "spec": {"rules": spec_dict["rules"], "uncovered": spec_dict.get("uncovered", []), "informational": spec_dict.get("informational", []), "provenance": spec_dict.get("provenance", {})},
         "holdout_sha256": holdout_sha, "holdout_sealed_before_fix": bool(sealed_before_fix),
         "files_sha256": files_sha, "disclaimer": DISCLAIMER,
     }
@@ -622,7 +622,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
         lines += ["", "**Not expressible yet**", ""] + [f"- {item}" for item in not_expressible]
     lines += ["", "**Coverage**", "", coverage["headline"], ""]
     for entry in coverage["sentences"]:
-        suffix = f" - needs human review: {entry['reason']}" if entry["label"] == "needs_review" else (" - compiler said nothing" if entry["label"] == "not_addressed" else "")
+        suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
         lines.append(f"- [{entry['label']}] {entry['sentence']}{suffix}")
     lines += ["", "**Compiled Rules**", "", "| id | primitive | quoted policy sentence |", "|---|---|---|"]
     for r in spec_dict["rules"]:
