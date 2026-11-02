@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from agent.client import MetaAPIError, MetaClient  # noqa: E402
+from compiler.coverage import compute_coverage  # noqa: E402
 from compiler.dsl import SpecError, json_schema, spec_to_dict, validate_spec  # noqa: E402
 
 COMPILER_MODEL = "muse-wonder-1.0"
@@ -66,7 +67,11 @@ def build_request(policy_text: str, retry_error: str | None = None) -> str:
         "assign ids C1, C2, C3, ... in that order (do not reuse the policy's own rule labels as ids); "
         "set quote to exactly one sentence copied verbatim from the policy (exact characters, including backticks; "
         "do not include the bullet's rule label or heading in the quote); "
-        "fill params with exactly the parameters named for the chosen primitive.\n\n"
+        "fill params with exactly the parameters named for the chosen primitive. "
+        "Every obligation sentence in the policy must end up either as a rule quote or in an optional top-level "
+        "uncovered list: add {quote, reason} for each obligation sentence no listed primitive can express, where "
+        "quote is exactly one sentence copied verbatim from the policy and reason is a short explanation of why "
+        "no primitive can express it. Never force a sentence into a primitive whose semantics do not match.\n\n"
         f"{_SEMANTICS}\n\n{_WORLD}\n\n"
         f"--- DSL JSON SCHEMA ---\n{json.dumps(json_schema(), indent=2)}\n\n"
         f"--- POLICY ---\n{policy_text}\n"
@@ -134,6 +139,11 @@ def compile_policy_text(policy_text: str, client: Any = None, model: str = COMPI
         lines = ["# Compiled policy spec", "",
                  f"- Model: {last_model}", f"- Policy sha256: {policy_sha256}",
                  f"- Response id: {last_response_id}", ""]
+        cov = compute_coverage(policy_text, result)
+        lines += ["## Coverage", "", cov["headline"], ""]
+        for entry in cov["sentences"]:
+            suffix = f" - needs human review: {entry['reason']}" if entry["label"] == "needs_review" else (" - compiler said nothing" if entry["label"] == "not_addressed" else "")
+            lines += [f"- [{entry['label']}] {entry['sentence']}{suffix}", ""]
         for rule in spec.rules:
             lines += [f"## {rule.id} - {rule.primitive}", "",
                       f"Policy sentence: {rule.quote}", "",

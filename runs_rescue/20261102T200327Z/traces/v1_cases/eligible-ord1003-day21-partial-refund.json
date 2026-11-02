@@ -1,0 +1,59 @@
+{
+  "case_id": "eligible-ord1003-day21-partial-refund",
+  "turns": [
+    "Hello, I'm Ben Carter (ben.carter@example.com). Order ORD1003 was delivered on 2026-05-25 and the teak outdoor bench arrived damaged. Please refund $120 toward this order."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "ben.carter@example.com",
+        "order_id": "ORD1003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD1003",
+          "customer_id": "CUST002",
+          "email": "ben.carter@example.com",
+          "items": [
+            "Teak Outdoor Bench"
+          ],
+          "total": 189.99,
+          "status": "delivered",
+          "delivered_on": "2026-05-25",
+          "internal_note": "Two-person lift, pallet delivery confirmed"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 120.0,
+        "order_id": "ORD1003",
+        "reason": "damaged teak outdoor bench"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD1003",
+        "amount": 120.0
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order and sort the refund for the damaged bench.\nThanks for those details \u2014 I've confirmed your order, so I'll process that $120 refund now.\nDone! I've refunded $120 for order ORD1003 for the damaged bench.\n\nRefund ID is RF-1 \u2014 it should be back on your original payment method in a few days. Sorry again about the damage!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD1003",
+        "amount": 120.0,
+        "reason": "damaged teak outdoor bench",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

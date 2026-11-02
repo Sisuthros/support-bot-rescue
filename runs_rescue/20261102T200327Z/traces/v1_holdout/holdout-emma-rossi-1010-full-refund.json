@@ -1,0 +1,60 @@
+{
+  "case_id": "holdout-emma-rossi-1010-full-refund",
+  "turns": [
+    "Hello, I am Emma Rossi and my contact is emma.rossi@example.com. Regarding ORD1010, the plant stand wobbled badly after it arrived on May 30, so I would like the whole purchase returned for 119.95."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "emma.rossi@example.com",
+        "order_id": "ORD1010"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD1010",
+          "customer_id": "CUST005",
+          "email": "emma.rossi@example.com",
+          "items": [
+            "Outdoor String Lights",
+            "Plant Stand"
+          ],
+          "total": 119.95,
+          "status": "delivered",
+          "delivered_on": "2026-05-30",
+          "internal_note": "Customer gate code on file with courier"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 119.95,
+        "order_id": "ORD1010",
+        "reason": "Plant stand wobbled badly after arrival"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD1010",
+        "amount": 119.95
+      }
+    }
+  ],
+  "reply": "I'll look up your order right away to check the details.\nGot it \u2014 I'll process that full refund for your wobbly plant stand now.\nHi Emma \u2014 done!\n\nI've refunded the full $119.95 for order ORD1010 due to the wobbly plant stand.\n\nRefund ID: RF-1. It should show up back in your account in a few business days.\n\nLet me know if you need anything else!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD1010",
+        "amount": 119.95,
+        "reason": "Plant stand wobbled badly after arrival",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

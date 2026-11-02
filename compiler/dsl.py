@@ -60,7 +60,7 @@ PRIMITIVES: dict[str, dict[str, str]] = {
 }
 
 _ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
-_TOP_KEYS = {"version", "provenance", "rules"}
+_TOP_KEYS = {"version", "provenance", "rules", "uncovered"}
 _PROVENANCE_KEYS = {"model", "policy_sha256", "timestamp", "response_id"}
 _RULE_KEYS = {"id", "primitive", "quote", "params"}
 
@@ -74,10 +74,17 @@ class Rule:
 
 
 @dataclass(frozen=True)
+class Uncovered:
+    quote: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class Spec:
     version: str
     rules: tuple[Rule, ...]
     provenance: dict[str, Any] = field(default_factory=dict)
+    uncovered: tuple[Uncovered, ...] = ()
 
 
 def _check_value(rule_id: str, name: str, value: Any, tag: str) -> None:
@@ -146,7 +153,24 @@ def validate_spec(data: Any, policy_text: str | None = None) -> Spec:
         for name, tag in expected.items():
             _check_value(rid, name, params[name], tag)
         rules.append(Rule(id=rid, primitive=primitive, quote=quote, params=dict(params)))
-    return Spec(version=SPEC_VERSION, rules=tuple(rules), provenance=dict(provenance))
+    uncovered: list[Uncovered] = []
+    raw_uncovered = data.get("uncovered", [])
+    if not isinstance(raw_uncovered, list):
+        raise SpecError("uncovered must be a list of {quote, reason} objects")
+    for raw in raw_uncovered:
+        if not isinstance(raw, dict) or set(raw) - {"quote", "reason"} or set(raw) != {"quote", "reason"}:
+            raise SpecError("each uncovered entry must be an object with only quote and reason")
+        uquote = raw.get("quote")
+        if not isinstance(uquote, str) or not uquote.strip():
+            raise SpecError("uncovered entry: missing quote (every entry needs a verbatim policy quote)")
+        if policy_norm is not None and uquote not in policy_norm:
+            raise SpecError("uncovered entry: quote is not verbatim in the policy text")
+        reason = raw.get("reason")
+        if not isinstance(reason, str) or not reason.strip():
+            raise SpecError("uncovered entry: reason must be a short non-empty string")
+        uncovered.append(Uncovered(quote=uquote, reason=reason))
+    return Spec(version=SPEC_VERSION, rules=tuple(rules), provenance=dict(provenance),
+                uncovered=tuple(uncovered))
 
 
 def spec_to_dict(spec: Spec) -> dict[str, Any]:
@@ -157,6 +181,8 @@ def spec_to_dict(spec: Spec) -> dict[str, Any]:
         {"id": r.id, "primitive": r.primitive, "quote": r.quote, "params": dict(r.params)}
         for r in spec.rules
     ]
+    if spec.uncovered:
+        out["uncovered"] = [{"quote": u.quote, "reason": u.reason} for u in spec.uncovered]
     return out
 
 
@@ -181,6 +207,15 @@ def json_schema() -> dict[str, Any]:
             "provenance": {
                 "type": "object", "additionalProperties": False,
                 "properties": {k: {"type": ["string", "null"]} for k in sorted(_PROVENANCE_KEYS)},
+            },
+            "uncovered": {
+                "type": "array",
+                "items": {
+                    "type": "object", "additionalProperties": False,
+                    "required": ["quote", "reason"],
+                    "properties": {"quote": {"type": "string", "minLength": 1},
+                                     "reason": {"type": "string", "minLength": 1}},
+                },
             },
             "rules": {
                 "type": "array", "minItems": 1,
