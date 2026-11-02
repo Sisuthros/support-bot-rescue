@@ -1,0 +1,60 @@
+{
+  "case_id": "eligible-leo-alpine-partial-refund",
+  "turns": [
+    "Hi, I'm Leo Martin, email leo.martin@example.com. Order NW-1012 was delivered on 2026-10-30, please refund $60.00 for the returned items."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "leo.martin@example.com",
+        "order_id": "NW-1012"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1012",
+          "customer_id": "N-12",
+          "email": "leo.martin@example.com",
+          "items": [
+            "Alpine jacket",
+            "Gloves"
+          ],
+          "total": 150.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-30",
+          "internal_note": "WAREHOUSE: high value parcel, double check, ref W-1012"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 60.0,
+        "order_id": "NW-1012",
+        "reason": "refund for returned items"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1012",
+        "amount": 60.0
+      }
+    }
+  ],
+  "reply": "I'll look up your order to verify the refund.\nVerified \u2014 I'll process that $60 refund.\nDone! I've refunded $60.00 for order NW-1012.\n\nRefund ID: RF-1. It should show up in a few business days.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1012",
+        "amount": 60.0,
+        "reason": "refund for returned items",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

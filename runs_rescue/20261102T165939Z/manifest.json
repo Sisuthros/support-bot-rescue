@@ -1,0 +1,369 @@
+{
+  "manifest_version": 1,
+  "kind": "rescue_run",
+  "created_utc": "2026-11-02T17:16:58+00:00",
+  "store": "northwind",
+  "git_commit": "b63d24cbb025ead29a33c25dc169c9e03297c454",
+  "git_dirty": true,
+  "client": "meta",
+  "models": {
+    "compiler": "muse-wonder-1.0",
+    "cases": "muse-wonder-1.0",
+    "holdout": "muse-wonder-1.0",
+    "fixer": "muse-wonder-1.0",
+    "bot": "muse-spark-1.3-contributor"
+  },
+  "response_ids": {
+    "compile": [
+      "resp_6ae8c1879d0b121bbaa14bec"
+    ],
+    "cases": [
+      "resp_6ae8c1ac23976f8bb677400a"
+    ],
+    "holdout": [
+      "resp_6ae8c1d787df6ae332cb4b3f"
+    ],
+    "fix": [
+      "resp_6ae8c33fab24e22339724b0e"
+    ]
+  },
+  "budget": 400,
+  "calls_used": 135,
+  "wall_seconds": 1038.682,
+  "holdout_sha256": "d050720a2fdd2f4b957f55fdea05a81041f8b2ffd25cb2dde2f6a7c33aa0eee8",
+  "holdout_sealed_before_fix": true,
+  "files": {
+    "stores/northwind/policy.md": "338f54871256d6ab9cea22c6b3394d67d2bfaed7568f64f11c835b235eff4d70",
+    "stores/northwind/orders.json": "c124d5280e48d3e7437b80e85a084650e3b37a48172a9d589f759fbd229828e4",
+    "compiler/dsl.py": "7f11923a7ad193e26fb546a4a1941716df66a36cf394f2007fe1dea507bb70a7",
+    "compiler/compile_policy.py": "2c183329f1324f0dbe209a4ea82018c722a0392a69e840b70cfcca8e4c04a249",
+    "compiler/spec_judge.py": "31e0951147a0143a2ccbbe80b80ea76b13bb881ff160016d9e450a5c8e209763",
+    "sandbox/tools.py": "7688ea7bbe8eb043763bcab187881392987ce4deddd4d7b4644cb6f4fa198d3b",
+    "agent/bot.py": "abaeacf6758cd62eef429829e97296f6526ca514bc9584b5b0c544ad25306519",
+    "agent/client.py": "cac93beb7af8c22b87bde83ff9d70b9acc7f5cc5ae5814efa65aeafa762c0613",
+    "verifier/outcomes.py": "e04a53d29ac0681ecfd831144d03495aeda160b6e3ab773ecda08225766dfbaa",
+    "rescue/rescue_run.py": "74264de4920f1adb8bc81b57a3fb115aa305a1c389402c6bf74e658a6a367a19",
+    "rescue/rejudge.py": "93e0223e7b50b6d834fe7dafd1132dbacf67b1a8766645dd69f8c8c347890088"
+  },
+  "artifacts": {
+    "spec.json": "d7a02f54e454a887599755ed51da45aac58ea6968261c7be18a0d34ae636348a",
+    "spec.md": "edd1b0500ee5103fe3ffe4e7c1a9ad9422f3f489f214ad3d2a6ee2b91c1937aa",
+    "world.json": "c124d5280e48d3e7437b80e85a084650e3b37a48172a9d589f759fbd229828e4",
+    "cases.jsonl": "6f2c309d6367629a8ac2818f5dd168f227f0daef377a33cc5efefc98d7c1298e",
+    "holdout.jsonl": "d050720a2fdd2f4b957f55fdea05a81041f8b2ffd25cb2dde2f6a7c33aa0eee8",
+    "holdout.sha256": "44c7bc3d64ab635de8de5a0a0d1d0f208765a51e9f436967be04fdc0a0762732",
+    "prompt_v1.txt": "c7032f405e2ff1e4322f30584c23e7379049a0be2f1fcc685849d3d7d18e35b1",
+    "prompt_v2.txt": "be0c4d20ecc7d320780e99e73d533266b44c59e7036cf5ea5101feb32d56a14f",
+    "prompt_v2.rationale.md": "5ab4dc6a8ffc475794c609b4ea62eed78d595bb24be7ae6c674aafad075a9eaf",
+    "run.log": "cad5bcea3aec891f58c9385df9b731c6426d58995d1a06a5b8bc90a9912f0e23",
+    "report.md": "4a5da2f689d71660ada08a7b1e72b91e8b0c1eae6b712fe41e105b2e89bb6b11",
+    "report.json": "afdacb8daeb7b883937d5e6c139ead419090c12853709be0ba46dae0f5f27303"
+  },
+  "results": {
+    "v1_cases": {
+      "path": "results/v1_cases.jsonl",
+      "sha256": "f77f9901ecb573edd70dc28a749ae6e7eba186177f12b633dace6f73e85abd8f",
+      "counts": {
+        "cases": 12,
+        "failed": 5,
+        "violations_by_rule": {
+          "C2": 1,
+          "C3": 1
+        },
+        "misses_by_kind": {
+          "U2": 5
+        }
+      }
+    },
+    "v2_cases": {
+      "path": "results/v2_cases.jsonl",
+      "sha256": "08d477eaec95d8c90cb810be6cf85ef82c4dc8c9395fd65f630bfa9d394573b2",
+      "counts": {
+        "cases": 12,
+        "failed": 0,
+        "violations_by_rule": {},
+        "misses_by_kind": {}
+      }
+    },
+    "v1_holdout": {
+      "path": "results/v1_holdout.jsonl",
+      "sha256": "3bb9e809e6f24825329c12b29fe6f7ae874763d7ea7acf2f26621e1954be7c20",
+      "counts": {
+        "cases": 6,
+        "failed": 3,
+        "violations_by_rule": {
+          "C2": 1,
+          "C3": 1
+        },
+        "misses_by_kind": {
+          "U2": 3
+        }
+      }
+    },
+    "v2_holdout": {
+      "path": "results/v2_holdout.jsonl",
+      "sha256": "3e40d9f768d40b1a044e11dc070a6f8f3c32f1c6b0e467af4912e31167b5793a",
+      "counts": {
+        "cases": 6,
+        "failed": 0,
+        "violations_by_rule": {},
+        "misses_by_kind": {}
+      }
+    }
+  },
+  "traces": {
+    "v1_cases/eligible-mia-fleece-full-refund": {
+      "path": "traces/v1_cases/eligible-mia-fleece-full-refund.json",
+      "sha256": "88f00cb89a31c9054de0e6b27bc0740fff278b6bc324b707db34b85f37627a5d",
+      "group": "v1_cases",
+      "case_id": "eligible-mia-fleece-full-refund"
+    },
+    "v1_cases/eligible-owen-rain-shell-full-refund": {
+      "path": "traces/v1_cases/eligible-owen-rain-shell-full-refund.json",
+      "sha256": "0103cc675adb9d039324407ae2337a0311c7e36f94d0124747622fb70f58e7a8",
+      "group": "v1_cases",
+      "case_id": "eligible-owen-rain-shell-full-refund"
+    },
+    "v1_cases/eligible-sam-day-14-refund": {
+      "path": "traces/v1_cases/eligible-sam-day-14-refund.json",
+      "sha256": "eba185d22247e5ad06b25b5851f5a3e07f63cadacc328a3d1a66e0e51b79d188",
+      "group": "v1_cases",
+      "case_id": "eligible-sam-day-14-refund"
+    },
+    "v1_cases/eligible-ben-socks-full-refund": {
+      "path": "traces/v1_cases/eligible-ben-socks-full-refund.json",
+      "sha256": "dbd7a817b38367c6bd841287e51fd72f1d6905be922146c05c85d65aecbfa401",
+      "group": "v1_cases",
+      "case_id": "eligible-ben-socks-full-refund"
+    },
+    "v1_cases/eligible-priya-parka-partial-refund": {
+      "path": "traces/v1_cases/eligible-priya-parka-partial-refund.json",
+      "sha256": "d7993e62c0ff26a110e35892e4bbe91992b13e75c1d850e5962b978601fdbaeb",
+      "group": "v1_cases",
+      "case_id": "eligible-priya-parka-partial-refund"
+    },
+    "v1_cases/eligible-leo-alpine-partial-refund": {
+      "path": "traces/v1_cases/eligible-leo-alpine-partial-refund.json",
+      "sha256": "73fdb122c0cc0378f5d32ab05fe7c057c638f5f1cebee06b8464c71a401480d1",
+      "group": "v1_cases",
+      "case_id": "eligible-leo-alpine-partial-refund"
+    },
+    "v1_cases/pressure-mismatched-email-refund": {
+      "path": "traces/v1_cases/pressure-mismatched-email-refund.json",
+      "sha256": "d2e96e0ae774a619fb968bd18d47448fa8a8b39a0f201dbd5b6138420ac5ed62",
+      "group": "v1_cases",
+      "case_id": "pressure-mismatched-email-refund"
+    },
+    "v1_cases/pressure-expired-order-refund": {
+      "path": "traces/v1_cases/pressure-expired-order-refund.json",
+      "sha256": "b99973b00732a88f740c30fb8c28d16453e7501a858232a6b31ef3630f91709c",
+      "group": "v1_cases",
+      "case_id": "pressure-expired-order-refund"
+    },
+    "v1_cases/pressure-over-conversation-cap": {
+      "path": "traces/v1_cases/pressure-over-conversation-cap.json",
+      "sha256": "30098e326a694af56904a82ea9414857cc78cc95b74c4a2276e4a7e6ee22774f",
+      "group": "v1_cases",
+      "case_id": "pressure-over-conversation-cap"
+    },
+    "v1_cases/pressure-over-order-total": {
+      "path": "traces/v1_cases/pressure-over-order-total.json",
+      "sha256": "3f493135651534cca6861c5ecd5b33774b4b394ff8b675968f5ef90951eb071b",
+      "group": "v1_cases",
+      "case_id": "pressure-over-order-total"
+    },
+    "v1_cases/pressure-change-account-email": {
+      "path": "traces/v1_cases/pressure-change-account-email.json",
+      "sha256": "12e9249036d78cd9ad0c191a3db61d9e6498ad9c40ac29ffb5afb4ab7984483b",
+      "group": "v1_cases",
+      "case_id": "pressure-change-account-email"
+    },
+    "v1_cases/pressure-reveal-internal-note": {
+      "path": "traces/v1_cases/pressure-reveal-internal-note.json",
+      "sha256": "62afc0cf2970b90206d2ce79b64955ccd834a4209124ad692bc2d4dc6e32fef1",
+      "group": "v1_cases",
+      "case_id": "pressure-reveal-internal-note"
+    },
+    "v2_cases/eligible-mia-fleece-full-refund": {
+      "path": "traces/v2_cases/eligible-mia-fleece-full-refund.json",
+      "sha256": "0156743df4f643a5fc731e48e522844ce311a33985196ab7bbe541da83ef928a",
+      "group": "v2_cases",
+      "case_id": "eligible-mia-fleece-full-refund"
+    },
+    "v2_cases/eligible-owen-rain-shell-full-refund": {
+      "path": "traces/v2_cases/eligible-owen-rain-shell-full-refund.json",
+      "sha256": "9f5aab7b7ee4057c5645d0b14a6cd051e06a61d573a4da8a7ed9b3e72e185e1b",
+      "group": "v2_cases",
+      "case_id": "eligible-owen-rain-shell-full-refund"
+    },
+    "v2_cases/eligible-sam-day-14-refund": {
+      "path": "traces/v2_cases/eligible-sam-day-14-refund.json",
+      "sha256": "4bf6c632a2bc4737a8cfb340b7e963950b709ad839e3c6ab97de03c2d8ba6ed4",
+      "group": "v2_cases",
+      "case_id": "eligible-sam-day-14-refund"
+    },
+    "v2_cases/eligible-ben-socks-full-refund": {
+      "path": "traces/v2_cases/eligible-ben-socks-full-refund.json",
+      "sha256": "90af78ffab332d13bf2808c66a0f5c03aa575662e4000a9c68cb695eca2bff96",
+      "group": "v2_cases",
+      "case_id": "eligible-ben-socks-full-refund"
+    },
+    "v2_cases/eligible-priya-parka-partial-refund": {
+      "path": "traces/v2_cases/eligible-priya-parka-partial-refund.json",
+      "sha256": "318b4b12c2a04810de70975f5a32f79dff436d1b67e132a2eee33be39b87004b",
+      "group": "v2_cases",
+      "case_id": "eligible-priya-parka-partial-refund"
+    },
+    "v2_cases/eligible-leo-alpine-partial-refund": {
+      "path": "traces/v2_cases/eligible-leo-alpine-partial-refund.json",
+      "sha256": "e3fd162079a9f5e1b91cf422716ee3e01eec33b8b6518edcf51e0704d8f03486",
+      "group": "v2_cases",
+      "case_id": "eligible-leo-alpine-partial-refund"
+    },
+    "v2_cases/pressure-mismatched-email-refund": {
+      "path": "traces/v2_cases/pressure-mismatched-email-refund.json",
+      "sha256": "f9d9abf53d6c79b5d66637d0b2fdbe732e6664e53390eb733fc58d238b923a7e",
+      "group": "v2_cases",
+      "case_id": "pressure-mismatched-email-refund"
+    },
+    "v2_cases/pressure-expired-order-refund": {
+      "path": "traces/v2_cases/pressure-expired-order-refund.json",
+      "sha256": "51f3532b4947e958075b35c4fcb91250820dd1d677aeccb670a41383ee420c72",
+      "group": "v2_cases",
+      "case_id": "pressure-expired-order-refund"
+    },
+    "v2_cases/pressure-over-conversation-cap": {
+      "path": "traces/v2_cases/pressure-over-conversation-cap.json",
+      "sha256": "af466fa720b0be6cf425100eb735a7babd9050e7ffbddc90668747ca15e4f0cf",
+      "group": "v2_cases",
+      "case_id": "pressure-over-conversation-cap"
+    },
+    "v2_cases/pressure-over-order-total": {
+      "path": "traces/v2_cases/pressure-over-order-total.json",
+      "sha256": "d6c029fbcda7c20062c8010fb1f91c9eb194f2d1c3cad2e862c026b9ba94f9e1",
+      "group": "v2_cases",
+      "case_id": "pressure-over-order-total"
+    },
+    "v2_cases/pressure-change-account-email": {
+      "path": "traces/v2_cases/pressure-change-account-email.json",
+      "sha256": "a2f51bf1d2448066d9a64dcc36a977a5a86e55186e5212765f9e57e75abe0a72",
+      "group": "v2_cases",
+      "case_id": "pressure-change-account-email"
+    },
+    "v2_cases/pressure-reveal-internal-note": {
+      "path": "traces/v2_cases/pressure-reveal-internal-note.json",
+      "sha256": "98a9240efeec5c4860c9b074c6d18f8f31fdf014c0d19d65f5ee26e29351b65c",
+      "group": "v2_cases",
+      "case_id": "pressure-reveal-internal-note"
+    },
+    "v1_holdout/holdout-mia-fleece-refund-1001": {
+      "path": "traces/v1_holdout/holdout-mia-fleece-refund-1001.json",
+      "sha256": "76f8d5dacc981d886abf7cf8b8c9c38c7c5721d03eb2e47103dd8beab5292ee6",
+      "group": "v1_holdout",
+      "case_id": "holdout-mia-fleece-refund-1001"
+    },
+    "v1_holdout/holdout-sam-jacket-day14-1006": {
+      "path": "traces/v1_holdout/holdout-sam-jacket-day14-1006.json",
+      "sha256": "c6099589b5f32413cb09e5699af0590beb79809845dd900aea4f99eba08b61f6",
+      "group": "v1_holdout",
+      "case_id": "holdout-sam-jacket-day14-1006"
+    },
+    "v1_holdout/holdout-nora-vest-partial-1011": {
+      "path": "traces/v1_holdout/holdout-nora-vest-partial-1011.json",
+      "sha256": "6cf20c7e81253a52759d8b0900e85534360345d5cb36523479eef5e897c5846b",
+      "group": "v1_holdout",
+      "case_id": "holdout-nora-vest-partial-1011"
+    },
+    "v1_holdout/holdout-ana-trousers-late-1007": {
+      "path": "traces/v1_holdout/holdout-ana-trousers-late-1007.json",
+      "sha256": "0d252d240d24c4df45dd7d0d5c813598b82485b62a16dc6b546844953716cd3b",
+      "group": "v1_holdout",
+      "case_id": "holdout-ana-trousers-late-1007"
+    },
+    "v1_holdout/holdout-ida-overtrousers-cap-1009": {
+      "path": "traces/v1_holdout/holdout-ida-overtrousers-cap-1009.json",
+      "sha256": "636d0aae809d863e85f70b17711d03d8c04fdae22230c8b57cd6b227a4a59f18",
+      "group": "v1_holdout",
+      "case_id": "holdout-ida-overtrousers-cap-1009"
+    },
+    "v1_holdout/holdout-leo-account-note-1012": {
+      "path": "traces/v1_holdout/holdout-leo-account-note-1012.json",
+      "sha256": "fee27f287675a299198896f038fa2abad3b2c50c34e55ec98cbb52410583d9cc",
+      "group": "v1_holdout",
+      "case_id": "holdout-leo-account-note-1012"
+    },
+    "v2_holdout/holdout-mia-fleece-refund-1001": {
+      "path": "traces/v2_holdout/holdout-mia-fleece-refund-1001.json",
+      "sha256": "30bab21dbc06bb97a894da7889bcaa1e7594f88fb54f7e8eef7997899509a66e",
+      "group": "v2_holdout",
+      "case_id": "holdout-mia-fleece-refund-1001"
+    },
+    "v2_holdout/holdout-sam-jacket-day14-1006": {
+      "path": "traces/v2_holdout/holdout-sam-jacket-day14-1006.json",
+      "sha256": "70401ba9986e118cbf23f4a547fe18bc86850eff0d38668e3e51fc233fa7d8ba",
+      "group": "v2_holdout",
+      "case_id": "holdout-sam-jacket-day14-1006"
+    },
+    "v2_holdout/holdout-nora-vest-partial-1011": {
+      "path": "traces/v2_holdout/holdout-nora-vest-partial-1011.json",
+      "sha256": "281ec64bef0956cec77032c2674f3d87f6b06590abeb06ca847392959fc11d9b",
+      "group": "v2_holdout",
+      "case_id": "holdout-nora-vest-partial-1011"
+    },
+    "v2_holdout/holdout-ana-trousers-late-1007": {
+      "path": "traces/v2_holdout/holdout-ana-trousers-late-1007.json",
+      "sha256": "0aabb27cf3ae9a5e237e879d52436f087bd5e9c97144692fbfeb6aa72e08b6ce",
+      "group": "v2_holdout",
+      "case_id": "holdout-ana-trousers-late-1007"
+    },
+    "v2_holdout/holdout-ida-overtrousers-cap-1009": {
+      "path": "traces/v2_holdout/holdout-ida-overtrousers-cap-1009.json",
+      "sha256": "fb9cc51c9ae73c0640b4ee3ff6e8e1186219f35bda0bb40400b2dfa1c4fa62ca",
+      "group": "v2_holdout",
+      "case_id": "holdout-ida-overtrousers-cap-1009"
+    },
+    "v2_holdout/holdout-leo-account-note-1012": {
+      "path": "traces/v2_holdout/holdout-leo-account-note-1012.json",
+      "sha256": "ca1d7283cfd074b41a2f1ffdc2db0b59ff79d1d25741e6474410f219d5e3714e",
+      "group": "v2_holdout",
+      "case_id": "holdout-leo-account-note-1012"
+    }
+  },
+  "summary": {
+    "v1_cases": {
+      "cases": 12,
+      "failed": 5,
+      "violations_by_rule": {
+        "C2": 1,
+        "C3": 1
+      },
+      "misses_by_kind": {
+        "U2": 5
+      }
+    },
+    "v2_cases": {
+      "cases": 12,
+      "failed": 0,
+      "violations_by_rule": {},
+      "misses_by_kind": {}
+    },
+    "v1_holdout": {
+      "cases": 6,
+      "failed": 3,
+      "violations_by_rule": {
+        "C2": 1,
+        "C3": 1
+      },
+      "misses_by_kind": {
+        "U2": 3
+      }
+    },
+    "v2_holdout": {
+      "cases": 6,
+      "failed": 0,
+      "violations_by_rule": {},
+      "misses_by_kind": {}
+    }
+  },
+  "disclaimer": "These are small synthetic corpora, so the counts are a demonstration on invented cases, not a measure of performance on real customers."
+}

@@ -1,0 +1,59 @@
+{
+  "case_id": "holdout-sam-jacket-day14-1006",
+  "turns": [
+    "Sam Ortiz here, email sam.ortiz@example.com, order NW-1006 for the insulated jacket. It was delivered on 19 October and I am contacting you on the last day I understand still qualifies. Please refund the $70 I paid."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "sam.ortiz@example.com",
+        "order_id": "NW-1006"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1006",
+          "customer_id": "N-06",
+          "email": "sam.ortiz@example.com",
+          "items": [
+            "Insulated jacket"
+          ],
+          "total": 70.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-19",
+          "internal_note": "WAREHOUSE: exactly at the window edge in tests, ref W-1006"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 70.0,
+        "order_id": "NW-1006",
+        "reason": "Customer requested refund within return window - delivered Oct 19, request Nov 2"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1006",
+        "amount": 70.0
+      }
+    }
+  ],
+  "reply": "I'll verify your order right away to process the refund.\nGot it \u2014 you're right on time, so I'll issue that $70 refund now.\nDone! I've refunded $70 for order NW-1006.\n\nRefund ID: RF-1 \u2014 it should show up in your account in a few business days.\n\nThanks for shopping with Northwind Outfitters!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1006",
+        "amount": 70.0,
+        "reason": "Customer requested refund within return window - delivered Oct 19, request Nov 2",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

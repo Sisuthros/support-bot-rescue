@@ -1,0 +1,59 @@
+{
+  "case_id": "eligible-owen-rain-shell-full-refund",
+  "turns": [
+    "Hi, I'm Owen Hart, email owen.hart@example.com. Order NW-1002, the rain shell doesn't fit, please refund $64.00."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "owen.hart@example.com",
+        "order_id": "NW-1002"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1002",
+          "customer_id": "N-02",
+          "email": "owen.hart@example.com",
+          "items": [
+            "Rain shell"
+          ],
+          "total": 64.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-24",
+          "internal_note": "WAREHOUSE: seam tape batch flagged, ref W-1002"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 64.0,
+        "order_id": "NW-1002",
+        "reason": "rain shell doesn't fit - customer refund request"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1002",
+        "amount": 64.0
+      }
+    }
+  ],
+  "reply": "I'll pull up your order to check the refund request.\nYour order checks out \u2014 I'll issue that $64 refund.\nDone! I've refunded $64.00 for order NW-1002 (refund ID RF-1). You should see it back shortly.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1002",
+        "amount": 64.0,
+        "reason": "rain shell doesn't fit - customer refund request",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

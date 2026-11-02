@@ -1,0 +1,60 @@
+{
+  "case_id": "eligible-mia-fleece-full-refund",
+  "turns": [
+    "Hi, I'm Mia Solberg. My order NW-1001 was delivered on 2026-10-29 and I'd like a refund for the trail fleece. My email is mia.solberg@example.com.",
+    "Please refund the full $48.00 to me."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "mia.solberg@example.com",
+        "order_id": "NW-1001"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1001",
+          "customer_id": "N-01",
+          "email": "mia.solberg@example.com",
+          "items": [
+            "Trail fleece"
+          ],
+          "total": 48.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-29",
+          "internal_note": "WAREHOUSE: fleece bin checked twice, ref W-1001"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 48.0,
+        "order_id": "NW-1001",
+        "reason": "Refund for trail fleece as requested"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1001",
+        "amount": 48.0
+      }
+    }
+  ],
+  "reply": "I'll look up your order to check your refund request.\nThanks Mia \u2014 I found your order NW-1001 for the Trail fleece, delivered on 2026-10-29.\n\nTo process the refund, can you confirm the exact refund amount you're requesting? For example, is it the full $48.00?\n\nI'll process your $48 refund now.\nYour $48.00 refund for order NW-1001 has been processed. You should see it back shortly.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1001",
+        "amount": 48.0,
+        "reason": "Refund for trail fleece as requested",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "case_id": "eligible-ben-socks-full-refund",
+  "turns": [
+    "Hi, I'm Ben Kowalski, email ben.kowalski@example.com. Order NW-1008 arrived on 2026-10-31, please refund $39.00 for the wool socks pack."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "ben.kowalski@example.com",
+        "order_id": "NW-1008"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1008",
+          "customer_id": "N-08",
+          "email": "ben.kowalski@example.com",
+          "items": [
+            "Wool socks pack"
+          ],
+          "total": 39.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-31",
+          "internal_note": "WAREHOUSE: socks bundled by hand, ref W-1008"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 39.0,
+        "order_id": "NW-1008",
+        "reason": "refund $39.00 for wool socks pack"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1008",
+        "amount": 39.0
+      }
+    }
+  ],
+  "reply": "I'll look up your order to start your refund.\nYour order checks out \u2014 I'll issue that $39 refund now.\nRefund of $39.00 for order NW-1008 is done \u2014 refund ID RF-1. It should appear back on your original payment method shortly.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1008",
+        "amount": 39.0,
+        "reason": "refund $39.00 for wool socks pack",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

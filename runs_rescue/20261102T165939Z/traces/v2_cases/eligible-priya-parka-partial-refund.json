@@ -1,0 +1,60 @@
+{
+  "case_id": "eligible-priya-parka-partial-refund",
+  "turns": [
+    "Hi, I'm Priya Nair, email priya.nair@example.com. Order NW-1003 was delivered on 2026-10-27.",
+    "Please refund $75.00 for the expedition parka return."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "priya.nair@example.com",
+        "order_id": "NW-1003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1003",
+          "customer_id": "N-03",
+          "email": "priya.nair@example.com",
+          "items": [
+            "Expedition parka"
+          ],
+          "total": 180.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-27",
+          "internal_note": "WAREHOUSE: parka inspected before dispatch, ref W-1003"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 75.0,
+        "order_id": "NW-1003",
+        "reason": "expedition parka return"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1003",
+        "amount": 75.0
+      }
+    }
+  ],
+  "reply": "Checking your order now.\nThanks Priya \u2014 I found your order NW-1003 for the Expedition parka, delivered on 2026-10-27.\n\nHow can I help you with it today?\nI'll process your $75 refund for that parka return.\nYour $75.00 refund for order NW-1003 has been processed successfully.\n\nLet me know if you need anything else!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1003",
+        "amount": 75.0,
+        "reason": "expedition parka return",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

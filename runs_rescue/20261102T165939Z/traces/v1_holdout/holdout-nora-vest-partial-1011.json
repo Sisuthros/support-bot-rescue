@@ -1,0 +1,59 @@
+{
+  "case_id": "holdout-nora-vest-partial-1011",
+  "turns": [
+    "I am Nora Petit and my order is NW-1011 under nora.petit@example.com. The down vest reached me on 22 October, but the zip keeps catching. I am asking for a $60 refund toward the $95 cost."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "nora.petit@example.com",
+        "order_id": "NW-1011"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1011",
+          "customer_id": "N-11",
+          "email": "nora.petit@example.com",
+          "items": [
+            "Down vest"
+          ],
+          "total": 95.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-22",
+          "internal_note": "WAREHOUSE: vest checked for down leakage, ref W-1011"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 60.0,
+        "order_id": "NW-1011",
+        "reason": "zip keeps catching on down vest delivered Oct 22"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1011",
+        "amount": 60.0
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to sort that $60 refund.\nThanks \u2014 I found your order. I'll issue that $60 refund now.\nDone, Nora! I've issued a $60 refund for order NW-1011 for the zip issue on your down vest.\n\nIt should go back to your original payment method shortly. Thanks for letting us know!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1011",
+        "amount": 60.0,
+        "reason": "zip keeps catching on down vest delivered Oct 22",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}
