@@ -70,7 +70,7 @@ class Sandbox:
         o = self.orders.get(order_id)
         if o is None or str(email).strip().lower() != o["email"].lower():
             return {"ok": False, "error": "no order matches that order id and email"}
-        return {"ok": True, "order": {k: o[k] for k in _ORDER_FIELDS}}
+        return {"ok": True, "order": {k: v for k, v in o.items()}}
 
     def _issue_refund(self, order_id: str, amount: float, reason: str) -> dict:
         if order_id not in self.orders:

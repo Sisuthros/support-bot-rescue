@@ -81,7 +81,7 @@ def test_gate_accepts_correct_checker():
     result = gate_proposal(proposal(), POLICY)
     assert result["status"] == "proposed"
     assert [step["step"] for step in result["gate"]] == [
-        "json_shape", "ast_whitelist", "sandbox_execution", "self_test", "replay"]
+        "json_shape", "world_fields", "ast_whitelist", "sandbox_execution", "self_test", "conflict", "replay"]
     assert all(step["ok"] for step in result["gate"])
 
 

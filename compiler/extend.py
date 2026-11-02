@@ -20,7 +20,7 @@ import hashlib
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +33,7 @@ from compiler.compile_policy import COMPILER_MODEL, _response_text  # noqa: E402
 from compiler.dsl import PRIMITIVES, SpecError, checker_sha256, validate_spec  # noqa: E402
 from compiler.dsl import _check_value  # noqa: E402
 from compiler.sandbox_runner import SandboxError, run_checker, run_checker_batch  # noqa: E402
+from compiler.spec_judge import judge_trace  # noqa: E402
 
 __all__ = [
     "ProposalError", "build_proposal_request", "validate_checker_ast",
@@ -57,6 +58,111 @@ _BANNED_NAMES = {
 _ALLOWED_BUILTINS = ("len, sum, min, max, abs, any, all, sorted, str, int, "
                      "float, bool, isinstance, dict, list, set, tuple, range, "
                      "enumerate, zip, round")
+WORLD_FIELD_TYPES = ("string", "number", "boolean", "date")
+BASE_WORLD_FIELDS: dict[str, set[str]] = {
+    "customers": {"customer_id", "name", "email", "payout_email", "shipping_address"},
+    "orders": {"order_id", "customer_id", "items", "total", "status", "delivered_on",
+               "internal_note", "email"},
+}
+# The bot's tools, exactly as sandbox.tools.TOOL_SCHEMAS / rescue prompts name them.
+BOT_TOOLS = ("lookup_order(order_id, email), issue_refund(order_id, amount, reason), "
+             "escalate_to_human(reason), update_account(customer_id, field, value)")
+
+
+def _world_field_value_ok(value: Any, type_tag: Any) -> bool:
+    if type_tag == "string":
+        return isinstance(value, str)
+    if type_tag == "number":
+        return not isinstance(value, bool) and isinstance(value, (int, float))
+    if type_tag == "boolean":
+        return isinstance(value, bool)
+    if type_tag == "date":
+        if not isinstance(value, str):
+            return False
+        try:
+            date.fromisoformat(value)
+        except ValueError:
+            return False
+        return True
+    return False
+
+
+def _entities_of(state: Any, collection: str) -> list[Any]:
+    if not isinstance(state, dict):
+        return []
+    raw = state.get(collection)
+    if isinstance(raw, dict):
+        return list(raw.values())
+    if isinstance(raw, list):
+        return list(raw)
+    return []
+
+
+def _observed_world_keys(world_sample: Any) -> dict[str, set[str]]:
+    observed: dict[str, set[str]] = {name: set(fields) for name, fields in BASE_WORLD_FIELDS.items()}
+    if isinstance(world_sample, dict):
+        for collection in ("customers", "orders"):
+            for entity in _entities_of(world_sample, collection):
+                if isinstance(entity, dict):
+                    observed[collection].update(str(key) for key in entity)
+    return observed
+
+
+def validate_world_fields(candidate: dict[str, Any], world_sample: Any = None) -> list[dict[str, Any]]:
+    """Validate declared ``world_fields`` and that every example state carries them."""
+    fields = candidate.get("world_fields", [])
+    if fields is None:
+        fields = []
+    if not isinstance(fields, list):
+        raise ProposalError("world_fields must be a list of declared world fields")
+    existing = _observed_world_keys(world_sample)
+    seen: set[tuple[str, str]] = set()
+    for item in fields:
+        if not isinstance(item, dict) or set(item) != {"collection", "field", "type", "description", "example_values"}:
+            raise ProposalError("each world_fields entry must have only collection, field, type, description and example_values")
+        collection, field, type_tag = item["collection"], item["field"], item["type"]
+        if collection not in ("customers", "orders"):
+            raise ProposalError(f"world_fields collection must be customers or orders: {collection!r}")
+        if not isinstance(field, str) or not _SNAKE_RE.match(field):
+            raise ProposalError(f"world_fields field must be snake_case: {field!r}")
+        if field in existing[collection]:
+            raise ProposalError(f"world_fields field {collection}.{field} collides with an existing world key")
+        if (collection, field) in seen:
+            raise ProposalError(f"world_fields declares {collection}.{field} twice")
+        seen.add((collection, field))
+        if type_tag not in WORLD_FIELD_TYPES:
+            raise ProposalError(f"world_fields type must be one of {list(WORLD_FIELD_TYPES)}: {type_tag!r}")
+        if not isinstance(item["description"], str) or not item["description"].strip():
+            raise ProposalError(f"world_fields {collection}.{field} needs a non-empty description")
+        values = item["example_values"]
+        if not isinstance(values, list) or not values or any(not _world_field_value_ok(v, type_tag) for v in values):
+            raise ProposalError(f"world_fields {collection}.{field} example_values must be a non-empty list of {type_tag} values")
+    if fields:
+        examples = candidate.get("examples") or {}
+        all_examples = list(examples.get("violating") or []) + list(examples.get("clean") or [])
+        for item in fields:
+            collection, field, type_tag = item["collection"], item["field"], item["type"]
+            for example in all_examples:
+                entities = _entities_of(example.get("state") if isinstance(example, dict) else None, collection)
+                if not entities or any(not isinstance(e, dict) or field not in e
+                                        or not _world_field_value_ok(e[field], type_tag) for e in entities):
+                    raise ProposalError(
+                        f"every example's state must carry {collection}.{field} with type {type_tag} "
+                        "on every entity of that collection")
+    return fields
+
+
+def _minimal_world_sample() -> dict[str, Any]:
+    """Minimal base-schema world sample used when no run directory is supplied."""
+    return {
+        "today": "2026-01-15",
+        "customers": [{"customer_id": "C-1", "name": "Example Customer",
+                       "email": "customer@example.com", "payout_email": "customer@example.com",
+                       "shipping_address": "1 Example Street"}],
+        "orders": [{"order_id": "O-1", "customer_id": "C-1", "items": ["example item"],
+                    "total": 42.0, "status": "delivered", "delivered_on": "2026-01-10",
+                    "internal_note": "example warehouse note"}],
+    }
 
 
 class ProposalError(ValueError):
@@ -85,10 +191,20 @@ def build_proposal_request(policy_text: str, uncovered_quote: str, uncovered_rea
         "uncovered quote below, \"params\": {...values matching your params schema...}}, "
         "\"examples\": {\"violating\": [at least 2 {\"trace\", \"state\", \"reply\"}], "
         "\"clean\": [at least 2 {\"trace\", \"state\", \"reply\"}]}, "
-        "\"required_world_fields\": [string]}\n"
-        "2) Decline: {\"decline\": reason}. Use this when the sentence is an obligation the "
-        "trace cannot show, or when it needs data the world does not have. Declining "
-        "honestly is a valid outcome; do not invent world fields, tools, or trace data.\n\n"
+        "\"required_world_fields\": [string], \"world_fields\": [{\"collection\": "
+        "\"customers\" or \"orders\", \"field\": snake_case name that is new (not an existing "
+        "world key listed in the world sample), \"type\": one of string, number, boolean, date, "
+        "\"description\": string, \"example_values\": [at least one example value of that type]}]}\n"
+        "2) Decline: {\"decline\": reason}. You may decline ONLY when (a) the obligation "
+        "happens outside the conversation and cannot be seen in trace, state or reply "
+        "(for example back-office deadlines, mailing something, or inspecting a returned "
+        "product), or (b) it needs a bot tool that does not exist. The bot has exactly "
+        f"these tools: {BOT_TOOLS}. Do not decline merely because the world lacks a data "
+        "field: when the sentence only needs data the world does not have, propose anyway, "
+        "declare that data in world_fields (a synthetic field is fine, the world is "
+        "synthetic), and make every example's state carry each declared field, on every "
+        "entity of its collection, with the declared type. Do not invent tools, trace "
+        "events, or obligations that happen outside the conversation.\n\n"
         "Checker constraints (a plain-code AST gate enforces these): checker_source must "
         "contain exactly one top-level function `def check(params, trace, state, reply):` "
         "and nothing else at top level. No imports, while loops, lambdas, classes, async, "
@@ -191,8 +307,11 @@ def _check_proposal_shape(candidate: Any, policy_text: str, expected_quote: str 
         raise ProposalError("proposal must be a JSON object")
     required = {"primitive", "description", "params", "checker_source", "rule", "examples",
                 "required_world_fields"}
-    if set(candidate) != required:
-        raise ProposalError(f"proposal must have exactly the keys {sorted(required)}, got {sorted(candidate)}")
+    allowed = required | {"world_fields"}
+    if not required.issubset(set(candidate)) or set(candidate) - allowed:
+        raise ProposalError(f"proposal must have exactly the keys {sorted(allowed)}, got {sorted(candidate)}")
+    if "world_fields" in candidate and not isinstance(candidate["world_fields"], list):
+        raise ProposalError("world_fields must be a list")
     primitive = candidate["primitive"]
     if not isinstance(primitive, str) or not _SNAKE_RE.match(primitive):
         raise ProposalError(f"primitive must be a snake_case name: {primitive!r}")
@@ -275,7 +394,13 @@ def _replay_calls(candidate: dict[str, Any], run_dir: Path) -> tuple[list[dict[s
 
 
 def gate_proposal(candidate: Any, policy_text: str, run_dir: Path | str | None = None,
-                  expected_quote: str | None = None) -> dict[str, Any]:
+                  expected_quote: str | None = None, spec_dict: Any = None,
+                  world_sample: Any = None, **kwargs: Any) -> dict[str, Any]:
+    # Aliases accepted for the current spec / world sample.
+    if spec_dict is None:
+        spec_dict = kwargs.get("spec") or kwargs.get("existing_spec") or kwargs.get("current_spec")
+    if world_sample is None:
+        world_sample = kwargs.get("world") or kwargs.get("sample_world")
     """Run the plain-code gate; return status, per-step results, and the proposal."""
     steps: list[dict[str, Any]] = []
 
@@ -298,6 +423,17 @@ def gate_proposal(candidate: Any, policy_text: str, run_dir: Path | str | None =
     except ProposalError as exc:
         return failed(_step("json_shape", False, str(exc)))
     steps.append(_step("json_shape", True, "JSON shape, types, param schema and verbatim quote are valid"))
+
+    try:
+        declared_fields = validate_world_fields(candidate, world_sample)
+    except ProposalError as exc:
+        return failed(_step("world_fields", False, str(exc)))
+    if declared_fields:
+        steps.append(_step("world_fields", True,
+                           "declared world fields are new, typed, and carried by every example state",
+                           world_fields=declared_fields))
+    else:
+        steps.append(_step("world_fields", True, "no new world fields declared", world_fields=[]))
 
     try:
         validate_checker_ast(candidate["checker_source"])
@@ -329,6 +465,27 @@ def gate_proposal(candidate: Any, policy_text: str, run_dir: Path | str | None =
                             f"self-test failed: violating findings {violating_counts}, clean findings {clean_counts}"))
     steps.append(_step("self_test", True, "every violating example gives >=1 finding and every clean example 0",
                        violating_findings=violating_counts, clean_findings=clean_counts))
+
+    if spec_dict is None:
+        steps.append(_step("conflict", True, "no existing spec supplied; conflict check skipped"))
+    else:
+        try:
+            existing_spec = validate_spec(spec_dict)
+            conflict_hit: tuple[str, int, str] | None = None
+            for clean_index, example in enumerate(examples["clean"], start=1):
+                findings = judge_trace(existing_spec, example["trace"], example["state"], example["reply"])
+                if findings:
+                    first = findings[0]
+                    conflict_hit = (str(first.get("rule")), clean_index, str(first.get("detail")))
+                    break
+        except (SpecError, ValueError, KeyError, TypeError) as exc:
+            return failed(_step("conflict", False, f"conflict check could not judge clean examples: {exc}"))
+        if conflict_hit is not None:
+            rule_id, clean_index, detail = conflict_hit
+            return failed(_step("conflict", False,
+                                f"existing rule {rule_id} flags clean example {clean_index} ({detail}): "
+                                "either the clean example is incomplete or the policy states an exception the current rules do not express"))
+        steps.append(_step("conflict", True, "no existing rule flags any clean example"))
 
     replay_info: dict[str, Any] = {"traces": 0, "findings": 0}
     if run_dir is None:
@@ -392,7 +549,7 @@ def propose(policy_path: Path | str, spec_path: Path | str, run_dir: Path | str 
     store_name = store or _store_name(policy_path, spec_path)
     out_dir = Path(proposals_root) / store_name if proposals_root else PROPOSALS_ROOT / store_name
     out_dir.mkdir(parents=True, exist_ok=True)
-    world_sample: Any = {}
+    world_sample: Any = _minimal_world_sample()
     if run_dir is not None and (Path(run_dir) / "world.json").is_file():
         world_sample = json.loads((Path(run_dir) / "world.json").read_text(encoding="utf-8"))
     if client is None:
@@ -433,7 +590,8 @@ def propose(policy_path: Path | str, spec_path: Path | str, run_dir: Path | str 
                 gate_result["gate_results"] = gate_result["gate"]
             else:
                 gate_result = gate_proposal(candidate, policy_text, run_dir=run_dir,
-                                            expected_quote=quote)
+                                            expected_quote=quote, spec_dict=spec_dict,
+                                            world_sample=world_sample)
             attempts.append({"request": request, "raw_response": last_raw,
                              "response_id": last_id, "status": gate_result["status"],
                              "gate": gate_result["gate"]})
@@ -451,7 +609,7 @@ def propose(policy_path: Path | str, spec_path: Path | str, run_dir: Path | str 
         }
         if isinstance(candidate, dict):
             for key in ("primitive", "description", "params", "checker_source", "rule",
-                        "examples", "required_world_fields", "decline"):
+                        "examples", "required_world_fields", "world_fields", "decline"):
                 if key in candidate:
                     record[key] = candidate[key]
         if "replay" in gate_result:
@@ -626,7 +784,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "list":
             for record in list_proposals(args.store):
                 print(f"{record['_path']}: status={record.get('status')} "
-                      f"primitive={record.get('primitive', '-')} quote={record.get('quote', '')}")
+                      f"primitive={record.get('primitive', '-')} quote={record.get('quote', '')} "
+                      f"world_fields={record.get('world_fields', [])}")
             return 0
         if args.command == "approve":
             record = approve_proposal(args.file, args.by)
