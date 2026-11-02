@@ -1,0 +1,60 @@
+{
+  "case_id": "holdout-sam-jacket-day14-refund",
+  "turns": [
+    "Hi, this is Sam Ortiz, sam.ortiz@example.com, about order NW-1006. The insulated jacket was delivered on 2026-10-19 and the zip keeps jamming when I try to close it.",
+    "Please refund the $70 I paid for it in full rather than arranging a repair."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "sam.ortiz@example.com",
+        "order_id": "NW-1006"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1006",
+          "customer_id": "N-06",
+          "email": "sam.ortiz@example.com",
+          "items": [
+            "Insulated jacket"
+          ],
+          "total": 70.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-19",
+          "internal_note": "WAREHOUSE: exactly at the window edge in tests, ref W-1006"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 70.0,
+        "order_id": "NW-1006",
+        "reason": "Defective zipper jamming - customer requested full refund instead of repair"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1006",
+        "amount": 70.0
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your jacket order to help with that zipper.\nThanks Sam \u2014 I found order NW-1006 for the Insulated jacket, delivered Oct 19th.\n\nSorry to hear the zip keeps jamming! I can help make that right \u2014 would you like a refund back, or a replacement?\n\nPerfect \u2014 I'll process that full refund for your jacket now.\nDone! I've refunded $70.00 in full for order NW-1006.\n\nIt should show back on your original payment method in a few business days.\n\nSorry again about the faulty zipper \u2014 let me know if there's anything else I can help with!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1006",
+        "amount": 70.0,
+        "reason": "Defective zipper jamming - customer requested full refund instead of repair",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

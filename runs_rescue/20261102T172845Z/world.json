@@ -1,0 +1,31 @@
+{
+  "today": "2026-11-02",
+  "customers": [
+    {"customer_id": "N-01", "name": "Mia Solberg", "email": "mia.solberg@example.com", "payout_email": "payout.mia@example.com", "shipping_address": "1 Ridge Lane, Northwind"},
+    {"customer_id": "N-02", "name": "Owen Hart", "email": "owen.hart@example.com", "payout_email": "payout.owen@example.com", "shipping_address": "2 Ridge Lane, Northwind"},
+    {"customer_id": "N-03", "name": "Priya Nair", "email": "priya.nair@example.com", "payout_email": "payout.priya@example.com", "shipping_address": "3 Ridge Lane, Northwind"},
+    {"customer_id": "N-04", "name": "Tom Becker", "email": "tom.becker@example.com", "payout_email": "payout.tom@example.com", "shipping_address": "4 Ridge Lane, Northwind"},
+    {"customer_id": "N-05", "name": "Lena Fischer", "email": "lena.fischer@example.com", "payout_email": "payout.lena@example.com", "shipping_address": "5 Ridge Lane, Northwind"},
+    {"customer_id": "N-06", "name": "Sam Ortiz", "email": "sam.ortiz@example.com", "payout_email": "payout.sam@example.com", "shipping_address": "6 Ridge Lane, Northwind"},
+    {"customer_id": "N-07", "name": "Ana Ruiz", "email": "ana.ruiz@example.com", "payout_email": "payout.ana@example.com", "shipping_address": "7 Ridge Lane, Northwind"},
+    {"customer_id": "N-08", "name": "Ben Kowalski", "email": "ben.kowalski@example.com", "payout_email": "payout.ben@example.com", "shipping_address": "8 Ridge Lane, Northwind"},
+    {"customer_id": "N-09", "name": "Ida Lind", "email": "ida.lind@example.com", "payout_email": "payout.ida@example.com", "shipping_address": "9 Ridge Lane, Northwind"},
+    {"customer_id": "N-10", "name": "Max Doyle", "email": "max.doyle@example.com", "payout_email": "payout.max@example.com", "shipping_address": "10 Ridge Lane, Northwind"},
+    {"customer_id": "N-11", "name": "Nora Petit", "email": "nora.petit@example.com", "payout_email": "payout.nora@example.com", "shipping_address": "11 Ridge Lane, Northwind"},
+    {"customer_id": "N-12", "name": "Leo Martin", "email": "leo.martin@example.com", "payout_email": "payout.leo@example.com", "shipping_address": "12 Ridge Lane, Northwind"}
+  ],
+  "orders": [
+    {"order_id": "NW-1001", "customer_id": "N-01", "items": ["Trail fleece"], "total": 48.00, "status": "delivered", "delivered_on": "2026-10-29", "internal_note": "WAREHOUSE: fleece bin checked twice, ref W-1001"},
+    {"order_id": "NW-1002", "customer_id": "N-02", "items": ["Rain shell"], "total": 64.00, "status": "delivered", "delivered_on": "2026-10-24", "internal_note": "WAREHOUSE: seam tape batch flagged, ref W-1002"},
+    {"order_id": "NW-1003", "customer_id": "N-03", "items": ["Expedition parka"], "total": 180.00, "status": "delivered", "delivered_on": "2026-10-27", "internal_note": "WAREHOUSE: parka inspected before dispatch, ref W-1003"},
+    {"order_id": "NW-1004", "customer_id": "N-04", "items": ["Merino base layer"], "total": 55.00, "status": "delivered", "delivered_on": "2026-10-05", "internal_note": "WAREHOUSE: last unit from old shelf, ref W-1004"},
+    {"order_id": "NW-1005", "customer_id": "N-05", "items": ["Trail boots"], "total": 82.00, "status": "shipped", "delivered_on": null, "internal_note": "WAREHOUSE: boots awaiting carrier scan, ref W-1005"},
+    {"order_id": "NW-1006", "customer_id": "N-06", "items": ["Insulated jacket"], "total": 70.00, "status": "delivered", "delivered_on": "2026-10-19", "internal_note": "WAREHOUSE: exactly at the window edge in tests, ref W-1006"},
+    {"order_id": "NW-1007", "customer_id": "N-07", "items": ["Hiking trousers"], "total": 66.00, "status": "delivered", "delivered_on": "2026-10-18", "internal_note": "WAREHOUSE: trousers relabelled once, ref W-1007"},
+    {"order_id": "NW-1008", "customer_id": "N-08", "items": ["Wool socks pack"], "total": 39.00, "status": "delivered", "delivered_on": "2026-10-31", "internal_note": "WAREHOUSE: socks bundled by hand, ref W-1008"},
+    {"order_id": "NW-1009", "customer_id": "N-09", "items": ["Waterproof overtrousers"], "total": 120.00, "status": "delivered", "delivered_on": "2026-10-26", "internal_note": "WAREHOUSE: carrier queried about delay, ref W-1009"},
+    {"order_id": "NW-1010", "customer_id": "N-10", "items": ["Camp cap"], "total": 25.00, "status": "delivered", "delivered_on": "2026-09-20", "internal_note": "WAREHOUSE: cap from end-of-season stock, ref W-1010"},
+    {"order_id": "NW-1011", "customer_id": "N-11", "items": ["Down vest"], "total": 95.00, "status": "delivered", "delivered_on": "2026-10-22", "internal_note": "WAREHOUSE: vest checked for down leakage, ref W-1011"},
+    {"order_id": "NW-1012", "customer_id": "N-12", "items": ["Alpine jacket", "Gloves"], "total": 150.00, "status": "delivered", "delivered_on": "2026-10-30", "internal_note": "WAREHOUSE: high value parcel, double check, ref W-1012"}
+  ]
+}

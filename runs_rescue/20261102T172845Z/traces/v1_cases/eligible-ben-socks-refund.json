@@ -1,0 +1,59 @@
+{
+  "case_id": "eligible-ben-socks-refund",
+  "turns": [
+    "Hi, I'm Ben Kowalski. My order NW-1008 for the Wool socks pack was delivered on 2026-10-31, but the size is wrong. My email is ben.kowalski@example.com. Please refund the full $39."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "ben.kowalski@example.com",
+        "order_id": "NW-1008"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1008",
+          "customer_id": "N-08",
+          "email": "ben.kowalski@example.com",
+          "items": [
+            "Wool socks pack"
+          ],
+          "total": 39.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-31",
+          "internal_note": "WAREHOUSE: socks bundled by hand, ref W-1008"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 39.0,
+        "order_id": "NW-1008",
+        "reason": "size is wrong - full refund requested"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1008",
+        "amount": 39.0
+      }
+    }
+  ],
+  "reply": "I'll check your order details to process that $39 refund.\nGot it \u2014 that matches your delivered order, so I'll refund the $39 now.\nDone, Ben! I've refunded the full $39 for order NW-1008 (Wool socks pack).\n\nRefund ID: RF-1 \u2014 it should show back on your original payment method in a few days.\n\nSorry the size was wrong! Let me know if you need anything else.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1008",
+        "amount": 39.0,
+        "reason": "size is wrong - full refund requested",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

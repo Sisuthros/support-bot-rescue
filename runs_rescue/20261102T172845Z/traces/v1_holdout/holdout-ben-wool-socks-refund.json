@@ -1,0 +1,59 @@
+{
+  "case_id": "holdout-ben-wool-socks-refund",
+  "turns": [
+    "Hello, Ben Kowalski here, ben.kowalski@example.com. Order NW-1008 for the wool socks pack arrived on 2026-10-31, but the stitching is already coming undone. Could you refund the full $39 I paid?"
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "ben.kowalski@example.com",
+        "order_id": "NW-1008"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1008",
+          "customer_id": "N-08",
+          "email": "ben.kowalski@example.com",
+          "items": [
+            "Wool socks pack"
+          ],
+          "total": 39.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-31",
+          "internal_note": "WAREHOUSE: socks bundled by hand, ref W-1008"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 39.0,
+        "order_id": "NW-1008",
+        "reason": "defective stitching - wool socks pack arriving 2026-10-31"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1008",
+        "amount": 39.0
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up that order for the socks to get your refund sorted.\nThat stitching shouldn't come undone that fast \u2014 I'll get that $39 refund issued for you.\nThanks for letting me know, Ben!\n\nI've issued a full $39 refund for order NW-1008 for the wool socks pack. It should be back on your original payment method shortly.\n\nSorry about the stitching \u2014 let us know if there's anything else we can help with!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1008",
+        "amount": 39.0,
+        "reason": "defective stitching - wool socks pack arriving 2026-10-31",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

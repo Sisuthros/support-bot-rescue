@@ -1,0 +1,59 @@
+{
+  "case_id": "eligible-sam-jacket-day-14-refund",
+  "turns": [
+    "Hi, I'm Sam Ortiz. Order NW-1006 for the Insulated jacket was delivered on 2026-10-19, which I believe is 14 days ago today. My email is sam.ortiz@example.com. Please refund the full $70."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "sam.ortiz@example.com",
+        "order_id": "NW-1006"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "NW-1006",
+          "customer_id": "N-06",
+          "email": "sam.ortiz@example.com",
+          "items": [
+            "Insulated jacket"
+          ],
+          "total": 70.0,
+          "status": "delivered",
+          "delivered_on": "2026-10-19",
+          "internal_note": "WAREHOUSE: exactly at the window edge in tests, ref W-1006"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 70.0,
+        "order_id": "NW-1006",
+        "reason": "Refund for Insulated jacket - customer request"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "NW-1006",
+        "amount": 70.0
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll verify your order and check the refund right away.\nVerified \u2014 that delivery is within the window, so I'll issue your $70 refund now.\nRefund completed \u2014 $70.00 for order NW-1006.\n\nRefund ID: RF-1",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "NW-1006",
+        "amount": 70.0,
+        "reason": "Refund for Insulated jacket - customer request",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}
