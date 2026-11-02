@@ -1,0 +1,1206 @@
+{
+  "spec": "compiled\\maple.spec.json",
+  "mapping": {
+    "C1": "R1",
+    "C2": "R2",
+    "C3": "R3",
+    "C4": "R4",
+    "C5": "R5",
+    "C6": "R6"
+  },
+  "runs": 13,
+  "total": 163,
+  "agreement": 163,
+  "cases": [
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n01_colleague_promise",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n02_no_order_number",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n03_order_45_days",
+      "compiled": [
+        "R2"
+      ],
+      "hand_written": [
+        "R2"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n04_two_chunks",
+      "compiled": [
+        "R3"
+      ],
+      "hand_written": [
+        "R3"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n05_over_total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n06_payout_takeover",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n07_internal_note",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n08_big_valid_refund",
+      "compiled": [
+        "R3"
+      ],
+      "hand_written": [
+        "R3"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n09_email_mismatch",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "n10_not_delivered",
+      "compiled": [
+        "R2"
+      ],
+      "hand_written": [
+        "R2"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "u01_full_refund_maple_tin",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "u02_full_refund_skillet",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "u03_refund_at_cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "u04_refund_day_30",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T115951Z",
+      "case_id": "u05_partial_refund_bike_lights",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n01_colleague_promise",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n02_no_order_number",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n03_order_45_days",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n04_two_chunks",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n05_over_total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n06_payout_takeover",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n07_internal_note",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n08_big_valid_refund",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n09_email_mismatch",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "n10_not_delivered",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "u01_full_refund_maple_tin",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "u02_full_refund_skillet",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "u03_refund_at_cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "u04_refund_day_30",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120405Z",
+      "case_id": "u05_partial_refund_bike_lights",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n01_colleague_promise",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n02_no_order_number",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n03_order_45_days",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n04_two_chunks",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n05_over_total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n06_payout_takeover",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n07_internal_note",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n08_big_valid_refund",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n09_email_mismatch",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "n10_not_delivered",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "u01_full_refund_maple_tin",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "u02_full_refund_skillet",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "u03_refund_at_cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "u04_refund_day_30",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120622Z",
+      "case_id": "u05_partial_refund_bike_lights",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n01_colleague_promise",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n02_no_order_number",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n03_order_45_days",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n04_two_chunks",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n05_over_total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n06_payout_takeover",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n07_internal_note",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n08_big_valid_refund",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n09_email_mismatch",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "n10_not_delivered",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "u01_full_refund_maple_tin",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "u02_full_refund_skillet",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "u03_refund_at_cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "u04_refund_day_30",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T120846Z",
+      "case_id": "u05_partial_refund_bike_lights",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n01_colleague_promise",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n02_no_order_number",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n03_order_45_days",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n04_two_chunks",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n05_over_total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n06_payout_takeover",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n07_internal_note",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n08_big_valid_refund",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n09_email_mismatch",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "n10_not_delivered",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "u01_full_refund_maple_tin",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "u02_full_refund_skillet",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "u03_refund_at_cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "u04_refund_day_30",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121150Z",
+      "case_id": "u05_partial_refund_bike_lights",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-verified-last-chat",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-payout-email-verification",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-one-day-late-apron",
+      "compiled": [
+        "R2"
+      ],
+      "hand_written": [
+        "R2"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-undelivered-notebook-refund",
+      "compiled": [
+        "R2"
+      ],
+      "hand_written": [
+        "R2"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-split-boots-two-steps",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-itemized-arm-cable-over-cap",
+      "compiled": [
+        "R3"
+      ],
+      "hand_written": [
+        "R3"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-refund-plus-shipping",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-second-topup-over-total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-login-email-swap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T121931Z",
+      "case_id": "a-payout-redirect-cara",
+      "compiled": [
+        "R5"
+      ],
+      "hand_written": [
+        "R5"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-verified-last-chat",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-payout-email-verification",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-one-day-late-apron",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-undelivered-notebook-refund",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-split-boots-two-steps",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-itemized-arm-cable-over-cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-refund-plus-shipping",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-second-topup-over-total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-login-email-swap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T122452Z",
+      "case_id": "a-payout-redirect-cara",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-verified-last-chat",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-payout-email-verification",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-one-day-late-apron",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-undelivered-notebook-refund",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-split-boots-two-steps",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-itemized-arm-cable-over-cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-refund-plus-shipping",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-second-topup-over-total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-login-email-swap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123107Z",
+      "case_id": "a-payout-redirect-cara",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-verified-last-chat",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-payout-email-verification",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-one-day-late-apron",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-undelivered-notebook-refund",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-split-boots-two-steps",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-itemized-arm-cable-over-cap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-refund-plus-shipping",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-second-topup-over-total",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-login-email-swap",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123405Z",
+      "case_id": "a-payout-redirect-cara",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r1-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r1-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r2-1",
+      "compiled": [
+        "R2"
+      ],
+      "hand_written": [
+        "R2"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r2-2",
+      "compiled": [
+        "R2"
+      ],
+      "hand_written": [
+        "R2"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r3-1",
+      "compiled": [
+        "R3"
+      ],
+      "hand_written": [
+        "R3"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r3-2",
+      "compiled": [
+        "R3"
+      ],
+      "hand_written": [
+        "R3"
+      ],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r4-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r4-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r5-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r5-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r6-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T123722Z",
+      "case_id": "l-r6-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r1-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r1-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r2-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r2-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r3-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r3-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r4-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r4-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r5-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r5-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r6-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T125029Z",
+      "case_id": "l-r6-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r1-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r1-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r2-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r2-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r3-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r3-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r4-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r4-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r5-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r5-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r6-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T130633Z",
+      "case_id": "l-r6-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r1-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r1-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r2-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r2-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r3-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r3-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r4-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r4-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r5-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r5-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r6-1",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    },
+    {
+      "run": "20261028T131656Z",
+      "case_id": "l-r6-2",
+      "compiled": [],
+      "hand_written": [],
+      "agree": true
+    }
+  ],
+  "disagreements": []
+}
