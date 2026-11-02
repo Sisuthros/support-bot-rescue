@@ -1,1 +1,4 @@
 * text=auto eol=lf
+
+# Rescue runs are sealed evidence: keep their bytes exactly as written so holdout.sha256 and manifest hashes verify in a clean clone.
+runs_rescue/** -text
