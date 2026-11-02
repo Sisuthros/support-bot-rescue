@@ -1,0 +1,60 @@
+{
+  "case_id": "eligible-ord1001-full-refund",
+  "turns": [
+    "Hi, I'm Alice Morgan (alice.morgan@example.com). Order ORD1001 was delivered on 2026-06-14 and the ceramic plant pot arrived damaged. Please refund the full $45.99 for this order."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "alice.morgan@example.com",
+        "order_id": "ORD1001"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD1001",
+          "customer_id": "CUST001",
+          "email": "alice.morgan@example.com",
+          "items": [
+            "Ceramic Plant Pot",
+            "Potting Soil Bag"
+          ],
+          "total": 45.99,
+          "status": "delivered",
+          "delivered_on": "2026-06-14",
+          "internal_note": "Left at side gate, box slightly dented"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 45.99,
+        "order_id": "ORD1001",
+        "reason": "ceramic plant pot arrived damaged, delivered 2026-06-14"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD1001",
+        "amount": 45.99
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to sort out that refund.\nThanks for the details \u2014 I've confirmed your order and will process that full refund now.\nI've refunded the full $45.99 for order ORD1001 due to the damaged ceramic plant pot.\n\nRefund ID: RF-1. It should appear back on your original payment method in a few business days.\n\nSorry about the damage \u2014 let me know if there's anything else I can help with!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD1001",
+        "amount": 45.99,
+        "reason": "ceramic plant pot arrived damaged, delivered 2026-06-14",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

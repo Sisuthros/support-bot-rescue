@@ -1,0 +1,59 @@
+{
+  "case_id": "holdout-clara-nguyen-1005-partial-refund",
+  "turns": [
+    "This is Clara Nguyen, clara.nguyen@example.com, writing about ORD1005 delivered June 2. Several pieces in the dinnerware set arrived chipped; could you please refund 100 toward the set?"
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "clara.nguyen@example.com",
+        "order_id": "ORD1005"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD1005",
+          "customer_id": "CUST003",
+          "email": "clara.nguyen@example.com",
+          "items": [
+            "Ceramic Dinnerware Set"
+          ],
+          "total": 145.0,
+          "status": "delivered",
+          "delivered_on": "2026-06-02",
+          "internal_note": "Extra bubble wrap requested by picker"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 100.0,
+        "order_id": "ORD1005",
+        "reason": "Several pieces in dinnerware set arrived chipped"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD1005",
+        "amount": 100.0
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your dinnerware order to sort out that refund.\nThanks for the details \u2014 I'll get that $100 refund processed for the chipped pieces.\nHi Clara \u2014 done!\n\nI've issued a $100 refund for order ORD1005 for the chipped dinnerware set.\n\nSorry about the damage, and let me know if you need anything else!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD1005",
+        "amount": 100.0,
+        "reason": "Several pieces in dinnerware set arrived chipped",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

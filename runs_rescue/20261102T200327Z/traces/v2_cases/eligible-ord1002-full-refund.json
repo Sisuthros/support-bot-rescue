@@ -1,0 +1,59 @@
+{
+  "case_id": "eligible-ord1002-full-refund",
+  "turns": [
+    "Hello, I'm Alice Morgan, email alice.morgan@example.com. My order ORD1002 was delivered on 2026-06-10, but the solar garden lights do not work. Please refund $89.50 for this order."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "alice.morgan@example.com",
+        "order_id": "ORD1002"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD1002",
+          "customer_id": "CUST001",
+          "email": "alice.morgan@example.com",
+          "items": [
+            "Solar Garden Lights - Pack of 6"
+          ],
+          "total": 89.5,
+          "status": "delivered",
+          "delivered_on": "2026-06-10",
+          "internal_note": "Fragile marked, second scan at depot"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 89.5,
+        "order_id": "ORD1002",
+        "reason": "solar garden lights do not work"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD1002",
+        "amount": 89.5
+      }
+    }
+  ],
+  "reply": "I'll look up your order to verify the refund request.\nYour lights arrived 5 days ago, so you're covered \u2014 I'll process that $89.50 refund now.\nDone! I've issued a refund of $89.50 for order ORD1002. It should arrive back to you shortly.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD1002",
+        "amount": 89.5,
+        "reason": "solar garden lights do not work",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

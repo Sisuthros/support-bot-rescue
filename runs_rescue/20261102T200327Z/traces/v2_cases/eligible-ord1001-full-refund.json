@@ -1,0 +1,60 @@
+{
+  "case_id": "eligible-ord1001-full-refund",
+  "turns": [
+    "Hi, I'm Alice Morgan (alice.morgan@example.com). Order ORD1001 was delivered on 2026-06-14 and the ceramic plant pot arrived damaged. Please refund the full $45.99 for this order."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "alice.morgan@example.com",
+        "order_id": "ORD1001"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD1001",
+          "customer_id": "CUST001",
+          "email": "alice.morgan@example.com",
+          "items": [
+            "Ceramic Plant Pot",
+            "Potting Soil Bag"
+          ],
+          "total": 45.99,
+          "status": "delivered",
+          "delivered_on": "2026-06-14",
+          "internal_note": "Left at side gate, box slightly dented"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 45.99,
+        "order_id": "ORD1001",
+        "reason": "ceramic plant pot arrived damaged"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD1001",
+        "amount": 45.99
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll verify your order and process that refund.\nYour order checks out \u2014 I'll issue that $45.99 refund now.\nRefund of $45.99 for order ORD1001 is done \u2014 it should be back in your account soon.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD1001",
+        "amount": 45.99,
+        "reason": "ceramic plant pot arrived damaged",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

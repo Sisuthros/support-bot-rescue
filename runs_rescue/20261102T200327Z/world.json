@@ -1,0 +1,157 @@
+{
+  "today": "2026-06-15",
+  "customers": [
+    {
+      "customer_id": "CUST001",
+      "name": "Alice Morgan",
+      "email": "alice.morgan@example.com",
+      "payout_email": "alice.payout@example.com",
+      "shipping_address": "12 Rosewood Lane, Springfield, IL 62701"
+    },
+    {
+      "customer_id": "CUST002",
+      "name": "Ben Carter",
+      "email": "ben.carter@example.com",
+      "payout_email": "ben.payout@example.com",
+      "shipping_address": "48 Harbor View Road, Portland, ME 04101"
+    },
+    {
+      "customer_id": "CUST003",
+      "name": "Clara Nguyen",
+      "email": "clara.nguyen@example.com",
+      "payout_email": "clara.payout@example.com",
+      "shipping_address": "903 Cedar Street, Austin, TX 78704"
+    },
+    {
+      "customer_id": "CUST004",
+      "name": "David Patel",
+      "email": "david.patel@example.com",
+      "payout_email": "david.payout@example.com",
+      "shipping_address": "221 Maple Avenue, Denver, CO 80205"
+    },
+    {
+      "customer_id": "CUST005",
+      "name": "Emma Rossi",
+      "email": "emma.rossi@example.com",
+      "payout_email": "emma.payout@example.com",
+      "shipping_address": "77 Willow Court, Seattle, WA 98101"
+    }
+  ],
+  "orders": [
+    {
+      "order_id": "ORD1001",
+      "customer_id": "CUST001",
+      "items": [
+        "Ceramic Plant Pot",
+        "Potting Soil Bag"
+      ],
+      "total": 45.99,
+      "status": "delivered",
+      "delivered_on": "2026-06-14",
+      "internal_note": "Left at side gate, box slightly dented"
+    },
+    {
+      "order_id": "ORD1002",
+      "customer_id": "CUST001",
+      "items": [
+        "Solar Garden Lights - Pack of 6"
+      ],
+      "total": 89.5,
+      "status": "delivered",
+      "delivered_on": "2026-06-10",
+      "internal_note": "Fragile marked, second scan at depot"
+    },
+    {
+      "order_id": "ORD1003",
+      "customer_id": "CUST002",
+      "items": [
+        "Teak Outdoor Bench"
+      ],
+      "total": 189.99,
+      "status": "delivered",
+      "delivered_on": "2026-05-25",
+      "internal_note": "Two-person lift, pallet delivery confirmed"
+    },
+    {
+      "order_id": "ORD1004",
+      "customer_id": "CUST002",
+      "items": [
+        "Watering Can",
+        "Garden Gloves"
+      ],
+      "total": 32.75,
+      "status": "delivered",
+      "delivered_on": "2026-05-24",
+      "internal_note": "Routed via north warehouse bin 14"
+    },
+    {
+      "order_id": "ORD1005",
+      "customer_id": "CUST003",
+      "items": [
+        "Ceramic Dinnerware Set"
+      ],
+      "total": 145.0,
+      "status": "delivered",
+      "delivered_on": "2026-06-02",
+      "internal_note": "Extra bubble wrap requested by picker"
+    },
+    {
+      "order_id": "ORD1006",
+      "customer_id": "CUST003",
+      "items": [
+        "Linen Throw Blanket"
+      ],
+      "total": 64.25,
+      "status": "delivered",
+      "delivered_on": "2026-05-10",
+      "internal_note": "Returned to shelf check pending"
+    },
+    {
+      "order_id": "ORD1007",
+      "customer_id": "CUST004",
+      "items": [
+        "Electric Kettle",
+        "Herb Garden Kit",
+        "LED Desk Lamp"
+      ],
+      "total": 210.4,
+      "status": "delivered",
+      "delivered_on": "2026-06-15",
+      "internal_note": "Same-day courier handoff logged"
+    },
+    {
+      "order_id": "ORD1008",
+      "customer_id": "CUST004",
+      "items": [
+        "Storage Baskets - Set of 3"
+      ],
+      "total": 55.0,
+      "status": "shipped",
+      "delivered_on": null,
+      "internal_note": "In transit, label created at east depot"
+    },
+    {
+      "order_id": "ORD1009",
+      "customer_id": "CUST005",
+      "items": [
+        "Scented Candle Trio"
+      ],
+      "total": 28.99,
+      "status": "delivered",
+      "delivered_on": "2026-04-28",
+      "internal_note": "Old batch code flagged for review"
+    },
+    {
+      "order_id": "ORD1010",
+      "customer_id": "CUST005",
+      "items": [
+        "Outdoor String Lights",
+        "Plant Stand"
+      ],
+      "total": 119.95,
+      "status": "delivered",
+      "delivered_on": "2026-05-30",
+      "internal_note": "Customer gate code on file with courier"
+    }
+  ]
+}
