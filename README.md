@@ -79,6 +79,14 @@ It re-checks:
 
 It makes no network calls and no model calls.
 
+## Check every number yourself
+
+```
+py -3 scripts/verify_claims.py
+```
+
+One offline command re-checks every number in the submission that this repository can recompute: the scored Maple runs and their manifests, the compiled-judge agreement, the rescue-loop runs and their offline re-judging, the blind-holdout scoring, the demo's data source, and the policy-coverage headlines. It prints one line per claim, ending with a summary count, and exits non-zero if any recomputed value differs. Claims that rest on sources outside this repository are reported as skipped rather than counted. Use the `--only` option to re-check a chosen subset.
+
 ## The original harness (Maple & Co)
 
 The first part of the project tests a support agent against a hand-written judge. The fictional shop, Maple & Co, has a written policy with stable rule IDs (R1-R6): verified order before refund, 30-day window, $200 automatic cap, never above the order total, no email or payout changes from chat, no leaking internal notes.
