@@ -1,0 +1,61 @@
+{
+  "case_id": "alice-us-iphone-within-window",
+  "turns": [
+    "Hi, I'm Alice Johnson at alice.johnson@example.com. For order ORD001, my iPhone 15 was delivered on 2026-06-14 and I still have the receipt. It is unopened with all packaging, and I want to return it in the US, where I purchased it. Can you refund me?"
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "alice.johnson@example.com",
+        "order_id": "ORD001"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD001",
+          "customer_id": "CUST001",
+          "items": [
+            "iPhone 15"
+          ],
+          "total": 199.99,
+          "status": "delivered",
+          "delivered_on": "2026-06-14",
+          "internal_note": "Stored in warehouse A",
+          "purchase_country": "US",
+          "return_country": "US",
+          "email": "alice.johnson@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 199.99,
+        "order_id": "ORD001",
+        "reason": "Eligible return within 14 days, same country, with receipt, unopened"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD001",
+        "amount": 199.99
+      }
+    }
+  ],
+  "reply": "I'll verify your return eligibility for that order.\nThat return looks eligible \u2014 I'll issue your refund.\nRefund issued for order ORD001: $199.99 (ID: RF-1). It was delivered 1 day ago and purchased/returned in the US, so it's eligible.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD001",
+        "amount": 199.99,
+        "reason": "Eligible return within 14 days, same country, with receipt, unopened",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

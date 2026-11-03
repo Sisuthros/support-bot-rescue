@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from compiler.extend import checker_sha256, load_approved_proposals  # noqa: E402
 from compiler.spec_judge import judge_stored_trace, load_spec  # noqa: E402
 from sandbox.tools import load_world  # noqa: E402
 from verifier.outcomes import check_outcome  # noqa: E402
@@ -41,6 +42,15 @@ def rejudge(run_dir: Path | str, extensions=None) -> list[str]:
     problems: list[str] = []
     report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
     manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+    if extensions is None and (run_dir / "extensions").is_dir():
+        extensions = load_approved_proposals(run_dir / "extensions")
+    recorded_ext = json.loads((run_dir / "spec.json").read_text(encoding="utf-8")).get(
+        "provenance", {}).get("extensions") or []
+    loaded_ext = {(r.get("primitive"), checker_sha256(r.get("checker_source") or "")) for r in extensions or []}
+    for ext in recorded_ext:
+        if (ext.get("name"), ext.get("checker_sha256")) not in loaded_ext:
+            problems.append(f"extension {ext.get('name')} with checker {ext.get('checker_sha256')} "
+                            "is recorded in spec.json but not present in the run's extensions/")
     spec = load_spec(run_dir / "spec.json", extensions=extensions)
     local_world = run_dir / "world.json"
     orders_path = local_world if local_world.is_file() else ROOT / "stores" / report["store"] / "orders.json"

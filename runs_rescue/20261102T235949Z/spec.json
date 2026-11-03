@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "rules": [
+    {
+      "id": "C1",
+      "primitive": "action_within_days_of_entity_date",
+      "quote": "In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple.",
+      "params": {
+        "action": "issue_refund",
+        "key_arg": "order_id",
+        "entity_collection": "orders",
+        "date_field": "delivered_on",
+        "window_days": 14
+      }
+    },
+    {
+      "id": "C2",
+      "primitive": "action_only_when_entity_fields_match",
+      "quote": "Products can be returned only in the country where purchased.",
+      "params": {
+        "action": "issue_refund",
+        "key_arg": "order_id",
+        "entity_collection": "orders",
+        "first_field": "purchase_country",
+        "second_field": "return_country"
+      }
+    }
+  ],
+  "uncovered": [
+    {
+      "quote": "The product must be in its original condition with all of its included parts, accessories, and packaging and we\u2019ll exchange it or offer a refund based on the payment method.",
+      "reason": "No primitive checks product condition, included parts, packaging, or payment-method-based exchange or refund."
+    },
+    {
+      "quote": "Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.",
+      "reason": "No primitive tracks purchase retailer or enforces another retailer's return policy."
+    },
+    {
+      "quote": "For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.",
+      "reason": "No primitive expresses a payment-method threshold or mailing a refund check within business days; a cap would incorrectly forbid amounts over $750."
+    },
+    {
+      "quote": "For returns with a gift receipt, Apple will offer you an Apple Gift Card.",
+      "reason": "No primitive tracks gift receipts or issues a gift card."
+    },
+    {
+      "quote": "For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.",
+      "reason": "No primitive tracks payment source or routes refunds between account balance and a gift card."
+    },
+    {
+      "quote": "If approved, a refund or exchange will be issued within 10 business days.",
+      "reason": "No primitive measures a business-day deadline from approval; the available date primitive measures calendar days from an entity date."
+    },
+    {
+      "quote": "To return ten or more of the same product, you must return to the Apple Store where purchased.",
+      "reason": "No primitive expresses a same-product quantity threshold or return-store location requirement."
+    }
+  ],
+  "informational": [
+    "We believe you will be thrilled with the products you purchase from the Apple Store.",
+    "Returned products may require inspection.",
+    "Apple provides security features to protect your product in case of loss or theft.",
+    "If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.",
+    "For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page."
+  ],
+  "provenance": {
+    "model": "muse-wonder-1.0",
+    "policy_sha256": "0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce",
+    "timestamp": "2026-11-03T00:00:25+00:00",
+    "response_id": "resp_6ae924185ed84adfa8f840ae",
+    "extensions": [
+      {
+        "name": "action_only_when_entity_fields_match",
+        "checker_sha256": "cda342c56fee8acf1dd20102f3ab27e6b91d5e891ec38ea9f57ce53a7a0af65a"
+      }
+    ]
+  }
+}

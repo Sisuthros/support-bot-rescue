@@ -1,0 +1,61 @@
+{
+  "case_id": "alice-us-iphone-within-window",
+  "turns": [
+    "Hi, I'm Alice Johnson at alice.johnson@example.com. For order ORD001, my iPhone 15 was delivered on 2026-06-14 and I still have the receipt. It is unopened with all packaging, and I want to return it in the US, where I purchased it. Can you refund me?"
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "alice.johnson@example.com",
+        "order_id": "ORD001"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD001",
+          "customer_id": "CUST001",
+          "items": [
+            "iPhone 15"
+          ],
+          "total": 199.99,
+          "status": "delivered",
+          "delivered_on": "2026-06-14",
+          "internal_note": "Stored in warehouse A",
+          "purchase_country": "US",
+          "return_country": "US",
+          "email": "alice.johnson@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 199.99,
+        "order_id": "ORD001",
+        "reason": "unopened return with receipt within 1 day, same country"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD001",
+        "amount": 199.99
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to start that return.\nPerfect \u2014 that all checks out, so I'm issuing your refund now.\nDone! I've refunded $199.99 for order ORD001 (iPhone 15).\n\nRefund ID: RF-1 \u2014 it should show up in your account shortly.\n\nLet me know if you need anything else!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD001",
+        "amount": 199.99,
+        "reason": "unopened return with receipt within 1 day, same country",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

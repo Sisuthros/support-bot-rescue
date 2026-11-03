@@ -1,0 +1,63 @@
+{
+  "case_id": "carla-canada-ipad-matching-country",
+  "turns": [
+    "Hello, Carla Martinez here, carla.martinez@example.com. Order ORD003 with the iPad Air and Apple Pencil arrived on 2026-06-03. I have the receipt and everything is in original condition with the accessories and packaging.",
+    "I bought this order in Canada and will be returning it in Canada as well. Please process the refund for ORD003."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "carla.martinez@example.com",
+        "order_id": "ORD003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD003",
+          "customer_id": "CUST003",
+          "items": [
+            "iPad Air",
+            "Apple Pencil"
+          ],
+          "total": 549.5,
+          "status": "delivered",
+          "delivered_on": "2026-06-03",
+          "internal_note": "Checked in at dock 2",
+          "purchase_country": "CA",
+          "return_country": "CA",
+          "email": "carla.martinez@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 549.5,
+        "order_id": "ORD003",
+        "reason": "Return in original condition with accessories and packaging - Canada purchase and return"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD003",
+        "amount": 549.5
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to help.\nThanks Carla \u2014 I found your order ORD003 for the iPad Air and Apple Pencil, delivered on 2026-06-03.\n\nHow can I help you with it today? Are you looking to return it?\nI'll process your refund for ORD003.\nDone! I've processed a full refund of $549.50 for order ORD003.\n\nRefund ID: RF-1\n\nThe money should be back to your original payment method shortly. Thanks for returning everything in original condition with accessories and packaging!\n\nLet me know if you need anything else.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD003",
+        "amount": 549.5,
+        "reason": "Return in original condition with accessories and packaging - Canada purchase and return",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

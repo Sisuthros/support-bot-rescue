@@ -631,6 +631,13 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
             extension_records = [extensions] if extensions.get("status") == "approved" else []
         else:
             extension_records = [r for r in extensions if isinstance(r, dict) and r.get("status") == "approved"]
+    if extension_records:
+        # Keep the approved checkers inside the run so rescue.rejudge can recompute it from a clone.
+        ext_dir = run_dir / "extensions"
+        ext_dir.mkdir()
+        for record in extension_records:
+            (ext_dir / f"{record['primitive']}.json").write_text(
+                json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     spec_dict, not_expressible = _compile_policy(counted, policy_text, run_dir / "spec.json", response_ids["compile"],
                                                  extension_records=extension_records)
     coverage = compute_coverage(policy_text, spec_dict)

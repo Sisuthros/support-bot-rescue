@@ -1,0 +1,175 @@
+{
+  "today": "2026-06-15",
+  "customers": [
+    {
+      "customer_id": "CUST001",
+      "name": "Alice Johnson",
+      "email": "alice.johnson@example.com",
+      "payout_email": "alice.johnson.payout@example.com",
+      "shipping_address": "123 Maple St, Austin, TX 78701"
+    },
+    {
+      "customer_id": "CUST002",
+      "name": "Brian Lee",
+      "email": "brian.lee@example.com",
+      "payout_email": "brian.lee.payout@example.com",
+      "shipping_address": "456 Oak Ave, Seattle, WA 98101"
+    },
+    {
+      "customer_id": "CUST003",
+      "name": "Carla Martinez",
+      "email": "carla.martinez@example.com",
+      "payout_email": "carla.martinez.payout@example.com",
+      "shipping_address": "789 Pine Rd, Chicago, IL 60601"
+    },
+    {
+      "customer_id": "CUST004",
+      "name": "David Chen",
+      "email": "david.chen@example.com",
+      "payout_email": "david.chen.payout@example.com",
+      "shipping_address": "321 Elm Blvd, Denver, CO 80201"
+    },
+    {
+      "customer_id": "CUST005",
+      "name": "Emma Wilson",
+      "email": "emma.wilson@example.com",
+      "payout_email": "emma.wilson.payout@example.com",
+      "shipping_address": "654 Birch Ln, Miami, FL 33101"
+    }
+  ],
+  "orders": [
+    {
+      "order_id": "ORD001",
+      "customer_id": "CUST001",
+      "items": [
+        "iPhone 15"
+      ],
+      "total": 199.99,
+      "status": "delivered",
+      "delivered_on": "2026-06-14",
+      "internal_note": "Stored in warehouse A",
+      "purchase_country": "US",
+      "return_country": "US"
+    },
+    {
+      "order_id": "ORD002",
+      "customer_id": "CUST002",
+      "items": [
+        "MacBook Air"
+      ],
+      "total": 899.0,
+      "status": "delivered",
+      "delivered_on": "2026-06-08",
+      "internal_note": "Fragile handling noted",
+      "purchase_country": "US",
+      "return_country": "CA"
+    },
+    {
+      "order_id": "ORD003",
+      "customer_id": "CUST003",
+      "items": [
+        "iPad Air",
+        "Apple Pencil"
+      ],
+      "total": 549.5,
+      "status": "delivered",
+      "delivered_on": "2026-06-03",
+      "internal_note": "Checked in at dock 2",
+      "purchase_country": "CA",
+      "return_country": "CA"
+    },
+    {
+      "order_id": "ORD004",
+      "customer_id": "CUST001",
+      "items": [
+        "MacBook Pro"
+      ],
+      "total": 1199.0,
+      "status": "delivered",
+      "delivered_on": "2026-05-28",
+      "internal_note": "Stored in warehouse B",
+      "purchase_country": "US",
+      "return_country": "US"
+    },
+    {
+      "order_id": "ORD005",
+      "customer_id": "CUST004",
+      "items": [
+        "AirPods Pro"
+      ],
+      "total": 129.99,
+      "status": "delivered",
+      "delivered_on": "2026-05-10",
+      "internal_note": "Inspection pending",
+      "purchase_country": "CA",
+      "return_country": "US"
+    },
+    {
+      "order_id": "ORD006",
+      "customer_id": "CUST005",
+      "items": [
+        "iPhone 15 Pro"
+      ],
+      "total": 799.99,
+      "status": "delivered",
+      "delivered_on": "2026-06-15",
+      "internal_note": "Delivered today, logged",
+      "purchase_country": "CA",
+      "return_country": "CA"
+    },
+    {
+      "order_id": "ORD007",
+      "customer_id": "CUST002",
+      "items": [
+        "Apple Watch Series 9"
+      ],
+      "total": 299.0,
+      "status": "shipped",
+      "delivered_on": null,
+      "internal_note": "In transit to customer",
+      "purchase_country": "US",
+      "return_country": "US"
+    },
+    {
+      "order_id": "ORD008",
+      "customer_id": "CUST003",
+      "items": [
+        "Mac Studio",
+        "Studio Display"
+      ],
+      "total": 1599.0,
+      "status": "delivered",
+      "delivered_on": "2026-05-01",
+      "internal_note": "Stored in warehouse C",
+      "purchase_country": "US",
+      "return_country": "CA"
+    },
+    {
+      "order_id": "ORD009",
+      "customer_id": "CUST004",
+      "items": [
+        "iPad Mini"
+      ],
+      "total": 449.0,
+      "status": "delivered",
+      "delivered_on": "2026-06-10",
+      "internal_note": "Checked in at dock 1",
+      "purchase_country": "CA",
+      "return_country": "US"
+    },
+    {
+      "order_id": "ORD010",
+      "customer_id": "CUST005",
+      "items": [
+        "HomePod",
+        "AirTag"
+      ],
+      "total": 649.0,
+      "status": "delivered",
+      "delivered_on": "2026-05-25",
+      "internal_note": "Awaiting shelf assignment",
+      "purchase_country": "US",
+      "return_country": "US"
+    }
+  ]
+}
