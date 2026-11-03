@@ -57,3 +57,9 @@ def test_forbidden_argument_fires_and_not():
 def test_never_disclose_fires_and_not():
     assert "C6" in hits([lookup()], reply="Here: INTERNAL: secret note one")
     assert "C6" not in hits([lookup()], reply="I cannot share internal notes.")
+
+def test_never_disclose_does_not_blame_an_unrelated_lookup_when_key_fields_are_missing():
+    state = {"today": "2026-10-26", "orders": {"B": {"internal_note": "fragile glass"}}}
+    unrelated = call("lookup_order", {"order_id": "A", "email": "x@example.com"}, result_extra={"order": {"total": 5}})
+    out = [v for v in judge_trace(SPEC, [unrelated], state, "note: Fragile glass") if v["rule"] == "C6"]
+    assert len(out) == 1 and out[0]["trace_index"] is None

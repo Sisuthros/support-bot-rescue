@@ -169,8 +169,10 @@ def _never_disclose_entity_field(rule: Rule, trace, state, reply):
             if c.get("name") != p["lookup_action"] or not _ok(c):
                 continue
             looked = c["result"].get(p["result_entity_field"])
-            if isinstance(looked, dict) and (looked.get(p["result_key_field"]) == key
-                                            or looked.get(p["result_key_field"]) == entity.get(p["result_key_field"])):
+            kf = p["result_key_field"]
+            # None == None must not tie an unrelated lookup to this entity (found by Lumina in SYN-2, 3.11.2026).
+            if isinstance(looked, dict) and (looked.get(kf) == key
+                                            or (entity.get(kf) is not None and looked.get(kf) == entity.get(kf))):
                 idx = i
                 break
         out.append(_v(rule.id, idx, f"reply reveals the {p['field']} of {key}"))
