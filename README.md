@@ -1,6 +1,87 @@
 # Support Bot Rescue
 
-Support Bot Rescue tests a store's AI support agent for refund-policy violations. The fictional shop, Maple & Co, has a written policy with stable rule IDs (R1-R6): verified order before refund, 30-day window, $200 automatic cap, never above the order total, no email or payout changes from chat, no leaking internal notes.
+Give it a store's written refund policy, and Support Bot Rescue does the rest:
+- turns the policy into rules that plain code can check;
+- writes test conversations;
+- seals a holdout before any fix exists;
+- catches the store's AI support bot breaking the policy;
+- rewrites the bot's prompt;
+- checks the fix on the sealed cases.
+
+No LLM grades the bot. Every count can be recomputed offline from the stored traces.
+
+It was built during the Meta Global AI Developer Hackathon with Meta's models. `muse-wonder-1.0` compiles the policy, writes the cases and rewrites the prompt; `muse-spark-1.3-contributor` is the bot under test.
+
+## Rescue a bot (live, about five minutes)
+
+```
+rescue\showcase.cmd                      Northwind, a synthetic test store
+rescue\showcase.cmd path\to\policy.md    any written policy; Muse Wonder invents a matching synthetic world
+```
+
+Without the wrapper: `py -3 -m rescue.rescue_run --policy-file <policy.md> --cases 8 --holdout 4`. The browser view `live.html` refreshes every two seconds. A run goes through these steps:
+
+1. Compile the policy into a closed vocabulary of typed rules (`compiler/compile_policy.py`, `compiler/dsl.py`). Every rule quotes its policy sentence verbatim.
+2. Build a synthetic order world for the policy.
+3. Write the test cases, then seal a holdout. Its sha256 goes into `run.log` before the fix step starts.
+4. Run the original prompt and judge every trace with plain code (`compiler/spec_judge.py`).
+5. Rewrite the prompt from the failing visible traces only.
+6. Run the new prompt on the visible cases and on the sealed holdout.
+
+Everything lands in `runs_rescue/<timestamp>/`: `report.md`, `report.json`, `manifest.json`, `spec.md`, the world, the cases and every trace.
+
+## Coverage: nothing disappears silently
+
+Every sentence of the policy gets one of four labels:
+- enforced by code;
+- needs human review, with the compiler's reason;
+- informational;
+- unaccounted, meaning the compiler said nothing about it.
+
+The labels appear in `spec.md`, `report.md` and the live view. Two examples:
+- `compiled/brightwave.spec.md`: a synthetic store with three clauses the vocabulary cannot express.
+- `compiled/public-apple-us.spec.md`: Apple Store US's public returns policy, from one compile. The text is copied with its source and hash in `stores/public-apple-us/SOURCE.md`.
+
+## Muse Wonder grows the rule language, behind a gate
+
+```
+py -3 -m compiler.extend propose --policy <policy.md> --spec <spec.json> [--run runs_rescue/<timestamp>]
+py -3 -m compiler.extend list
+py -3 -m compiler.extend approve <proposal.json> --by <name>
+```
+
+For each sentence the vocabulary cannot express, Muse Wonder either proposes a new primitive or declines. A proposal comes with a parameter schema, a plain-Python checker, examples, and any synthetic world fields it needs. Wonder declines obligations a chat cannot show, such as mailing a check or inspecting a parcel, and ones that need a tool the bot does not have.
+
+Code gates every proposal:
+- the quote must be verbatim;
+- the checker must pass an AST whitelist;
+- it executes only in an isolated `py -3 -I` subprocess, with whitelisted builtins and a 5 s timeout;
+- it must pass a self-test on its own examples;
+- a conflict check runs it against the existing rules;
+- it is replayed over stored traces.
+
+A proposal judges nothing until someone runs `approve --by <name>`. A checker whose sha256 changes after approval is refused at load.
+
+The review in `compiler/proposals/REVIEW-2026-11-03.md` shows why the approver matters. One proposal passed every gate and was rejected anyway, because it judged orders the conversation never mentioned.
+
+To run with approved rules, add `--extensions compiler/proposals/<store>`. Example run: `runs_rescue/20261102T235949Z`, on the Apple policy with an approved "returned only in the country where purchased" rule.
+
+## Recompute any run offline
+
+```
+py -3 -m rescue.rejudge runs_rescue/<timestamp>
+```
+
+It re-checks:
+- the holdout hash and every trace hash;
+- every stored trace, re-judged, including approved extension checkers stored in the run's `extensions/`;
+- every count in the report and the manifest.
+
+It makes no network calls and no model calls.
+
+## The original harness (Maple & Co)
+
+The first part of the project tests a support agent against a hand-written judge. The fictional shop, Maple & Co, has a written policy with stable rule IDs (R1-R6): verified order before refund, 30-day window, $200 automatic cap, never above the order total, no email or payout changes from chat, no leaking internal notes.
 
 The judge is deterministic. The agent runs against a sandbox of fake tools (no real money, no network) that records an ordered trace. `verifier/rules.py` checks the trace, the final state and the final reply against each rule. There is no LLM in the verifier, so the same trace always gives the same verdict.
 
@@ -33,15 +114,11 @@ py -3 demo.py
 
 It plays the v1 failure, the v2 and v3 fixes, and v1 behind the firewall as a paced terminal walkthrough, computing every number at run time from the 13 non-holdout runs in `evidence/5423ab2/` and re-verifying their manifests with the verifier from commit `5423ab2` (use `--fast` to remove the pauses).
 
-## Final blind holdout
+## Final blind holdout (k13-k18)
 
-Photon seals the fresh usefulness holdout (`k07`-`k12`) with sha256 and posts the hash; nobody opens the cases before scoring. Score the exact sealed bytes with one command (substituting the file and hash Photon posts):
+A separate `muse-wonder-1.0` call wrote a fresh usefulness holdout of six cases from the policy, the schema and the world. Code checked every case against the world before the set was sealed (`evidence/k13-k18.sha256`, `evidence/k13-k18.provenance.json`). It was scored once, in `evidence/final-k13/` and `evidence/final-20261102T174453Z/`. Its writer belongs to the same model family as the author of the hardened prompt, so it is fresh but not independent.
 
-```
-py -3 score_final.py --cases <photon-cases-file> --sha256 <hash-posted-by-photon> --live
-```
-
-Without `--live` the command prints the plan (sha256, case count, the four variants `v1`, `v2`, `v3` and `v1 --firewall`, and the `--max-calls` budget, 200 per variant by default) and constructs no client. With `--live` it writes `runs/final-<UTC timestamp>/SUMMARY.md` and `SUMMARY.json` and re-verifies every variant manifest. Exit codes: `0` = dry-run plan printed, or live scoring finished with every manifest re-verified; `1` = live scoring finished but a manifest failed `verify_manifest.recheck`; `2` = `REFUSED: sha256 mismatch` (nothing was parsed), or a live run could not start or finish; `3` = the cases file fails the k07-k12 schema (first problem reported). This holdout has not been scored yet.
+An earlier set, k07-k12, was retired without being quoted, because its cases named orders that do not exist in the world.
 
 ## Built during the hackathon
 
