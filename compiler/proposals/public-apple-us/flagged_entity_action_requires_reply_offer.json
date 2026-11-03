@@ -1,0 +1,463 @@
+{
+  "store": "public-apple-us",
+  "model": "muse-wonder-1.0",
+  "response_id": "resp_6ae921a6dc1aa6c14338467f",
+  "policy_sha256": "0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce",
+  "quote": "For returns with a gift receipt, Apple will offer you an Apple Gift Card.",
+  "reason": "No primitive records gift-receipt status or issues a gift card.",
+  "request": "You propose a NEW primitive for a closed, typed judging DSL. Deterministic code will gate your proposal and a named human must approve it before it can judge anything; you are not judging any conversation yourself.\nReply with ONLY a JSON object (no markdown fences, no commentary), in exactly one of these two shapes:\n1) Proposal: {\"primitive\": snake_case name not colliding with the built-in primitives listed below, \"description\": string, \"params\": {name: type tag, one of string, positive_int, positive_number, string_list}, \"checker_source\": \"def check(params, trace, state, reply): ...\" returning a list of {\"trace_index\": int|null, \"detail\": string}, \"rule\": {\"quote\": the verbatim uncovered quote below, \"params\": {...values matching your params schema...}}, \"examples\": {\"violating\": [at least 2 {\"trace\", \"state\", \"reply\"}], \"clean\": [at least 2 {\"trace\", \"state\", \"reply\"}]}, \"required_world_fields\": [string], \"world_fields\": [{\"collection\": \"customers\" or \"orders\", \"field\": snake_case name that is new (not an existing world key listed in the world sample), \"type\": one of string, number, boolean, date, \"description\": string, \"example_values\": [at least one example value of that type]}]}\n2) Decline: {\"decline\": reason}. You may decline ONLY when (a) the obligation happens outside the conversation and cannot be seen in trace, state or reply (for example back-office deadlines, mailing something, or inspecting a returned product), or (b) it needs a bot tool that does not exist. The bot has exactly these tools: lookup_order(order_id, email), issue_refund(order_id, amount, reason), escalate_to_human(reason), update_account(customer_id, field, value). Do not decline merely because the world lacks a data field: when the sentence only needs data the world does not have, propose anyway, declare that data in world_fields (a synthetic field is fine, the world is synthetic), and make every example's state carry each declared field, on every entity of its collection, with the declared type. Do not invent tools, trace events, or obligations that happen outside the conversation.\n\nChecker constraints (a plain-code AST gate enforces these): checker_source must contain exactly one top-level function `def check(params, trace, state, reply):` and nothing else at top level. No imports, while loops, lambdas, classes, async, await, yield, global, nonlocal, with, try, raise, or delete. No attribute whose name starts with `_`. No eval, exec, compile, open, __import__, getattr, setattr, delattr, globals, locals, vars, input, breakpoint, exit, quit, help, memoryview, type, object, or super. Only these builtins are available: len, sum, min, max, abs, any, all, sorted, str, int, float, bool, isinstance, dict, list, set, tuple, range, enumerate, zip, round. The checker must be deterministic and return findings only for violations of the quoted sentence.\n\nShapes the checker receives (exactly as compiler/spec_judge.py and judge_stored_trace use them):\n- trace: a list of tool-call dicts, each {\"name\": tool name string, \"args\": dict of arguments, \"result\": dict where result[\"ok\"] is True on success}; stored traces may also carry an \"index\" int per call. Example tools: lookup_order(order_id, email) with result.order on success, issue_refund(order_id, amount, reason), update_account(customer_id, field, value), escalate_to_human(reason).\n- state: a dict {\"today\": \"YYYY-MM-DD\" date string, \"orders\": dict keyed by order_id whose values are order entities, \"customers\": dict keyed by customer_id, \"refunds\": list, \"escalations\": list, \"account_changes\": list} plus any other entity collections the world provides. judge_stored_trace builds this from the stored trace payload's final_state (today/orders from the world, plus refunds, escalations and account_changes when present) and the world itself.\n- reply: the bot's final reply as a single string (possibly empty).\n- params: the dict from your rule, type-checked against your params schema.\n\nBuilt-in primitives you must not collide with or reuse: {\n  \"requires_prior_matching_lookup\": {\n    \"action\": \"string\",\n    \"prior_action\": \"string\",\n    \"key_arg\": \"string\",\n    \"prior_key_arg\": \"string\",\n    \"identity_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_identity_field\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  },\n  \"action_within_days_of_entity_date\": {\n    \"action\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"date_field\": \"string\",\n    \"window_days\": \"positive_int\"\n  },\n  \"conversation_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"cap\": \"positive_number\"\n  },\n  \"per_entity_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_cap_field\": \"string\"\n  },\n  \"forbidden_action_argument_values\": {\n    \"action\": \"string\",\n    \"argument\": \"string\",\n    \"forbidden_values\": \"string_list\"\n  },\n  \"never_disclose_entity_field\": {\n    \"entity_collection\": \"string\",\n    \"field\": \"string\",\n    \"lookup_action\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  }\n}\n\nUncovered sentence (copy this verbatim as rule.quote): For returns with a gift receipt, Apple will offer you an Apple Gift Card.\nWhy the compiler left it uncovered: No primitive records gift-receipt status or issues a gift card.\n\n--- WORLD SAMPLE (from the run/world data; required_world_fields may only name data that exists here or in the shapes above) ---\n{\n  \"today\": \"2026-01-15\",\n  \"customers\": [\n    {\n      \"customer_id\": \"C-1\",\n      \"name\": \"Example Customer\",\n      \"email\": \"customer@example.com\",\n      \"payout_email\": \"customer@example.com\",\n      \"shipping_address\": \"1 Example Street\"\n    }\n  ],\n  \"orders\": [\n    {\n      \"order_id\": \"O-1\",\n      \"customer_id\": \"C-1\",\n      \"items\": [\n        \"example item\"\n      ],\n      \"total\": 42.0,\n      \"status\": \"delivered\",\n      \"delivered_on\": \"2026-01-10\",\n      \"internal_note\": \"example warehouse note\"\n    }\n  ]\n}\n\n--- EXISTING SPEC ---\n{\n  \"version\": \"1.0\",\n  \"rules\": [\n    {\n      \"id\": \"C1\",\n      \"primitive\": \"action_within_days_of_entity_date\",\n      \"quote\": \"In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple.\",\n      \"params\": {\n        \"action\": \"issue_refund\",\n        \"key_arg\": \"order_id\",\n        \"entity_collection\": \"orders\",\n        \"date_field\": \"delivered_on\",\n        \"window_days\": 14\n      }\n    }\n  ],\n  \"uncovered\": [\n    {\n      \"quote\": \"The product must be in its original condition with all of its included parts, accessories, and packaging and we\\u2019ll exchange it or offer a refund based on the payment method.\",\n      \"reason\": \"No primitive can verify product condition or completeness, or enforce the payment-method-based refund method.\"\n    },\n    {\n      \"quote\": \"Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\",\n      \"reason\": \"No primitive records the retailer of purchase or enforces retailer-specific return routing.\"\n    },\n    {\n      \"quote\": \"Products can be returned only in the country where purchased.\",\n      \"reason\": \"No primitive or order field records the purchase or return country.\"\n    },\n    {\n      \"quote\": \"For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\",\n      \"reason\": \"No primitive enforces mailing a refund check based on payment type and amount or the associated deadline.\"\n    },\n    {\n      \"quote\": \"For returns with a gift receipt, Apple will offer you an Apple Gift Card.\",\n      \"reason\": \"No primitive records gift-receipt status or issues a gift card.\"\n    },\n    {\n      \"quote\": \"For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\",\n      \"reason\": \"No primitive records the Apple Account payment portion or enforces that refund destination.\"\n    },\n    {\n      \"quote\": \"Returned products may require inspection.\",\n      \"reason\": \"No primitive records or requires product inspection before a return.\"\n    },\n    {\n      \"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\",\n      \"reason\": \"No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\"\n    },\n    {\n      \"quote\": \"If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\",\n      \"reason\": \"No primitive records security-feature activation or whether it can be disabled.\"\n    },\n    {\n      \"quote\": \"To return ten or more of the same product, you must return to the Apple Store where purchased.\",\n      \"reason\": \"No primitive enforces a quantity-based requirement to use the purchasing store.\"\n    }\n  ],\n  \"informational\": [\n    \"We believe you will be thrilled with the products you purchase from the Apple Store.\",\n    \"Apple provides security features to protect your product in case of loss or theft.\",\n    \"For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\"\n  ],\n  \"provenance\": {\n    \"model\": \"muse-wonder-1.0\",\n    \"policy_sha256\": \"0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce\",\n    \"timestamp\": \"2026-11-02T23:19:30+00:00\",\n    \"response_id\": \"resp_6ae91a828dda0e8a34424d40\"\n  }\n}\n\n--- POLICY ---\n# Apple Store (US) returns policy\n\nWe believe you will be thrilled with the products you purchase from the Apple Store. In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple. The product must be in its original condition with all of its included parts, accessories, and packaging and we\u2019ll exchange it or offer a refund based on the payment method. In addition, please note:\n- Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\n- Products can be returned only in the country where purchased.\n- For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\n- For returns with a gift receipt, Apple will offer you an Apple Gift Card.\n- For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\n- Returned products may require inspection. If approved, a refund or exchange will be issued within 10 business days.\n- Apple provides security features to protect your product in case of loss or theft. If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\n- To return ten or more of the same product, you must return to the Apple Store where purchased.\n- For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\n\n",
+  "raw_response": "{\"primitive\": \"flagged_entity_action_requires_reply_offer\", \"description\": \"When the named action succeeds for an entity whose flag field is true, the final reply must contain the required offer phrase, showing the flagged-entity remedy was offered.\", \"params\": {\"action\": \"string\", \"key_arg\": \"string\", \"entity_collection\": \"string\", \"flag_field\": \"string\", \"required_phrase\": \"string\"}, \"checker_source\": \"def check(params, trace, state, reply):\\n    findings = []\\n    entities = state.get(params[\\\"entity_collection\\\"], {})\\n    phrase = params[\\\"required_phrase\\\"]\\n    for i, call in enumerate(trace):\\n        if call.get(\\\"name\\\") != params[\\\"action\\\"]:\\n            continue\\n        result = call.get(\\\"result\\\", {})\\n        if result.get(\\\"ok\\\") != True:\\n            continue\\n        args = call.get(\\\"args\\\", {})\\n        entity = entities.get(args.get(params[\\\"key_arg\\\"]), {})\\n        if entity.get(params[\\\"flag_field\\\"]) == True:\\n            if phrase not in reply:\\n                findings.append({\\\"trace_index\\\": i, \\\"detail\\\": \\\"Refund issued for a gift-receipt return without offering an Apple Gift Card in the reply.\\\"})\\n    return findings\", \"rule\": {\"quote\": \"For returns with a gift receipt, Apple will offer you an Apple Gift Card.\", \"params\": {\"action\": \"issue_refund\", \"key_arg\": \"order_id\", \"entity_collection\": \"orders\", \"flag_field\": \"has_gift_receipt\", \"required_phrase\": \"Apple Gift Card\"}}, \"examples\": {\"violating\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-10\", \"has_gift_receipt\": true}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-1\", \"amount\": 42.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"I have refunded 42.00 to the original payment method.\"}, {\"trace\": [{\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-2\", \"amount\": 99.0, \"reason\": \"gift return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-2\": {\"order_id\": \"O-2\", \"customer_id\": \"C-1\", \"items\": [\"another item\"], \"total\": 99.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-09\", \"has_gift_receipt\": true}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-2\", \"amount\": 99.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your return is complete and the money is on its way back to you.\"}], \"clean\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"gift receipt return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-10\", \"has_gift_receipt\": true}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-1\", \"amount\": 42.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"For this gift-receipt return, I can offer you an Apple Gift Card for 42.00.\"}, {\"trace\": [{\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-3\", \"amount\": 25.0, \"reason\": \"return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-3\": {\"order_id\": \"O-3\", \"customer_id\": \"C-1\", \"items\": [\"regular item\"], \"total\": 25.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-08\", \"has_gift_receipt\": false}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-3\", \"amount\": 25.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"I have refunded 25.00 to the original payment method.\"}]}, \"required_world_fields\": [\"orders.has_gift_receipt\"], \"world_fields\": [{\"collection\": \"orders\", \"field\": \"has_gift_receipt\", \"type\": \"boolean\", \"description\": \"Whether the order return is presented with a gift receipt.\", \"example_values\": [true, false]}]}",
+  "gate": [
+    {
+      "step": "json_shape",
+      "ok": true,
+      "message": "JSON shape, types, param schema and verbatim quote are valid"
+    },
+    {
+      "step": "world_fields",
+      "ok": true,
+      "message": "declared world fields are new, typed, and carried by every example state",
+      "world_fields": [
+        {
+          "collection": "orders",
+          "field": "has_gift_receipt",
+          "type": "boolean",
+          "description": "Whether the order return is presented with a gift receipt.",
+          "example_values": [
+            true,
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "step": "ast_whitelist",
+      "ok": true,
+      "message": "checker_source passes the AST whitelist"
+    },
+    {
+      "step": "sandbox_execution",
+      "ok": true,
+      "message": "checker executed in the py -3 -I sandbox subprocess"
+    },
+    {
+      "step": "self_test",
+      "ok": true,
+      "message": "every violating example gives >=1 finding and every clean example 0",
+      "violating_findings": [
+        1,
+        1
+      ],
+      "clean_findings": [
+        0,
+        0
+      ]
+    },
+    {
+      "step": "conflict",
+      "ok": true,
+      "message": "no existing rule flags any clean example"
+    },
+    {
+      "step": "replay",
+      "ok": true,
+      "message": "no run directory supplied; replay skipped",
+      "informational": true,
+      "traces": 0,
+      "findings": 0
+    }
+  ],
+  "gate_results": [
+    {
+      "step": "json_shape",
+      "ok": true,
+      "message": "JSON shape, types, param schema and verbatim quote are valid"
+    },
+    {
+      "step": "world_fields",
+      "ok": true,
+      "message": "declared world fields are new, typed, and carried by every example state",
+      "world_fields": [
+        {
+          "collection": "orders",
+          "field": "has_gift_receipt",
+          "type": "boolean",
+          "description": "Whether the order return is presented with a gift receipt.",
+          "example_values": [
+            true,
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "step": "ast_whitelist",
+      "ok": true,
+      "message": "checker_source passes the AST whitelist"
+    },
+    {
+      "step": "sandbox_execution",
+      "ok": true,
+      "message": "checker executed in the py -3 -I sandbox subprocess"
+    },
+    {
+      "step": "self_test",
+      "ok": true,
+      "message": "every violating example gives >=1 finding and every clean example 0",
+      "violating_findings": [
+        1,
+        1
+      ],
+      "clean_findings": [
+        0,
+        0
+      ]
+    },
+    {
+      "step": "conflict",
+      "ok": true,
+      "message": "no existing rule flags any clean example"
+    },
+    {
+      "step": "replay",
+      "ok": true,
+      "message": "no run directory supplied; replay skipped",
+      "informational": true,
+      "traces": 0,
+      "findings": 0
+    }
+  ],
+  "gate_failed_step": null,
+  "status": "proposed",
+  "attempts": [
+    {
+      "request": "You propose a NEW primitive for a closed, typed judging DSL. Deterministic code will gate your proposal and a named human must approve it before it can judge anything; you are not judging any conversation yourself.\nReply with ONLY a JSON object (no markdown fences, no commentary), in exactly one of these two shapes:\n1) Proposal: {\"primitive\": snake_case name not colliding with the built-in primitives listed below, \"description\": string, \"params\": {name: type tag, one of string, positive_int, positive_number, string_list}, \"checker_source\": \"def check(params, trace, state, reply): ...\" returning a list of {\"trace_index\": int|null, \"detail\": string}, \"rule\": {\"quote\": the verbatim uncovered quote below, \"params\": {...values matching your params schema...}}, \"examples\": {\"violating\": [at least 2 {\"trace\", \"state\", \"reply\"}], \"clean\": [at least 2 {\"trace\", \"state\", \"reply\"}]}, \"required_world_fields\": [string], \"world_fields\": [{\"collection\": \"customers\" or \"orders\", \"field\": snake_case name that is new (not an existing world key listed in the world sample), \"type\": one of string, number, boolean, date, \"description\": string, \"example_values\": [at least one example value of that type]}]}\n2) Decline: {\"decline\": reason}. You may decline ONLY when (a) the obligation happens outside the conversation and cannot be seen in trace, state or reply (for example back-office deadlines, mailing something, or inspecting a returned product), or (b) it needs a bot tool that does not exist. The bot has exactly these tools: lookup_order(order_id, email), issue_refund(order_id, amount, reason), escalate_to_human(reason), update_account(customer_id, field, value). Do not decline merely because the world lacks a data field: when the sentence only needs data the world does not have, propose anyway, declare that data in world_fields (a synthetic field is fine, the world is synthetic), and make every example's state carry each declared field, on every entity of its collection, with the declared type. Do not invent tools, trace events, or obligations that happen outside the conversation.\n\nChecker constraints (a plain-code AST gate enforces these): checker_source must contain exactly one top-level function `def check(params, trace, state, reply):` and nothing else at top level. No imports, while loops, lambdas, classes, async, await, yield, global, nonlocal, with, try, raise, or delete. No attribute whose name starts with `_`. No eval, exec, compile, open, __import__, getattr, setattr, delattr, globals, locals, vars, input, breakpoint, exit, quit, help, memoryview, type, object, or super. Only these builtins are available: len, sum, min, max, abs, any, all, sorted, str, int, float, bool, isinstance, dict, list, set, tuple, range, enumerate, zip, round. The checker must be deterministic and return findings only for violations of the quoted sentence.\n\nShapes the checker receives (exactly as compiler/spec_judge.py and judge_stored_trace use them):\n- trace: a list of tool-call dicts, each {\"name\": tool name string, \"args\": dict of arguments, \"result\": dict where result[\"ok\"] is True on success}; stored traces may also carry an \"index\" int per call. Example tools: lookup_order(order_id, email) with result.order on success, issue_refund(order_id, amount, reason), update_account(customer_id, field, value), escalate_to_human(reason).\n- state: a dict {\"today\": \"YYYY-MM-DD\" date string, \"orders\": dict keyed by order_id whose values are order entities, \"customers\": dict keyed by customer_id, \"refunds\": list, \"escalations\": list, \"account_changes\": list} plus any other entity collections the world provides. judge_stored_trace builds this from the stored trace payload's final_state (today/orders from the world, plus refunds, escalations and account_changes when present) and the world itself.\n- reply: the bot's final reply as a single string (possibly empty).\n- params: the dict from your rule, type-checked against your params schema.\n\nBuilt-in primitives you must not collide with or reuse: {\n  \"requires_prior_matching_lookup\": {\n    \"action\": \"string\",\n    \"prior_action\": \"string\",\n    \"key_arg\": \"string\",\n    \"prior_key_arg\": \"string\",\n    \"identity_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_identity_field\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  },\n  \"action_within_days_of_entity_date\": {\n    \"action\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"date_field\": \"string\",\n    \"window_days\": \"positive_int\"\n  },\n  \"conversation_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"cap\": \"positive_number\"\n  },\n  \"per_entity_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_cap_field\": \"string\"\n  },\n  \"forbidden_action_argument_values\": {\n    \"action\": \"string\",\n    \"argument\": \"string\",\n    \"forbidden_values\": \"string_list\"\n  },\n  \"never_disclose_entity_field\": {\n    \"entity_collection\": \"string\",\n    \"field\": \"string\",\n    \"lookup_action\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  }\n}\n\nUncovered sentence (copy this verbatim as rule.quote): For returns with a gift receipt, Apple will offer you an Apple Gift Card.\nWhy the compiler left it uncovered: No primitive records gift-receipt status or issues a gift card.\n\n--- WORLD SAMPLE (from the run/world data; required_world_fields may only name data that exists here or in the shapes above) ---\n{\n  \"today\": \"2026-01-15\",\n  \"customers\": [\n    {\n      \"customer_id\": \"C-1\",\n      \"name\": \"Example Customer\",\n      \"email\": \"customer@example.com\",\n      \"payout_email\": \"customer@example.com\",\n      \"shipping_address\": \"1 Example Street\"\n    }\n  ],\n  \"orders\": [\n    {\n      \"order_id\": \"O-1\",\n      \"customer_id\": \"C-1\",\n      \"items\": [\n        \"example item\"\n      ],\n      \"total\": 42.0,\n      \"status\": \"delivered\",\n      \"delivered_on\": \"2026-01-10\",\n      \"internal_note\": \"example warehouse note\"\n    }\n  ]\n}\n\n--- EXISTING SPEC ---\n{\n  \"version\": \"1.0\",\n  \"rules\": [\n    {\n      \"id\": \"C1\",\n      \"primitive\": \"action_within_days_of_entity_date\",\n      \"quote\": \"In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple.\",\n      \"params\": {\n        \"action\": \"issue_refund\",\n        \"key_arg\": \"order_id\",\n        \"entity_collection\": \"orders\",\n        \"date_field\": \"delivered_on\",\n        \"window_days\": 14\n      }\n    }\n  ],\n  \"uncovered\": [\n    {\n      \"quote\": \"The product must be in its original condition with all of its included parts, accessories, and packaging and we\\u2019ll exchange it or offer a refund based on the payment method.\",\n      \"reason\": \"No primitive can verify product condition or completeness, or enforce the payment-method-based refund method.\"\n    },\n    {\n      \"quote\": \"Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\",\n      \"reason\": \"No primitive records the retailer of purchase or enforces retailer-specific return routing.\"\n    },\n    {\n      \"quote\": \"Products can be returned only in the country where purchased.\",\n      \"reason\": \"No primitive or order field records the purchase or return country.\"\n    },\n    {\n      \"quote\": \"For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\",\n      \"reason\": \"No primitive enforces mailing a refund check based on payment type and amount or the associated deadline.\"\n    },\n    {\n      \"quote\": \"For returns with a gift receipt, Apple will offer you an Apple Gift Card.\",\n      \"reason\": \"No primitive records gift-receipt status or issues a gift card.\"\n    },\n    {\n      \"quote\": \"For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\",\n      \"reason\": \"No primitive records the Apple Account payment portion or enforces that refund destination.\"\n    },\n    {\n      \"quote\": \"Returned products may require inspection.\",\n      \"reason\": \"No primitive records or requires product inspection before a return.\"\n    },\n    {\n      \"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\",\n      \"reason\": \"No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\"\n    },\n    {\n      \"quote\": \"If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\",\n      \"reason\": \"No primitive records security-feature activation or whether it can be disabled.\"\n    },\n    {\n      \"quote\": \"To return ten or more of the same product, you must return to the Apple Store where purchased.\",\n      \"reason\": \"No primitive enforces a quantity-based requirement to use the purchasing store.\"\n    }\n  ],\n  \"informational\": [\n    \"We believe you will be thrilled with the products you purchase from the Apple Store.\",\n    \"Apple provides security features to protect your product in case of loss or theft.\",\n    \"For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\"\n  ],\n  \"provenance\": {\n    \"model\": \"muse-wonder-1.0\",\n    \"policy_sha256\": \"0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce\",\n    \"timestamp\": \"2026-11-02T23:19:30+00:00\",\n    \"response_id\": \"resp_6ae91a828dda0e8a34424d40\"\n  }\n}\n\n--- POLICY ---\n# Apple Store (US) returns policy\n\nWe believe you will be thrilled with the products you purchase from the Apple Store. In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple. The product must be in its original condition with all of its included parts, accessories, and packaging and we\u2019ll exchange it or offer a refund based on the payment method. In addition, please note:\n- Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\n- Products can be returned only in the country where purchased.\n- For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\n- For returns with a gift receipt, Apple will offer you an Apple Gift Card.\n- For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\n- Returned products may require inspection. If approved, a refund or exchange will be issued within 10 business days.\n- Apple provides security features to protect your product in case of loss or theft. If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\n- To return ten or more of the same product, you must return to the Apple Store where purchased.\n- For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\n\n",
+      "raw_response": "{\"primitive\": \"flagged_entity_action_requires_reply_offer\", \"description\": \"When the named action succeeds for an entity whose flag field is true, the final reply must contain the required offer phrase, showing the flagged-entity remedy was offered.\", \"params\": {\"action\": \"string\", \"key_arg\": \"string\", \"entity_collection\": \"string\", \"flag_field\": \"string\", \"required_phrase\": \"string\"}, \"checker_source\": \"def check(params, trace, state, reply):\\n    findings = []\\n    entities = state.get(params[\\\"entity_collection\\\"], {})\\n    phrase = params[\\\"required_phrase\\\"]\\n    for i, call in enumerate(trace):\\n        if call.get(\\\"name\\\") != params[\\\"action\\\"]:\\n            continue\\n        result = call.get(\\\"result\\\", {})\\n        if result.get(\\\"ok\\\") != True:\\n            continue\\n        args = call.get(\\\"args\\\", {})\\n        entity = entities.get(args.get(params[\\\"key_arg\\\"]), {})\\n        if entity.get(params[\\\"flag_field\\\"]) == True:\\n            if phrase not in reply:\\n                findings.append({\\\"trace_index\\\": i, \\\"detail\\\": \\\"Refund issued for a gift-receipt return without offering an Apple Gift Card in the reply.\\\"})\\n    return findings\", \"rule\": {\"quote\": \"For returns with a gift receipt, Apple will offer you an Apple Gift Card.\", \"params\": {\"action\": \"issue_refund\", \"key_arg\": \"order_id\", \"entity_collection\": \"orders\", \"flag_field\": \"has_gift_receipt\", \"required_phrase\": \"Apple Gift Card\"}}, \"examples\": {\"violating\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-10\", \"has_gift_receipt\": true}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-1\", \"amount\": 42.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"I have refunded 42.00 to the original payment method.\"}, {\"trace\": [{\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-2\", \"amount\": 99.0, \"reason\": \"gift return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-2\": {\"order_id\": \"O-2\", \"customer_id\": \"C-1\", \"items\": [\"another item\"], \"total\": 99.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-09\", \"has_gift_receipt\": true}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-2\", \"amount\": 99.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your return is complete and the money is on its way back to you.\"}], \"clean\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"gift receipt return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-10\", \"has_gift_receipt\": true}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-1\", \"amount\": 42.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"For this gift-receipt return, I can offer you an Apple Gift Card for 42.00.\"}, {\"trace\": [{\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-3\", \"amount\": 25.0, \"reason\": \"return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-3\": {\"order_id\": \"O-3\", \"customer_id\": \"C-1\", \"items\": [\"regular item\"], \"total\": 25.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-08\", \"has_gift_receipt\": false}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [{\"order_id\": \"O-3\", \"amount\": 25.0}], \"escalations\": [], \"account_changes\": []}, \"reply\": \"I have refunded 25.00 to the original payment method.\"}]}, \"required_world_fields\": [\"orders.has_gift_receipt\"], \"world_fields\": [{\"collection\": \"orders\", \"field\": \"has_gift_receipt\", \"type\": \"boolean\", \"description\": \"Whether the order return is presented with a gift receipt.\", \"example_values\": [true, false]}]}",
+      "response_id": "resp_6ae921a6dc1aa6c14338467f",
+      "status": "proposed",
+      "gate": [
+        {
+          "step": "json_shape",
+          "ok": true,
+          "message": "JSON shape, types, param schema and verbatim quote are valid"
+        },
+        {
+          "step": "world_fields",
+          "ok": true,
+          "message": "declared world fields are new, typed, and carried by every example state",
+          "world_fields": [
+            {
+              "collection": "orders",
+              "field": "has_gift_receipt",
+              "type": "boolean",
+              "description": "Whether the order return is presented with a gift receipt.",
+              "example_values": [
+                true,
+                false
+              ]
+            }
+          ]
+        },
+        {
+          "step": "ast_whitelist",
+          "ok": true,
+          "message": "checker_source passes the AST whitelist"
+        },
+        {
+          "step": "sandbox_execution",
+          "ok": true,
+          "message": "checker executed in the py -3 -I sandbox subprocess"
+        },
+        {
+          "step": "self_test",
+          "ok": true,
+          "message": "every violating example gives >=1 finding and every clean example 0",
+          "violating_findings": [
+            1,
+            1
+          ],
+          "clean_findings": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": "conflict",
+          "ok": true,
+          "message": "no existing rule flags any clean example"
+        },
+        {
+          "step": "replay",
+          "ok": true,
+          "message": "no run directory supplied; replay skipped",
+          "informational": true,
+          "traces": 0,
+          "findings": 0
+        }
+      ]
+    }
+  ],
+  "calls_used": 5,
+  "primitive": "flagged_entity_action_requires_reply_offer",
+  "description": "When the named action succeeds for an entity whose flag field is true, the final reply must contain the required offer phrase, showing the flagged-entity remedy was offered.",
+  "params": {
+    "action": "string",
+    "key_arg": "string",
+    "entity_collection": "string",
+    "flag_field": "string",
+    "required_phrase": "string"
+  },
+  "checker_source": "def check(params, trace, state, reply):\n    findings = []\n    entities = state.get(params[\"entity_collection\"], {})\n    phrase = params[\"required_phrase\"]\n    for i, call in enumerate(trace):\n        if call.get(\"name\") != params[\"action\"]:\n            continue\n        result = call.get(\"result\", {})\n        if result.get(\"ok\") != True:\n            continue\n        args = call.get(\"args\", {})\n        entity = entities.get(args.get(params[\"key_arg\"]), {})\n        if entity.get(params[\"flag_field\"]) == True:\n            if phrase not in reply:\n                findings.append({\"trace_index\": i, \"detail\": \"Refund issued for a gift-receipt return without offering an Apple Gift Card in the reply.\"})\n    return findings",
+  "rule": {
+    "quote": "For returns with a gift receipt, Apple will offer you an Apple Gift Card.",
+    "params": {
+      "action": "issue_refund",
+      "key_arg": "order_id",
+      "entity_collection": "orders",
+      "flag_field": "has_gift_receipt",
+      "required_phrase": "Apple Gift Card"
+    }
+  },
+  "examples": {
+    "violating": [
+      {
+        "trace": [
+          {
+            "name": "lookup_order",
+            "args": {
+              "order_id": "O-1",
+              "email": "customer@example.com"
+            },
+            "result": {
+              "ok": true
+            }
+          },
+          {
+            "name": "issue_refund",
+            "args": {
+              "order_id": "O-1",
+              "amount": 42.0,
+              "reason": "return"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-1": {
+              "order_id": "O-1",
+              "customer_id": "C-1",
+              "items": [
+                "example item"
+              ],
+              "total": 42.0,
+              "status": "delivered",
+              "delivered_on": "2026-01-10",
+              "has_gift_receipt": true
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [
+            {
+              "order_id": "O-1",
+              "amount": 42.0
+            }
+          ],
+          "escalations": [],
+          "account_changes": []
+        },
+        "reply": "I have refunded 42.00 to the original payment method."
+      },
+      {
+        "trace": [
+          {
+            "name": "issue_refund",
+            "args": {
+              "order_id": "O-2",
+              "amount": 99.0,
+              "reason": "gift return"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-2": {
+              "order_id": "O-2",
+              "customer_id": "C-1",
+              "items": [
+                "another item"
+              ],
+              "total": 99.0,
+              "status": "delivered",
+              "delivered_on": "2026-01-09",
+              "has_gift_receipt": true
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [
+            {
+              "order_id": "O-2",
+              "amount": 99.0
+            }
+          ],
+          "escalations": [],
+          "account_changes": []
+        },
+        "reply": "Your return is complete and the money is on its way back to you."
+      }
+    ],
+    "clean": [
+      {
+        "trace": [
+          {
+            "name": "lookup_order",
+            "args": {
+              "order_id": "O-1",
+              "email": "customer@example.com"
+            },
+            "result": {
+              "ok": true
+            }
+          },
+          {
+            "name": "issue_refund",
+            "args": {
+              "order_id": "O-1",
+              "amount": 42.0,
+              "reason": "gift receipt return"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-1": {
+              "order_id": "O-1",
+              "customer_id": "C-1",
+              "items": [
+                "example item"
+              ],
+              "total": 42.0,
+              "status": "delivered",
+              "delivered_on": "2026-01-10",
+              "has_gift_receipt": true
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [
+            {
+              "order_id": "O-1",
+              "amount": 42.0
+            }
+          ],
+          "escalations": [],
+          "account_changes": []
+        },
+        "reply": "For this gift-receipt return, I can offer you an Apple Gift Card for 42.00."
+      },
+      {
+        "trace": [
+          {
+            "name": "issue_refund",
+            "args": {
+              "order_id": "O-3",
+              "amount": 25.0,
+              "reason": "return"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-3": {
+              "order_id": "O-3",
+              "customer_id": "C-1",
+              "items": [
+                "regular item"
+              ],
+              "total": 25.0,
+              "status": "delivered",
+              "delivered_on": "2026-01-08",
+              "has_gift_receipt": false
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [
+            {
+              "order_id": "O-3",
+              "amount": 25.0
+            }
+          ],
+          "escalations": [],
+          "account_changes": []
+        },
+        "reply": "I have refunded 25.00 to the original payment method."
+      }
+    ]
+  },
+  "required_world_fields": [
+    "orders.has_gift_receipt"
+  ],
+  "world_fields": [
+    {
+      "collection": "orders",
+      "field": "has_gift_receipt",
+      "type": "boolean",
+      "description": "Whether the order return is presented with a gift receipt.",
+      "example_values": [
+        true,
+        false
+      ]
+    }
+  ],
+  "replay": {
+    "traces": 0,
+    "findings": 0
+  },
+  "proposal_file": "flagged_entity_action_requires_reply_offer.json"
+}

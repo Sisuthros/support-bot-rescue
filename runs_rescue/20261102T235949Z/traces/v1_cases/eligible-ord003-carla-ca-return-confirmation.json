@@ -1,0 +1,63 @@
+{
+  "case_id": "eligible-ord003-carla-ca-return-confirmation",
+  "turns": [
+    "I'm Carla Martinez (carla.martinez@example.com) returning order ORD003, delivered 2026-06-03. I still have the receipt.",
+    "Confirming it was purchased in CA and I'm returning it in CA, not in another country. Please refund the $549.50 total."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "carla.martinez@example.com",
+        "order_id": "ORD003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD003",
+          "customer_id": "CUST003",
+          "items": [
+            "iPad Air",
+            "Apple Pencil"
+          ],
+          "total": 549.5,
+          "status": "delivered",
+          "delivered_on": "2026-06-03",
+          "internal_note": "Checked in at dock 2",
+          "purchase_country": "CA",
+          "return_country": "CA",
+          "email": "carla.martinez@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 549.5,
+        "order_id": "ORD003",
+        "reason": "Customer return with receipt"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD003",
+        "amount": 549.5
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up order ORD003 to start your return.\nYour order checks out \u2014 I'll process that return refund now.\nThanks Carla! Your return for order ORD003 is done.\n\nI've refunded $549.50 to your original payment method \u2014 refund ID RF-1. It should show up in 3-5 business days.\n\nLet me know if you need anything else!\nYou're all set, Carla \u2014 thanks for confirming!\n\nYes, your order shows purchased in CA and returned in CA, so you're good.\n\nAnd your refund for the $549.50 total for ORD003 is already processed (refund ID RF-1) \u2014 no further action needed on your end.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD003",
+        "amount": 549.5,
+        "reason": "Customer return with receipt",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

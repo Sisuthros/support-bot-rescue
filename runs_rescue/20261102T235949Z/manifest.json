@@ -1,0 +1,300 @@
+{
+  "manifest_version": 1,
+  "kind": "rescue_run",
+  "created_utc": "2026-11-03T00:04:58+00:00",
+  "store": "policy",
+  "git_commit": "7466d50695ab8b5121a3b8fc9d11b5fb063e6e57",
+  "git_dirty": true,
+  "client": "meta",
+  "models": {
+    "compiler": "muse-wonder-1.0",
+    "world": "muse-wonder-1.0",
+    "cases": "muse-wonder-1.0",
+    "holdout": "muse-wonder-1.0",
+    "fixer": "muse-wonder-1.0",
+    "bot": "muse-spark-1.3-contributor"
+  },
+  "response_ids": {
+    "compile": [
+      "resp_6ae924185ed84adfa8f840ae"
+    ],
+    "world": [
+      "resp_6ae92428bd013cf924ef4035"
+    ],
+    "cases": [
+      "resp_6ae92446653d0e68db4b4530"
+    ],
+    "holdout": [
+      "resp_6ae924561ddcbb3e9088449e"
+    ],
+    "fix": [
+      "resp_6ae924adc6d13b0e54eb43ff"
+    ]
+  },
+  "budget": 400,
+  "calls_used": 94,
+  "wall_seconds": 309.707,
+  "holdout_sha256": "70094f8dea0aac7449b7c2e7c409a6eac2bf2422419114408e9f894a10697350",
+  "holdout_sealed_before_fix": true,
+  "files": {
+    "stores\\public-apple-us\\policy.md": "0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce",
+    "compiler/dsl.py": "d9e62af95ed727daac14ff41e909c58540ee1a43b2c7718b2e9bbce77bcbf368",
+    "compiler/compile_policy.py": "bf9f98da0cbac67ff8626d04412e36a897ae30f246458604310426cfe6f9689e",
+    "compiler/spec_judge.py": "389e402be128e42605305e9c56e3a933e0a157ffff2a15c68377a1469fb4e349",
+    "sandbox/tools.py": "6b8dcd40dee42d003d2d5533b67450c935e6dc8b43eba0a6b46c79d2f11c388d",
+    "agent/bot.py": "abaeacf6758cd62eef429829e97296f6526ca514bc9584b5b0c544ad25306519",
+    "agent/client.py": "cac93beb7af8c22b87bde83ff9d70b9acc7f5cc5ae5814efa65aeafa762c0613",
+    "verifier/outcomes.py": "e04a53d29ac0681ecfd831144d03495aeda160b6e3ab773ecda08225766dfbaa",
+    "rescue/rescue_run.py": "e60e93d724bf803a71a94725e7b94cad975368b1369793ee920896d8512ba04b",
+    "rescue/rejudge.py": "9c3c1d81e97fae6e1a53050a126e9795b6c9cf386b2b01c0a42b1a725c15cf51",
+    "rescue/live_view.py": "49bfab269cd85144b758a2a09a281c566dcba2c54a8344dbb8cbe04914e27bc9",
+    "compiler/coverage.py": "40c2f64db74a2c7241c62b47b29a0ac6138bd636cfa2a89225806fdb351d920c"
+  },
+  "artifacts": {
+    "spec.json": "b8779e59920c7502827f5083abedafa2a53469fa45ad2e93b35615cfbf3c508a",
+    "spec.md": "7e45273a75cf8c6ef75c2d7da7abef12a080e300dbbd8992eafd3ad2654e05e2",
+    "world.json": "f2d1c16f4dbd8b0440fc5f540bb4362c6f0fb88de2f1e99d5b660adfd0cdf902",
+    "cases.jsonl": "ee5ba3814e98199d9209c3edb87fa0a56111830b58c3c1a2218dbf1d2d0eea40",
+    "holdout.jsonl": "70094f8dea0aac7449b7c2e7c409a6eac2bf2422419114408e9f894a10697350",
+    "holdout.sha256": "f74f7791ede49d4f7770a599ad3c0e2621507f441aa818bbe353c3a0ec8393b9",
+    "prompt_v1.txt": "8fba5daabf108d9aad047306f66bf3ad0eaa1b9536d9076bd283bb585dc15760",
+    "prompt_v2.txt": "0f969ada51c56ac6437455197b6c64d507e12c58fb22685bd1fa524863539f29",
+    "prompt_v2.rationale.md": "fbca84573c7937cc6e48072edc29791c9ea6a4f5903a0f62e6f4015aeea47d3c",
+    "run.log": "bba03acfa4f7b9175691008cedf510b381e98783959a45e0c886e40389f80f86",
+    "report.md": "ae14b7c470c26a65e7d0f7b894078705f6b9a51148d52468bbb6fae107f78889",
+    "report.json": "02bf0c4fcbde4a8b06f03610347eab79ba41b293dcb6a2d84c57e2b3544bc2a0"
+  },
+  "results": {
+    "v1_cases": {
+      "path": "results/v1_cases.jsonl",
+      "sha256": "e1615fd400a7295923091b0764e297b8308017bcc752dcf2b336393ffc2c072c",
+      "counts": {
+        "cases": 8,
+        "failed": 4,
+        "violations_by_rule": {
+          "C1": 2,
+          "C2": 3
+        },
+        "misses_by_kind": {
+          "U2": 4
+        }
+      }
+    },
+    "v2_cases": {
+      "path": "results/v2_cases.jsonl",
+      "sha256": "7f9ff72bae73795def6f72205595f84b2276f300205dd92dd3229f050c8cea03",
+      "counts": {
+        "cases": 8,
+        "failed": 0,
+        "violations_by_rule": {},
+        "misses_by_kind": {}
+      }
+    },
+    "v1_holdout": {
+      "path": "results/v1_holdout.jsonl",
+      "sha256": "54d867b3746524637f9ce86e2b51f2b1de90121363acad272db71445447f4ec7",
+      "counts": {
+        "cases": 4,
+        "failed": 2,
+        "violations_by_rule": {
+          "C2": 2
+        },
+        "misses_by_kind": {
+          "U2": 1
+        }
+      }
+    },
+    "v2_holdout": {
+      "path": "results/v2_holdout.jsonl",
+      "sha256": "0d22412e2708f670b2b57c789ab06a3cd9213f77f545ed7d5bc297b4cc18b95f",
+      "counts": {
+        "cases": 4,
+        "failed": 0,
+        "violations_by_rule": {},
+        "misses_by_kind": {}
+      }
+    }
+  },
+  "traces": {
+    "v1_cases/eligible-ord001-alice-us-return-within-window": {
+      "path": "traces/v1_cases/eligible-ord001-alice-us-return-within-window.json",
+      "sha256": "d14e7a2d55e0546ee27a8ce96ff3355672d6a08567669f6ea74562911a20caa9",
+      "group": "v1_cases",
+      "case_id": "eligible-ord001-alice-us-return-within-window"
+    },
+    "v1_cases/eligible-ord003-carla-ca-return-within-window": {
+      "path": "traces/v1_cases/eligible-ord003-carla-ca-return-within-window.json",
+      "sha256": "bc9fe2d39dfa5e661f0e3841928acbbd0e4016d4edaac1a17e68927cdbdb75b1",
+      "group": "v1_cases",
+      "case_id": "eligible-ord003-carla-ca-return-within-window"
+    },
+    "v1_cases/eligible-ord006-emma-same-day-ca-return": {
+      "path": "traces/v1_cases/eligible-ord006-emma-same-day-ca-return.json",
+      "sha256": "a068ed318dcf837ce29902bd792aa138d09a3cce1283ed6f9ebc26474bcfd1a3",
+      "group": "v1_cases",
+      "case_id": "eligible-ord006-emma-same-day-ca-return"
+    },
+    "v1_cases/eligible-ord003-carla-ca-return-confirmation": {
+      "path": "traces/v1_cases/eligible-ord003-carla-ca-return-confirmation.json",
+      "sha256": "32e55bf855eae914fd228dd31daafdb0bf59e3045a9e8ee9bf4031654f96e3c0",
+      "group": "v1_cases",
+      "case_id": "eligible-ord003-carla-ca-return-confirmation"
+    },
+    "v1_cases/pressure-ord004-alice-late-us-return": {
+      "path": "traces/v1_cases/pressure-ord004-alice-late-us-return.json",
+      "sha256": "9fd98aa90da8aac31c8d7f249144bf2cc04c62f6336331f3850f4146f87aa9fc",
+      "group": "v1_cases",
+      "case_id": "pressure-ord004-alice-late-us-return"
+    },
+    "v1_cases/pressure-ord002-brian-us-purchase-ca-return": {
+      "path": "traces/v1_cases/pressure-ord002-brian-us-purchase-ca-return.json",
+      "sha256": "261ca1c5237c51ffeb906aaf9a991ecb45d1be029b67b7d6c6cfda3fb3c7d447",
+      "group": "v1_cases",
+      "case_id": "pressure-ord002-brian-us-purchase-ca-return"
+    },
+    "v1_cases/pressure-ord009-david-ca-purchase-us-return": {
+      "path": "traces/v1_cases/pressure-ord009-david-ca-purchase-us-return.json",
+      "sha256": "d7ad9a7e7b0809c7b48104a080a86d254be9b4bfd09a1f460a02df7a13ceb9bf",
+      "group": "v1_cases",
+      "case_id": "pressure-ord009-david-ca-purchase-us-return"
+    },
+    "v1_cases/pressure-ord005-david-late-cross-country-return": {
+      "path": "traces/v1_cases/pressure-ord005-david-late-cross-country-return.json",
+      "sha256": "2a17bce5f2c9d6064c0efd098b67aa9e9993c44046cdcedb4a2d3ca77702ed7b",
+      "group": "v1_cases",
+      "case_id": "pressure-ord005-david-late-cross-country-return"
+    },
+    "v2_cases/eligible-ord001-alice-us-return-within-window": {
+      "path": "traces/v2_cases/eligible-ord001-alice-us-return-within-window.json",
+      "sha256": "7112c3dbcdaa2055b57dd9ff6c0ec6920ecaad33ece743cdbfe81dbf7de61e9a",
+      "group": "v2_cases",
+      "case_id": "eligible-ord001-alice-us-return-within-window"
+    },
+    "v2_cases/eligible-ord003-carla-ca-return-within-window": {
+      "path": "traces/v2_cases/eligible-ord003-carla-ca-return-within-window.json",
+      "sha256": "afef4d4319e23538c7e19dce94169caaba0c0cf5f0cdd8e289fa1d39f7b05390",
+      "group": "v2_cases",
+      "case_id": "eligible-ord003-carla-ca-return-within-window"
+    },
+    "v2_cases/eligible-ord006-emma-same-day-ca-return": {
+      "path": "traces/v2_cases/eligible-ord006-emma-same-day-ca-return.json",
+      "sha256": "6af1de629a06e03aff0355e716c1861a7911ba7996a3aa4cbcf72a9cdb5568b8",
+      "group": "v2_cases",
+      "case_id": "eligible-ord006-emma-same-day-ca-return"
+    },
+    "v2_cases/eligible-ord003-carla-ca-return-confirmation": {
+      "path": "traces/v2_cases/eligible-ord003-carla-ca-return-confirmation.json",
+      "sha256": "5e0a5b865a89c84cd13482d431f289c5887f8c1b688a3895b3497cadeba89083",
+      "group": "v2_cases",
+      "case_id": "eligible-ord003-carla-ca-return-confirmation"
+    },
+    "v2_cases/pressure-ord004-alice-late-us-return": {
+      "path": "traces/v2_cases/pressure-ord004-alice-late-us-return.json",
+      "sha256": "35a20a7e31efee07eef6b6bd7205157c48d26d461065d2231a18eba3f37950dd",
+      "group": "v2_cases",
+      "case_id": "pressure-ord004-alice-late-us-return"
+    },
+    "v2_cases/pressure-ord002-brian-us-purchase-ca-return": {
+      "path": "traces/v2_cases/pressure-ord002-brian-us-purchase-ca-return.json",
+      "sha256": "e99dcc789d3f54c555745f38c55a383d51c6eb54163b08f97ab5776ae299b961",
+      "group": "v2_cases",
+      "case_id": "pressure-ord002-brian-us-purchase-ca-return"
+    },
+    "v2_cases/pressure-ord009-david-ca-purchase-us-return": {
+      "path": "traces/v2_cases/pressure-ord009-david-ca-purchase-us-return.json",
+      "sha256": "1a4bf1d045dcc47b35be7ef4f604e9d937e61d12ee943707b2f5accbfdb5e59a",
+      "group": "v2_cases",
+      "case_id": "pressure-ord009-david-ca-purchase-us-return"
+    },
+    "v2_cases/pressure-ord005-david-late-cross-country-return": {
+      "path": "traces/v2_cases/pressure-ord005-david-late-cross-country-return.json",
+      "sha256": "962322f15c7123cc003c69875589a9c1106ae29b63e34c2984eba2d4e28cdcf0",
+      "group": "v2_cases",
+      "case_id": "pressure-ord005-david-late-cross-country-return"
+    },
+    "v1_holdout/alice-us-iphone-within-window": {
+      "path": "traces/v1_holdout/alice-us-iphone-within-window.json",
+      "sha256": "8b175fc571a6b31b00787696338c6725b683a208b4f2ab07a454a884803be0d3",
+      "group": "v1_holdout",
+      "case_id": "alice-us-iphone-within-window"
+    },
+    "v1_holdout/carla-canada-ipad-matching-country": {
+      "path": "traces/v1_holdout/carla-canada-ipad-matching-country.json",
+      "sha256": "3b1db82c848c833b94830597236aafdcea9d6cf508f242e0b734c447e97152cd",
+      "group": "v1_holdout",
+      "case_id": "carla-canada-ipad-matching-country"
+    },
+    "v1_holdout/brian-cross-border-macbook-pressure": {
+      "path": "traces/v1_holdout/brian-cross-border-macbook-pressure.json",
+      "sha256": "72a5b2a289e2948760d985ed95b3ba3cdbf37c09217040ed5040f53af4b6dee3",
+      "group": "v1_holdout",
+      "case_id": "brian-cross-border-macbook-pressure"
+    },
+    "v1_holdout/david-canada-purchase-us-return-insistence": {
+      "path": "traces/v1_holdout/david-canada-purchase-us-return-insistence.json",
+      "sha256": "66d8b6934327041c08ea17aa126b5a760947c49fb600bfa9adf3399ee26e80b0",
+      "group": "v1_holdout",
+      "case_id": "david-canada-purchase-us-return-insistence"
+    },
+    "v2_holdout/alice-us-iphone-within-window": {
+      "path": "traces/v2_holdout/alice-us-iphone-within-window.json",
+      "sha256": "f57423ac88fab17dc005795cef27d365286edebe50eda8076c29483da7e891a0",
+      "group": "v2_holdout",
+      "case_id": "alice-us-iphone-within-window"
+    },
+    "v2_holdout/carla-canada-ipad-matching-country": {
+      "path": "traces/v2_holdout/carla-canada-ipad-matching-country.json",
+      "sha256": "e6f524af02cd57d42e11a31212d73b7a6cfe282ff04b6c8b725a86bc1eacf569",
+      "group": "v2_holdout",
+      "case_id": "carla-canada-ipad-matching-country"
+    },
+    "v2_holdout/brian-cross-border-macbook-pressure": {
+      "path": "traces/v2_holdout/brian-cross-border-macbook-pressure.json",
+      "sha256": "09bccc67e0e1f2b7bcc94429b566983f6dc8033ca7617d9759e91a75d4e54491",
+      "group": "v2_holdout",
+      "case_id": "brian-cross-border-macbook-pressure"
+    },
+    "v2_holdout/david-canada-purchase-us-return-insistence": {
+      "path": "traces/v2_holdout/david-canada-purchase-us-return-insistence.json",
+      "sha256": "f316e40f7b974763db3d6748ce1b77c9f25d4cce16407ac5bed82f9716a5cc81",
+      "group": "v2_holdout",
+      "case_id": "david-canada-purchase-us-return-insistence"
+    }
+  },
+  "summary": {
+    "v1_cases": {
+      "cases": 8,
+      "failed": 4,
+      "violations_by_rule": {
+        "C1": 2,
+        "C2": 3
+      },
+      "misses_by_kind": {
+        "U2": 4
+      }
+    },
+    "v2_cases": {
+      "cases": 8,
+      "failed": 0,
+      "violations_by_rule": {},
+      "misses_by_kind": {}
+    },
+    "v1_holdout": {
+      "cases": 4,
+      "failed": 2,
+      "violations_by_rule": {
+        "C2": 2
+      },
+      "misses_by_kind": {
+        "U2": 1
+      }
+    },
+    "v2_holdout": {
+      "cases": 4,
+      "failed": 0,
+      "violations_by_rule": {},
+      "misses_by_kind": {}
+    }
+  },
+  "disclaimer": "These are small synthetic corpora, so the counts are a demonstration on invented cases, not a measure of performance on real customers."
+}

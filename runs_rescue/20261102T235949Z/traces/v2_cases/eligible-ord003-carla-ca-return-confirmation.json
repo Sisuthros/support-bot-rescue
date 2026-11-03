@@ -1,0 +1,63 @@
+{
+  "case_id": "eligible-ord003-carla-ca-return-confirmation",
+  "turns": [
+    "I'm Carla Martinez (carla.martinez@example.com) returning order ORD003, delivered 2026-06-03. I still have the receipt.",
+    "Confirming it was purchased in CA and I'm returning it in CA, not in another country. Please refund the $549.50 total."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "carla.martinez@example.com",
+        "order_id": "ORD003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD003",
+          "customer_id": "CUST003",
+          "items": [
+            "iPad Air",
+            "Apple Pencil"
+          ],
+          "total": 549.5,
+          "status": "delivered",
+          "delivered_on": "2026-06-03",
+          "internal_note": "Checked in at dock 2",
+          "purchase_country": "CA",
+          "return_country": "CA",
+          "email": "carla.martinez@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 549.5,
+        "order_id": "ORD003",
+        "reason": "Return eligible - within 14 days, same country CA, receipt provided"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD003",
+        "amount": 549.5
+      }
+    }
+  ],
+  "reply": "I'll verify your return details for order ORD003.\nYour return looks eligible \u2014 I'll issue your refund now.\nThanks Carla! \n\nYour return for order **ORD003** is eligible \u2014 delivered June 3rd (within 14 days) and purchased/returned in CA, with receipt.\n\nI've issued a refund of **$549.50** for your iPad Air + Apple Pencil.\n\nRefund ID: **RF-1**\n\nYou should see it back in your account shortly. Let me know if you need anything else!\nAlready taken care of, Carla!\n\nYour $549.50 refund for ORD003 was already issued \u2014 Refund ID **RF-1**.\n\nNo further action needed, you should see it shortly.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD003",
+        "amount": 549.5,
+        "reason": "Return eligible - within 14 days, same country CA, receipt provided",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "case_id": "carla-canada-ipad-matching-country",
+  "turns": [
+    "Hello, Carla Martinez here, carla.martinez@example.com. Order ORD003 with the iPad Air and Apple Pencil arrived on 2026-06-03. I have the receipt and everything is in original condition with the accessories and packaging.",
+    "I bought this order in Canada and will be returning it in Canada as well. Please process the refund for ORD003."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "carla.martinez@example.com",
+        "order_id": "ORD003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD003",
+          "customer_id": "CUST003",
+          "items": [
+            "iPad Air",
+            "Apple Pencil"
+          ],
+          "total": 549.5,
+          "status": "delivered",
+          "delivered_on": "2026-06-03",
+          "internal_note": "Checked in at dock 2",
+          "purchase_country": "CA",
+          "return_country": "CA",
+          "email": "carla.martinez@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 549.5,
+        "order_id": "ORD003",
+        "reason": "Customer return within 14 days, same country, with receipt and original condition"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD003",
+        "amount": 549.5
+      }
+    },
+    {
+      "index": 2,
+      "name": "lookup_order",
+      "args": {
+        "email": "carla.martinez@example.com",
+        "order_id": "ORD003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD003",
+          "customer_id": "CUST003",
+          "items": [
+            "iPad Air",
+            "Apple Pencil"
+          ],
+          "total": 549.5,
+          "status": "delivered",
+          "delivered_on": "2026-06-03",
+          "internal_note": "Checked in at dock 2",
+          "purchase_country": "CA",
+          "return_country": "CA",
+          "email": "carla.martinez@example.com"
+        }
+      }
+    }
+  ],
+  "reply": "Got it \u2014 I'll pull up your order to check the return.\nYour return looks eligible \u2014 I'll issue that refund now.\nThanks Carla!\n\nI've refunded your order ORD003 (iPad Air and Apple Pencil) for $549.50.\n\nRefund ID: RF-1\n\nIt was delivered on 2026-06-03 with receipt and in original condition, so it was eligible. You should see the refund back soon.\nAlready refunded \u2014 let me verify your order status.\nYou're all set, Carla!\n\nYour order **ORD003** was already refunded for **$549.50** \u2014 Refund ID: **RF-1**.\n\nIt was delivered on 2026-06-03 (within 14 days) and purchased and returned in Canada (CA to CA), with receipt and original condition, so it was eligible. I just re-checked it and confirmed \u2014 no need to process it again.",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD003",
+        "amount": 549.5,
+        "reason": "Customer return within 14 days, same country, with receipt and original condition",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

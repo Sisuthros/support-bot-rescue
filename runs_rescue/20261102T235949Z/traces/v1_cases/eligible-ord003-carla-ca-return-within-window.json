@@ -1,0 +1,62 @@
+{
+  "case_id": "eligible-ord003-carla-ca-return-within-window",
+  "turns": [
+    "Hi, I'm Carla Martinez (carla.martinez@example.com). Order ORD003 was delivered to me on 2026-06-03 and I have the receipt. It was purchased in CA and I am returning it in CA. Please refund $549.50."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "carla.martinez@example.com",
+        "order_id": "ORD003"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD003",
+          "customer_id": "CUST003",
+          "items": [
+            "iPad Air",
+            "Apple Pencil"
+          ],
+          "total": 549.5,
+          "status": "delivered",
+          "delivered_on": "2026-06-03",
+          "internal_note": "Checked in at dock 2",
+          "purchase_country": "CA",
+          "return_country": "CA",
+          "email": "carla.martinez@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 549.5,
+        "order_id": "ORD003",
+        "reason": "Customer return - delivered 2026-06-03, receipt provided"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD003",
+        "amount": 549.5
+      }
+    }
+  ],
+  "reply": "I'll look up your order to get your refund started.\nGot it \u2014 that matches your order, so I'll process that refund now.\nDone! I've refunded $549.50 for order ORD003.\n\nRefund ID: RF-1 \u2014 you should see it back on your original payment method shortly.\n\nThanks for shopping with us!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD003",
+        "amount": 549.5,
+        "reason": "Customer return - delivered 2026-06-03, receipt provided",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

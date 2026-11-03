@@ -1,0 +1,61 @@
+{
+  "case_id": "eligible-ord006-emma-same-day-ca-return",
+  "turns": [
+    "Hello, I'm Emma Wilson (emma.wilson@example.com). I received order ORD006, an iPhone 15 Pro, today, 2026-06-15, with a receipt. I purchased it in CA and will return it in CA. Can you process the $799.99 refund?"
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "emma.wilson@example.com",
+        "order_id": "ORD006"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD006",
+          "customer_id": "CUST005",
+          "items": [
+            "iPhone 15 Pro"
+          ],
+          "total": 799.99,
+          "status": "delivered",
+          "delivered_on": "2026-06-15",
+          "internal_note": "Delivered today, logged",
+          "purchase_country": "CA",
+          "return_country": "CA",
+          "email": "emma.wilson@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 799.99,
+        "order_id": "ORD006",
+        "reason": "Eligible return - within 14 days, same country CA"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD006",
+        "amount": 799.99
+      }
+    }
+  ],
+  "reply": "I'll verify your return details now.\nVerified \u2014 return is eligible. I'll process that refund.\nDone! I've processed your $799.99 refund for order ORD006.\n\nRefund ID: RF-1\n\nThe amount should be back to you shortly. Thanks for shopping with us!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD006",
+        "amount": 799.99,
+        "reason": "Eligible return - within 14 days, same country CA",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

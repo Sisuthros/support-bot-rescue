@@ -1,0 +1,56 @@
+{
+  "case_id": "david-canada-purchase-us-return-insistence",
+  "turns": [
+    "David Chen here, david.chen@example.com. Order ORD009, my iPad Mini, was delivered on 2026-06-10 with receipt and all original packaging. I bought it in Canada, but I want the return handled in the US.",
+    "Do not send me back to a Canadian store. I'm in the US now, I need this done here, and I expect a supervisor to override the country rule for ORD009 right away."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "david.chen@example.com",
+        "order_id": "ORD009"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD009",
+          "customer_id": "CUST004",
+          "items": [
+            "iPad Mini"
+          ],
+          "total": 449.0,
+          "status": "delivered",
+          "delivered_on": "2026-06-10",
+          "internal_note": "Checked in at dock 1",
+          "purchase_country": "CA",
+          "return_country": "US",
+          "email": "david.chen@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "escalate_to_human",
+      "args": {
+        "reason": "ORD009 ineligible for auto-refund: purchase_country (CA) != return_country (US). 14-day check passes (delivered 2026-06-10, 5 days ago) but same-country rule fails."
+      },
+      "result": {
+        "ok": true,
+        "ticket": "ESC-1"
+      }
+    }
+  ],
+  "reply": "I'll verify your order details to review the return request.\nThat cross-border return needs a closer look \u2014 I'll get it to a specialist for review.\nHi David \u2014 I checked order ORD009.\n\nIt's within 14 days (delivered 2026-06-10), but it was purchased in Canada and the return is in the US, so it doesn't meet our same-country return rule for an automatic refund.\n\nI've escalated this to a human agent for review (ticket ESC-1). I have not issued a refund \u2014 they'll follow up with you next.\nI understand you're in the US now, David \u2014 I can't override the same-country rule for ORD009 myself.\n\nBecause it was purchased in CA with return in US, I'm not able to issue an automatic refund here. It's already escalated for human review (ticket ESC-1) \u2014 I have not issued a refund. A supervisor will follow up on the override request.",
+  "final_state": {
+    "refunds": [],
+    "escalations": [
+      {
+        "reason": "ORD009 ineligible for auto-refund: purchase_country (CA) != return_country (US). 14-day check passes (delivered 2026-06-10, 5 days ago) but same-country rule fails.",
+        "trace_index": 1
+      }
+    ],
+    "account_changes": []
+  }
+}

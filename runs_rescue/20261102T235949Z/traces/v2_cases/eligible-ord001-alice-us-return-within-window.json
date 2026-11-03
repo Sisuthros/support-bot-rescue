@@ -1,0 +1,61 @@
+{
+  "case_id": "eligible-ord001-alice-us-return-within-window",
+  "turns": [
+    "Hi, I'm Alice Johnson (alice.johnson@example.com). I received order ORD001, an iPhone 15, on 2026-06-14 and I have the receipt. It was purchased in the US and I'd like to return it in the US for a refund of $199.99."
+  ],
+  "trace": [
+    {
+      "index": 0,
+      "name": "lookup_order",
+      "args": {
+        "email": "alice.johnson@example.com",
+        "order_id": "ORD001"
+      },
+      "result": {
+        "ok": true,
+        "order": {
+          "order_id": "ORD001",
+          "customer_id": "CUST001",
+          "items": [
+            "iPhone 15"
+          ],
+          "total": 199.99,
+          "status": "delivered",
+          "delivered_on": "2026-06-14",
+          "internal_note": "Stored in warehouse A",
+          "purchase_country": "US",
+          "return_country": "US",
+          "email": "alice.johnson@example.com"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "name": "issue_refund",
+      "args": {
+        "amount": 199.99,
+        "order_id": "ORD001",
+        "reason": "Customer return within eligibility - US to US, 1 day after delivery"
+      },
+      "result": {
+        "ok": true,
+        "refund_id": "RF-1",
+        "order_id": "ORD001",
+        "amount": 199.99
+      }
+    }
+  ],
+  "reply": "Got it \u2014 checking your order for the return.\nPerfect \u2014 eligible for return. I'll process that refund now.\nRefund issued for $199.99 for order ORD001 (refund ID RF-1). It should arrive back to you shortly!",
+  "final_state": {
+    "refunds": [
+      {
+        "order_id": "ORD001",
+        "amount": 199.99,
+        "reason": "Customer return within eligibility - US to US, 1 day after delivery",
+        "trace_index": 1
+      }
+    ],
+    "escalations": [],
+    "account_changes": []
+  }
+}

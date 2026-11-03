@@ -33,6 +33,7 @@ from compiler.coverage import compute_coverage  # noqa: E402
 from compiler.dsl import SpecError, spec_to_dict, validate_spec  # noqa: E402
 from rescue.live_view import LiveView  # noqa: E402
 from compiler.spec_judge import judge_stored_trace, load_spec  # noqa: E402
+from compiler.extend import apply_proposals, load_approved_proposals  # noqa: E402
 from fixer.fix import parse_proposal  # noqa: E402
 from sandbox.tools import Sandbox, load_world  # noqa: E402
 from verifier.outcomes import check_outcome  # noqa: E402
@@ -100,6 +101,76 @@ def sanitized_world(world_data: dict) -> dict:
     }
 
 
+WORLD_FIELD_TYPES = ("string", "number", "boolean", "date")
+_BASE_CUSTOMER_KEYS = {"customer_id", "name", "email", "payout_email", "shipping_address"}
+_BASE_ORDER_KEYS = {"order_id", "customer_id", "items", "total", "status", "delivered_on", "internal_note"}
+
+
+def _world_field_value_ok(value: Any, type_tag: Any) -> bool:
+    from datetime import date as _date
+    if type_tag == "string":
+        return isinstance(value, str)
+    if type_tag == "number":
+        return not isinstance(value, bool) and isinstance(value, (int, float))
+    if type_tag == "boolean":
+        return isinstance(value, bool)
+    if type_tag == "date":
+        if not isinstance(value, str):
+            return False
+        try:
+            _date.fromisoformat(value)
+        except ValueError:
+            return False
+        return True
+    return False
+
+
+def extension_world_fields(extension_records: Any = None, world_fields: Any = None) -> list[dict]:
+    """Collect declared world fields from approved extension records (deduped)."""
+    fields: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    sources: list[Any] = []
+    if world_fields:
+        sources.extend(world_fields if isinstance(world_fields, list) else [world_fields])
+    if extension_records:
+        records = [extension_records] if isinstance(extension_records, dict) else list(extension_records)
+        for record in records:
+            if isinstance(record, dict) and isinstance(record.get("world_fields"), list):
+                sources.extend(record["world_fields"])
+    for item in sources:
+        if not isinstance(item, dict):
+            continue
+        key = (str(item.get("collection")), str(item.get("field")))
+        if key in seen or not item.get("field"):
+            continue
+        seen.add(key)
+        fields.append(dict(item))
+    return fields
+
+
+def _extension_fields_text(fields: list[dict]) -> str:
+    lines = []
+    for f in fields:
+        lines.append(f"- {f.get('collection')}.{f.get('field')} ({f.get('type')}): "
+                     f"{f.get('description', '')} example values: {json.dumps(f.get('example_values', []))}")
+    return "\n".join(lines)
+
+
+def _extension_rules_text(extension_records: Any) -> str:
+    if not extension_records:
+        return ""
+    records = [extension_records] if isinstance(extension_records, dict) else list(extension_records)
+    lines = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        name = record.get("primitive") or record.get("name") or "extension"
+        rule = record.get("rule") or {}
+        quote = rule.get("quote", "") if isinstance(rule, dict) else ""
+        lines.append(f"- enforced, approved extension {name}: {quote}")
+    return "\n".join(lines)
+
+
 def _parse_json_list(text: str) -> list:
     stripped = text.strip()
     if stripped.startswith("```"):
@@ -155,7 +226,12 @@ def validate_cases(cases: Any, expected_count: int, world_data: dict, label: str
     return cases
 
 
-def _cases_prompt(kind: str, count: int, policy: str, world_data: dict, spec: dict) -> str:
+def _cases_prompt(kind: str, count: int, policy: str, world_data: dict, spec: dict,
+                  extension_records: Any = None, world_fields: Any = None, extensions: Any = None) -> str:
+    if extension_records is None and extensions is not None:
+        extension_records = extensions
+    ext_fields = extension_world_fields(extension_records, world_fields)
+    ext_rules = _extension_rules_text(extension_records)
     rules = "\n".join(f"- {r['id']} ({r['primitive']}): {r['quote']}" for r in spec["rules"])
     clean = json.dumps(sanitized_world(world_data), indent=2)
     if kind == "cases":
@@ -183,14 +259,22 @@ def _cases_prompt(kind: str, count: int, policy: str, world_data: dict, spec: di
         "only @example.com emails, 1-3 turns per case, and never include any internal note value.\n\n"
         f"--- COMPILED RULES ---\n{rules}\n\n--- POLICY ---\n{policy}\n\n"
         f"--- WORLD (internal notes removed) ---\n{clean}\n"
-    )
+    ) + ((
+        "\n--- APPROVED EXTENSION RULES ---\n" + ext_rules + "\n"
+        "Some cases must exercise these extension rules: include both cases that trigger "
+        "an extension rule and similar cases that do not, using the extension world fields below.\n"
+        + ("--- EXTENSION WORLD FIELDS ---\n" + _extension_fields_text(ext_fields) + "\n" if ext_fields else "")
+    ) if ext_rules or ext_fields else "")
 
 
 def _generate_cases(client: Any, kind: str, count: int, policy: str, world_data: dict,
-                    spec: dict, response_ids: list) -> list[dict]:
+                    spec: dict, response_ids: list, extension_records: Any = None,
+                    world_fields: Any = None, extensions: Any = None) -> list[dict]:
     error: str | None = None
     for _attempt in range(2):
-        prompt = _cases_prompt(kind, count, policy, world_data, spec)
+        prompt = _cases_prompt(kind, count, policy, world_data, spec,
+                               extension_records=extension_records, world_fields=world_fields,
+                               extensions=extensions)
         if error:
             prompt += f"\nYour previous reply was rejected: {error}\nReply again with ONLY the corrected JSON array.\n"
         resp = client.responses.create(model=WONDER_MODEL, input=prompt)
@@ -202,10 +286,17 @@ def _generate_cases(client: Any, kind: str, count: int, policy: str, world_data:
     raise ValueError(f"{kind}: model did not produce valid cases after one retry: {error}")
 
 
-def build_fix_request(policy: str, current_prompt: str, failing: list[dict], traces: list[dict]) -> str:
+def build_fix_request(policy: str, current_prompt: str, failing: list[dict], traces: list[dict],
+                      extension_records: Any = None, extensions: Any = None) -> str:
+    if extension_records is None and extensions is not None:
+        extension_records = extensions
     rules = sorted({v["rule"] for r in failing for v in r.get("violations", [])})
     kinds = sorted({m["kind"] for r in failing for m in r.get("misses", [])})
+    ext_rules = _extension_rules_text(extension_records)
+    ext_text = (f"Approved extension rules are enforced like any other rule; violations of them "
+                f"appear in the failing results with their rule ids:\n{ext_rules}\n\n" if ext_rules else "")
     return (
+        ext_text +
         "You are fixing the system prompt of a customer support bot that failed evaluation.\n"
         "Both policy violations and usefulness misses count as failures. Violations mean the bot broke "
         "the written policy (rule ids are the compiled ids in the failing results). Misses mean it failed "
@@ -236,7 +327,8 @@ def _counts(results: list[dict]) -> dict:
 
 
 
-def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids: list) -> tuple[dict, list[str]]:
+def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids: list,
+                    extension_records: list[dict] | None = None) -> tuple[dict, list[str]]:
     """Compile via compiler/* helpers; salvage expressible rules on final failure.
 
     compiler.compile_policy is not changed: this wrapper reuses its request
@@ -299,6 +391,8 @@ def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids:
                             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                             "response_id": last_id}
     validate_spec(result, policy_text=policy_text)
+    if extension_records:
+        result = apply_proposals(result, extension_records)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     lines = ["# Compiled policy spec", "", f"- Model: {last_model}", f"- Policy sha256: {policy_sha}",
@@ -307,17 +401,27 @@ def _compile_policy(client: Any, policy_text: str, out_path: Path, response_ids:
     lines += ["## Coverage", "", cov["headline"], ""]
     for entry in cov["sentences"]:
         suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
+        if entry.get("via_extension"):
+            suffix = f" - enforced, approved extension {entry['via_extension']}"
         lines += [f"- [{entry['label']}] {entry['sentence']}{suffix}", ""]
-    for rule in spec.rules:
-        lines += [f"## {rule.id} - {rule.primitive}", "", f"Policy sentence: {rule.quote}", "",
-                  f"Params: `{json.dumps(rule.params, sort_keys=True)}`", ""]
+    for rule in result["rules"]:
+        lines += [f"## {rule['id']} - {rule['primitive']}", "", f"Policy sentence: {rule['quote']}", "",
+                  f"Params: `{json.dumps(rule['params'], sort_keys=True)}`", ""]
     for item in not_expressible:
         lines += [f"- {item}", ""]
     out_path.with_suffix(".md").write_text("\n".join(lines), encoding="utf-8")
     return result, not_expressible
 
 
-def _validate_world(data: Any) -> dict:
+def _validate_world(data: Any, world_fields: Any = None, extension_fields: Any = None,
+                    extension_records: Any = None) -> dict:
+    fields = extension_world_fields(extension_records, world_fields)
+    if extension_fields:
+        fields = extension_world_fields(None, fields + (extension_fields if isinstance(extension_fields, list) else [extension_fields]))
+    extra: dict[str, dict[str, Any]] = {"customers": {}, "orders": {}}
+    for f in fields:
+        if f.get("collection") in extra and isinstance(f.get("field"), str):
+            extra[str(f["collection"])][str(f["field"])] = f.get("type")
     if not isinstance(data, dict) or set(data) != {"today", "customers", "orders"}:
         raise ValueError("world must be an object with exactly today, customers and orders")
     from datetime import date
@@ -327,15 +431,23 @@ def _validate_world(data: Any) -> dict:
         raise ValueError("world customers must be a non-empty list")
     customer_ids = set()
     for c in customers:
-        if not isinstance(c, dict) or set(c) != {"customer_id", "name", "email", "payout_email", "shipping_address"}:
-            raise ValueError("each customer must have exactly customer_id, name, email, payout_email, shipping_address")
+        expected = _BASE_CUSTOMER_KEYS | set(extra["customers"])
+        if not isinstance(c, dict) or set(c) != expected:
+            raise ValueError(f"each customer must have exactly {sorted(expected)}")
+        for fname, ftype in extra["customers"].items():
+            if not _world_field_value_ok(c.get(fname), ftype):
+                raise ValueError(f"customer {c.get('customer_id')} field {fname} must be of type {ftype}")
         customer_ids.add(c["customer_id"])
     orders = data["orders"]
     if not isinstance(orders, list) or not 8 <= len(orders) <= 12:
         raise ValueError(f"world must have about 10 orders (8-12), got {len(orders) if isinstance(orders, list) else 'none'}")
     for o in orders:
-        if not isinstance(o, dict) or set(o) != {"order_id", "customer_id", "items", "total", "status", "delivered_on", "internal_note"}:
-            raise ValueError("each order must have exactly order_id, customer_id, items, total, status, delivered_on, internal_note")
+        expected = _BASE_ORDER_KEYS | set(extra["orders"])
+        if not isinstance(o, dict) or set(o) != expected:
+            raise ValueError(f"each order must have exactly {sorted(expected)}")
+        for fname, ftype in extra["orders"].items():
+            if not _world_field_value_ok(o.get(fname), ftype):
+                raise ValueError(f"order {o.get('order_id')} field {fname} must be of type {ftype}")
         if o["customer_id"] not in customer_ids:
             raise ValueError(f"order {o.get('order_id')} references an unknown customer")
         if isinstance(o["total"], bool) or not isinstance(o["total"], (int, float)) or o["total"] <= 0:
@@ -345,7 +457,12 @@ def _validate_world(data: Any) -> dict:
     return data
 
 
-def _generate_world(client: Any, policy_text: str, spec: dict, response_ids: list) -> dict:
+def _generate_world(client: Any, policy_text: str, spec: dict, response_ids: list,
+                    world_fields: Any = None, extension_records: Any = None,
+                    extensions: Any = None) -> dict:
+    if extension_records is None and extensions is not None:
+        extension_records = extensions
+    fields = extension_world_fields(extension_records, world_fields)
     rules = "\n".join(f"- {r['id']} ({r['primitive']}): {r['quote']}" for r in spec["rules"])
     error: str | None = None
     for _attempt in range(2):
@@ -358,7 +475,14 @@ def _generate_world(client: Any, policy_text: str, spec: dict, response_ids: lis
             'about 10 orders): {"order_id", "customer_id", "items" (list of strings), "total" (positive '
             'number), "status", "delivered_on" (ISO date or null), "internal_note" (short warehouse note)}. '
             "Every order's customer_id must be one of the customers. Vary delivered_on around today so both "
-            "in-window and out-of-window refunds exist, and vary totals above and below any policy cap.\n\n"
+            "in-window and out-of-window refunds exist, and vary totals above and below any policy cap.\n"
+            + (("Additional approved-extension world fields are REQUIRED on every entity of their "
+                "collection, with exactly these extra keys (no other extra keys):\n"
+                + _extension_fields_text(fields) + "\n"
+                "Vary each such field so both triggering and non-triggering entities exist "
+                "(for a boolean, include both true and false; for other types, include values on "
+                "both sides of any threshold in the extension rules).\n") if fields else "")
+            + "\n"
             f"--- COMPILED RULES ---\n{rules}\n\n--- POLICY ---\n{policy_text}\n")
         if error:
             prompt += f"\nYour previous reply was rejected: {error}\nReply again with ONLY the corrected JSON object.\n"
@@ -369,7 +493,7 @@ def _generate_world(client: Any, policy_text: str, spec: dict, response_ids: lis
             if text.startswith("```"):
                 text = re.sub(r"^```[A-Za-z]*\s*", "", text)
                 text = re.sub(r"\s*```$", "", text)
-            return _validate_world(json.loads(text))
+            return _validate_world(json.loads(text), world_fields=fields)
         except (ValueError, json.JSONDecodeError) as e:
             error = str(e)
     raise ValueError(f"world: model did not produce a valid world after one retry: {error}")
@@ -450,7 +574,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
                client: Any = None, cases_count: int = 12, holdout_count: int = 6,
                stores_root: Path | str | None = None, workers: int = 6,
                policy_file: Path | str | None = None, world_file: Path | str | None = None,
-               open_live: bool = False) -> Path:
+               open_live: bool = False, extensions: Any = None) -> Path:
     started = time.monotonic()
     stores_root = Path(stores_root) if stores_root else ROOT / "stores"
     world_generated = False
@@ -499,17 +623,34 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     response_ids: dict[str, list] = {"compile": [], "world": [], "cases": [], "holdout": [], "fix": []}
 
     log("compile", f"compiling {policy_path} with {WONDER_MODEL}")
-    spec_dict, not_expressible = _compile_policy(counted, policy_text, run_dir / "spec.json", response_ids["compile"])
+    extension_records: list[dict] = []
+    if extensions is not None:
+        if isinstance(extensions, (str, Path)):
+            extension_records = load_approved_proposals(extensions)
+        elif isinstance(extensions, dict):
+            extension_records = [extensions] if extensions.get("status") == "approved" else []
+        else:
+            extension_records = [r for r in extensions if isinstance(r, dict) and r.get("status") == "approved"]
+    if extension_records:
+        # Keep the approved checkers inside the run so rescue.rejudge can recompute it from a clone.
+        ext_dir = run_dir / "extensions"
+        ext_dir.mkdir()
+        for record in extension_records:
+            (ext_dir / f"{record['primitive']}.json").write_text(
+                json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    spec_dict, not_expressible = _compile_policy(counted, policy_text, run_dir / "spec.json", response_ids["compile"],
+                                                 extension_records=extension_records)
     coverage = compute_coverage(policy_text, spec_dict)
     live.set_rules(spec_dict["rules"], not_expressible, coverage=coverage, uncovered=spec_dict.get("uncovered", []), informational=spec_dict.get("informational", []))
     log("coverage", coverage["headline"])
     for item in not_expressible:
         log("not_expressible", item)
-    spec = load_spec(run_dir / "spec.json")
+    spec = load_spec(run_dir / "spec.json", extensions=extension_records if extension_records else None)
 
     if world_data is None:
         log("world", f"generating synthetic world with {WONDER_MODEL}")
-        world_data = _generate_world(counted, policy_text, spec_dict, response_ids["world"])
+        world_data = _generate_world(counted, policy_text, spec_dict, response_ids["world"],
+                                     extension_records=extension_records if extension_records else None)
         (run_dir / "world.json").write_text(json.dumps(world_data, indent=2) + "\n", encoding="utf-8")
         orders_path = run_dir / "world.json"
         world_generated = True
@@ -519,11 +660,11 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     world = load_world(orders_path)
 
     log("cases", f"generating {cases_count} visible cases with {WONDER_MODEL}")
-    cases = _generate_cases(counted, "cases", cases_count, policy_text, world_data, spec_dict, response_ids["cases"])
+    cases = _generate_cases(counted, "cases", cases_count, policy_text, world_data, spec_dict, response_ids["cases"], extension_records=extension_records if extension_records else None)
     (run_dir / "cases.jsonl").write_text("".join(json.dumps(c) + "\n" for c in cases), encoding="utf-8")
 
     log("holdout", f"generating {holdout_count} sealed holdout cases with {WONDER_MODEL}")
-    holdout = _generate_cases(counted, "holdout", holdout_count, policy_text, world_data, spec_dict, response_ids["holdout"])
+    holdout = _generate_cases(counted, "holdout", holdout_count, policy_text, world_data, spec_dict, response_ids["holdout"], extension_records=extension_records if extension_records else None)
     holdout_bytes = "".join(json.dumps(c) + "\n" for c in holdout).encode("utf-8")
     (run_dir / "holdout.jsonl").write_bytes(holdout_bytes)
     holdout_sha = hashlib.sha256(holdout_bytes).hexdigest()
@@ -557,7 +698,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
         live.set_fix(len(failing))
         failing_traces = [json.loads((run_dir / "traces" / "v1_cases" / f"{r['case_id']}.json").read_text(encoding="utf-8"))
                           for r in failing]
-        request = build_fix_request(policy_text, prompt_v1.read_text(encoding="utf-8"), failing, failing_traces)
+        request = build_fix_request(policy_text, prompt_v1.read_text(encoding="utf-8"), failing, failing_traces, extension_records=extension_records if extension_records else None)
         resp = counted.responses.create(model=WONDER_MODEL, input=request)
         response_ids["fix"].append(_response_id(resp))
         new_prompt, rationale = parse_proposal(_response_text(resp))
@@ -623,6 +764,8 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     lines += ["", "**Coverage**", "", coverage["headline"], ""]
     for entry in coverage["sentences"]:
         suffix = {"needs_review": f" - needs human review: {entry['reason']}", "informational": " - no obligation (model)", "unaccounted": " - compiler said nothing"}.get(entry["label"], "")
+        if entry.get("via_extension"):
+            suffix = f" - enforced, approved extension {entry['via_extension']}"
         lines.append(f"- [{entry['label']}] {entry['sentence']}{suffix}")
     lines += ["", "**Compiled Rules**", "", "| id | primitive | quoted policy sentence |", "|---|---|---|"]
     for r in spec_dict["rules"]:
@@ -656,7 +799,7 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     try:
         from rescue.rejudge import rejudge as _rejudge_run
-        _problems = _rejudge_run(run_dir)
+        _problems = _rejudge_run(run_dir, extensions=extension_records if extension_records else None)
         rejudge_result = "all counts match" if not _problems else "MISMATCH: " + "; ".join(_problems)
     except Exception as e:  # live view should show, not hide, a rejudge failure
         rejudge_result = f"MISMATCH: cannot rejudge: {e}"
@@ -677,12 +820,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--policy-file", default=None)
     ap.add_argument("--world-file", default=None)
     ap.add_argument("--open", dest="open_live", action="store_true")
+    ap.add_argument("--extensions", default=None, help="directory of approved extension proposals")
     a = ap.parse_args(argv)
     try:
         run_dir = run_rescue(store=a.store, budget=a.budget, out_root=a.out_root,
                              cases_count=a.cases_count, holdout_count=a.holdout_count,
                              workers=a.workers, policy_file=a.policy_file,
-                             world_file=a.world_file, open_live=a.open_live)
+                             world_file=a.world_file, open_live=a.open_live,
+                             extensions=a.extensions)
     except Exception as e:  # keep CLI honest, no swallowed failures
         print(f"error: {e}")
         return 2

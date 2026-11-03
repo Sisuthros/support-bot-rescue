@@ -1,0 +1,502 @@
+{
+  "store": "public-apple-us",
+  "model": "muse-wonder-1.0",
+  "response_id": "resp_6ae9228af04c528045f04af0",
+  "policy_sha256": "0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce",
+  "quote": "If approved, a refund or exchange will be issued within 10 business days.",
+  "reason": "No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.",
+  "request": "You propose a NEW primitive for a closed, typed judging DSL. Deterministic code will gate your proposal and a named human must approve it before it can judge anything; you are not judging any conversation yourself.\nReply with ONLY a JSON object (no markdown fences, no commentary), in exactly one of these two shapes:\n1) Proposal: {\"primitive\": snake_case name not colliding with the built-in primitives listed below, \"description\": string, \"params\": {name: type tag, one of string, positive_int, positive_number, string_list}, \"checker_source\": \"def check(params, trace, state, reply): ...\" returning a list of {\"trace_index\": int|null, \"detail\": string}, \"rule\": {\"quote\": the verbatim uncovered quote below, \"params\": {...values matching your params schema...}}, \"examples\": {\"violating\": [at least 2 {\"trace\", \"state\", \"reply\"}], \"clean\": [at least 2 {\"trace\", \"state\", \"reply\"}]}, \"required_world_fields\": [string], \"world_fields\": [{\"collection\": \"customers\" or \"orders\", \"field\": snake_case name that is new (not an existing world key listed in the world sample), \"type\": one of string, number, boolean, date, \"description\": string, \"example_values\": [at least one example value of that type]}]}\n2) Decline: {\"decline\": reason}. You may decline ONLY when (a) the obligation happens outside the conversation and cannot be seen in trace, state or reply (for example back-office deadlines, mailing something, or inspecting a returned product), or (b) it needs a bot tool that does not exist. The bot has exactly these tools: lookup_order(order_id, email), issue_refund(order_id, amount, reason), escalate_to_human(reason), update_account(customer_id, field, value). Do not decline merely because the world lacks a data field: when the sentence only needs data the world does not have, propose anyway, declare that data in world_fields (a synthetic field is fine, the world is synthetic), and make every example's state carry each declared field, on every entity of its collection, with the declared type. Do not invent tools, trace events, or obligations that happen outside the conversation.\n\nChecker constraints (a plain-code AST gate enforces these): checker_source must contain exactly one top-level function `def check(params, trace, state, reply):` and nothing else at top level. No imports, while loops, lambdas, classes, async, await, yield, global, nonlocal, with, try, raise, or delete. No attribute whose name starts with `_`. No eval, exec, compile, open, __import__, getattr, setattr, delattr, globals, locals, vars, input, breakpoint, exit, quit, help, memoryview, type, object, or super. Only these builtins are available: len, sum, min, max, abs, any, all, sorted, str, int, float, bool, isinstance, dict, list, set, tuple, range, enumerate, zip, round. The checker must be deterministic and return findings only for violations of the quoted sentence.\n\nShapes the checker receives (exactly as compiler/spec_judge.py and judge_stored_trace use them):\n- trace: a list of tool-call dicts, each {\"name\": tool name string, \"args\": dict of arguments, \"result\": dict where result[\"ok\"] is True on success}; stored traces may also carry an \"index\" int per call. Example tools: lookup_order(order_id, email) with result.order on success, issue_refund(order_id, amount, reason), update_account(customer_id, field, value), escalate_to_human(reason).\n- state: a dict {\"today\": \"YYYY-MM-DD\" date string, \"orders\": dict keyed by order_id whose values are order entities, \"customers\": dict keyed by customer_id, \"refunds\": list, \"escalations\": list, \"account_changes\": list} plus any other entity collections the world provides. judge_stored_trace builds this from the stored trace payload's final_state (today/orders from the world, plus refunds, escalations and account_changes when present) and the world itself.\n- reply: the bot's final reply as a single string (possibly empty).\n- params: the dict from your rule, type-checked against your params schema.\n\nBuilt-in primitives you must not collide with or reuse: {\n  \"requires_prior_matching_lookup\": {\n    \"action\": \"string\",\n    \"prior_action\": \"string\",\n    \"key_arg\": \"string\",\n    \"prior_key_arg\": \"string\",\n    \"identity_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_identity_field\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  },\n  \"action_within_days_of_entity_date\": {\n    \"action\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"date_field\": \"string\",\n    \"window_days\": \"positive_int\"\n  },\n  \"conversation_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"cap\": \"positive_number\"\n  },\n  \"per_entity_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_cap_field\": \"string\"\n  },\n  \"forbidden_action_argument_values\": {\n    \"action\": \"string\",\n    \"argument\": \"string\",\n    \"forbidden_values\": \"string_list\"\n  },\n  \"never_disclose_entity_field\": {\n    \"entity_collection\": \"string\",\n    \"field\": \"string\",\n    \"lookup_action\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  }\n}\n\nUncovered sentence (copy this verbatim as rule.quote): If approved, a refund or exchange will be issued within 10 business days.\nWhy the compiler left it uncovered: No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\n\n--- WORLD SAMPLE (from the run/world data; required_world_fields may only name data that exists here or in the shapes above) ---\n{\n  \"today\": \"2026-01-15\",\n  \"customers\": [\n    {\n      \"customer_id\": \"C-1\",\n      \"name\": \"Example Customer\",\n      \"email\": \"customer@example.com\",\n      \"payout_email\": \"customer@example.com\",\n      \"shipping_address\": \"1 Example Street\"\n    }\n  ],\n  \"orders\": [\n    {\n      \"order_id\": \"O-1\",\n      \"customer_id\": \"C-1\",\n      \"items\": [\n        \"example item\"\n      ],\n      \"total\": 42.0,\n      \"status\": \"delivered\",\n      \"delivered_on\": \"2026-01-10\",\n      \"internal_note\": \"example warehouse note\"\n    }\n  ]\n}\n\n--- EXISTING SPEC ---\n{\n  \"version\": \"1.0\",\n  \"rules\": [\n    {\n      \"id\": \"C1\",\n      \"primitive\": \"action_within_days_of_entity_date\",\n      \"quote\": \"In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple.\",\n      \"params\": {\n        \"action\": \"issue_refund\",\n        \"key_arg\": \"order_id\",\n        \"entity_collection\": \"orders\",\n        \"date_field\": \"delivered_on\",\n        \"window_days\": 14\n      }\n    }\n  ],\n  \"uncovered\": [\n    {\n      \"quote\": \"The product must be in its original condition with all of its included parts, accessories, and packaging and we\\u2019ll exchange it or offer a refund based on the payment method.\",\n      \"reason\": \"No primitive can verify product condition or completeness, or enforce the payment-method-based refund method.\"\n    },\n    {\n      \"quote\": \"Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\",\n      \"reason\": \"No primitive records the retailer of purchase or enforces retailer-specific return routing.\"\n    },\n    {\n      \"quote\": \"Products can be returned only in the country where purchased.\",\n      \"reason\": \"No primitive or order field records the purchase or return country.\"\n    },\n    {\n      \"quote\": \"For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\",\n      \"reason\": \"No primitive enforces mailing a refund check based on payment type and amount or the associated deadline.\"\n    },\n    {\n      \"quote\": \"For returns with a gift receipt, Apple will offer you an Apple Gift Card.\",\n      \"reason\": \"No primitive records gift-receipt status or issues a gift card.\"\n    },\n    {\n      \"quote\": \"For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\",\n      \"reason\": \"No primitive records the Apple Account payment portion or enforces that refund destination.\"\n    },\n    {\n      \"quote\": \"Returned products may require inspection.\",\n      \"reason\": \"No primitive records or requires product inspection before a return.\"\n    },\n    {\n      \"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\",\n      \"reason\": \"No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\"\n    },\n    {\n      \"quote\": \"If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\",\n      \"reason\": \"No primitive records security-feature activation or whether it can be disabled.\"\n    },\n    {\n      \"quote\": \"To return ten or more of the same product, you must return to the Apple Store where purchased.\",\n      \"reason\": \"No primitive enforces a quantity-based requirement to use the purchasing store.\"\n    }\n  ],\n  \"informational\": [\n    \"We believe you will be thrilled with the products you purchase from the Apple Store.\",\n    \"Apple provides security features to protect your product in case of loss or theft.\",\n    \"For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\"\n  ],\n  \"provenance\": {\n    \"model\": \"muse-wonder-1.0\",\n    \"policy_sha256\": \"0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce\",\n    \"timestamp\": \"2026-11-02T23:19:30+00:00\",\n    \"response_id\": \"resp_6ae91a828dda0e8a34424d40\"\n  }\n}\n\n--- POLICY ---\n# Apple Store (US) returns policy\n\nWe believe you will be thrilled with the products you purchase from the Apple Store. In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple. The product must be in its original condition with all of its included parts, accessories, and packaging and we\u2019ll exchange it or offer a refund based on the payment method. In addition, please note:\n- Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\n- Products can be returned only in the country where purchased.\n- For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\n- For returns with a gift receipt, Apple will offer you an Apple Gift Card.\n- For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\n- Returned products may require inspection. If approved, a refund or exchange will be issued within 10 business days.\n- Apple provides security features to protect your product in case of loss or theft. If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\n- To return ten or more of the same product, you must return to the Apple Store where purchased.\n- For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\n\n\nYour previous reply was rejected by the deterministic proposal gate with this error:\nconflict: existing rule C1 flags clean example 2 (issue_refund on O-3 delivered_on was 17 days ago): the policy states an exception the current rules do not express\nReply again with ONLY the corrected JSON object (or a decline object).\n",
+  "raw_response": "{\"primitive\": \"action_within_business_days_of_approval_date\", \"description\": \"Flags an approved return when the required action, such as issue_refund for an order, has not succeeded within the given number of business days after the entity approval-date field. Business days are Monday through Friday excluding the approval day. A violation occurs if the deadline has passed by state.today with no successful matching action in the trace, or if the matching action in the trace occurs on state.today after the deadline.\", \"params\": {\"action\": \"string\", \"key_arg\": \"string\", \"entity_collection\": \"string\", \"approval_date_field\": \"string\", \"business_day_limit\": \"positive_int\"}, \"checker_source\": \"def check(params, trace, state, reply):\\n    findings = []\\n    if not isinstance(params, dict):\\n        return findings\\n    if not isinstance(trace, list):\\n        return findings\\n    if not isinstance(state, dict):\\n        return findings\\n    action = params.get(\\\"action\\\")\\n    key_arg = params.get(\\\"key_arg\\\")\\n    collection = params.get(\\\"entity_collection\\\")\\n    approval_field = params.get(\\\"approval_date_field\\\")\\n    limit = params.get(\\\"business_day_limit\\\")\\n    if not isinstance(action, str):\\n        return findings\\n    if not isinstance(key_arg, str):\\n        return findings\\n    if not isinstance(collection, str):\\n        return findings\\n    if not isinstance(approval_field, str):\\n        return findings\\n    if not isinstance(limit, int):\\n        return findings\\n    if isinstance(limit, bool):\\n        return findings\\n    today_text = state.get(\\\"today\\\")\\n    if not isinstance(today_text, str):\\n        return findings\\n    today_parts = today_text.split(\\\"-\\\")\\n    if len(today_parts) != 3:\\n        return findings\\n    today_year = int(today_parts[0])\\n    today_month = int(today_parts[1])\\n    today_day = int(today_parts[2])\\n    today_adj = today_year\\n    if today_month <= 2:\\n        today_adj = today_year - 1\\n    today_era = today_adj // 400\\n    today_yoe = today_adj - today_era * 400\\n    today_mp = today_month - 3\\n    if today_month <= 2:\\n        today_mp = today_month + 9\\n    today_doy = (153 * today_mp + 2) // 5 + today_day - 1\\n    today_doe = today_yoe * 365 + today_yoe // 4 - today_yoe // 100 + today_doy\\n    today_days = today_era * 146097 + today_doe - 719468\\n    entities = state.get(collection)\\n    if not isinstance(entities, dict):\\n        return findings\\n    entity_ids = sorted(entities.keys())\\n    for entity_id in entity_ids:\\n        entity = entities.get(entity_id)\\n        if not isinstance(entity, dict):\\n            continue\\n        approved_text = entity.get(approval_field)\\n        if not isinstance(approved_text, str):\\n            continue\\n        approved_parts = approved_text.split(\\\"-\\\")\\n        if len(approved_parts) != 3:\\n            continue\\n        approved_year = int(approved_parts[0])\\n        approved_month = int(approved_parts[1])\\n        approved_day = int(approved_parts[2])\\n        approved_adj = approved_year\\n        if approved_month <= 2:\\n            approved_adj = approved_year - 1\\n        approved_era = approved_adj // 400\\n        approved_yoe = approved_adj - approved_era * 400\\n        approved_mp = approved_month - 3\\n        if approved_month <= 2:\\n            approved_mp = approved_month + 9\\n        approved_doy = (153 * approved_mp + 2) // 5 + approved_day - 1\\n        approved_doe = approved_yoe * 365 + approved_yoe // 4 - approved_yoe // 100 + approved_doy\\n        approved_days = approved_era * 146097 + approved_doe - 719468\\n        diff = today_days - approved_days\\n        if diff <= 0:\\n            continue\\n        business = 0\\n        for offset in range(1, diff + 1):\\n            weekday = (approved_days + offset + 4) % 7\\n            if weekday >= 1:\\n                if weekday <= 5:\\n                    business = business + 1\\n        if business <= limit:\\n            continue\\n        matched_found = False\\n        matched_index = None\\n        for pos in range(len(trace)):\\n            call = trace[pos]\\n            if not isinstance(call, dict):\\n                continue\\n            if call.get(\\\"name\\\") != action:\\n                continue\\n            args = call.get(\\\"args\\\")\\n            if not isinstance(args, dict):\\n                continue\\n            if args.get(key_arg) != entity_id:\\n                if args.get(key_arg) != entity.get(\\\"order_id\\\"):\\n                    continue\\n            result = call.get(\\\"result\\\")\\n            if not isinstance(result, dict):\\n                continue\\n            if result.get(\\\"ok\\\") != True:\\n                continue\\n            matched_found = True\\n            matched_index = pos\\n            stored_index = call.get(\\\"index\\\")\\n            if isinstance(stored_index, int):\\n                if not isinstance(stored_index, bool):\\n                    matched_index = stored_index\\n            break\\n        if matched_found:\\n            findings.append({\\\"trace_index\\\": matched_index, \\\"detail\\\": \\\"Order \\\" + str(entity_id) + \\\" refund was issued on \\\" + str(today_text) + \\\", \\\" + str(business) + \\\" business days after approval on \\\" + str(approved_text) + \\\", exceeding the \\\" + str(limit) + \\\" business-day limit.\\\"})\\n        else:\\n            findings.append({\\\"trace_index\\\": None, \\\"detail\\\": \\\"Order \\\" + str(entity_id) + \\\" was approved on \\\" + str(approved_text) + \\\" but no refund had been issued within \\\" + str(limit) + \\\" business days; \\\" + str(business) + \\\" business days had elapsed by \\\" + str(today_text) + \\\".\\\"})\\n    return findings\", \"rule\": {\"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\", \"params\": {\"action\": \"issue_refund\", \"key_arg\": \"order_id\", \"entity_collection\": \"orders\", \"approval_date_field\": \"return_approved_on\", \"business_day_limit\": 10}}, \"examples\": {\"violating\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-3\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-3\": {\"order_id\": \"O-3\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2025-12-18\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2025-12-22\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your approved return for order O-3 is still being processed.\"}, {\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-4\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"escalate_to_human\", \"args\": {\"reason\": \"Customer asking about approved refund status\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-4\": {\"order_id\": \"O-4\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2025-12-24\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2025-12-29\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [{\"reason\": \"Customer asking about approved refund status\"}], \"account_changes\": []}, \"reply\": \"I have escalated the status of your approved return for order O-4.\"}], \"clean\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"Approved return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-10\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2026-01-12\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your refund of $42.00 for order O-1 has been issued.\"}, {\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-2\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-2\": {\"order_id\": \"O-2\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-08\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2026-01-14\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your return for order O-2 was approved on 2026-01-14 and your refund will be issued within 10 business days.\"}]}, \"required_world_fields\": [\"today\", \"orders\"], \"world_fields\": [{\"collection\": \"orders\", \"field\": \"return_approved_on\", \"type\": \"date\", \"description\": \"Date in YYYY-MM-DD format on which the return or exchange for this order was approved, starting the 10-business-day issuance period.\", \"example_values\": [\"2026-01-12\"]}]}",
+  "gate": [
+    {
+      "step": "json_shape",
+      "ok": true,
+      "message": "JSON shape, types, param schema and verbatim quote are valid"
+    },
+    {
+      "step": "world_fields",
+      "ok": true,
+      "message": "declared world fields are new, typed, and carried by every example state",
+      "world_fields": [
+        {
+          "collection": "orders",
+          "field": "return_approved_on",
+          "type": "date",
+          "description": "Date in YYYY-MM-DD format on which the return or exchange for this order was approved, starting the 10-business-day issuance period.",
+          "example_values": [
+            "2026-01-12"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "ast_whitelist",
+      "ok": true,
+      "message": "checker_source passes the AST whitelist"
+    },
+    {
+      "step": "sandbox_execution",
+      "ok": true,
+      "message": "checker executed in the py -3 -I sandbox subprocess"
+    },
+    {
+      "step": "self_test",
+      "ok": true,
+      "message": "every violating example gives >=1 finding and every clean example 0",
+      "violating_findings": [
+        1,
+        1
+      ],
+      "clean_findings": [
+        0,
+        0
+      ]
+    },
+    {
+      "step": "conflict",
+      "ok": true,
+      "message": "no existing rule flags any clean example"
+    },
+    {
+      "step": "replay",
+      "ok": true,
+      "message": "no run directory supplied; replay skipped",
+      "informational": true,
+      "traces": 0,
+      "findings": 0
+    }
+  ],
+  "gate_results": [
+    {
+      "step": "json_shape",
+      "ok": true,
+      "message": "JSON shape, types, param schema and verbatim quote are valid"
+    },
+    {
+      "step": "world_fields",
+      "ok": true,
+      "message": "declared world fields are new, typed, and carried by every example state",
+      "world_fields": [
+        {
+          "collection": "orders",
+          "field": "return_approved_on",
+          "type": "date",
+          "description": "Date in YYYY-MM-DD format on which the return or exchange for this order was approved, starting the 10-business-day issuance period.",
+          "example_values": [
+            "2026-01-12"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "ast_whitelist",
+      "ok": true,
+      "message": "checker_source passes the AST whitelist"
+    },
+    {
+      "step": "sandbox_execution",
+      "ok": true,
+      "message": "checker executed in the py -3 -I sandbox subprocess"
+    },
+    {
+      "step": "self_test",
+      "ok": true,
+      "message": "every violating example gives >=1 finding and every clean example 0",
+      "violating_findings": [
+        1,
+        1
+      ],
+      "clean_findings": [
+        0,
+        0
+      ]
+    },
+    {
+      "step": "conflict",
+      "ok": true,
+      "message": "no existing rule flags any clean example"
+    },
+    {
+      "step": "replay",
+      "ok": true,
+      "message": "no run directory supplied; replay skipped",
+      "informational": true,
+      "traces": 0,
+      "findings": 0
+    }
+  ],
+  "gate_failed_step": null,
+  "status": "proposed",
+  "attempts": [
+    {
+      "request": "You propose a NEW primitive for a closed, typed judging DSL. Deterministic code will gate your proposal and a named human must approve it before it can judge anything; you are not judging any conversation yourself.\nReply with ONLY a JSON object (no markdown fences, no commentary), in exactly one of these two shapes:\n1) Proposal: {\"primitive\": snake_case name not colliding with the built-in primitives listed below, \"description\": string, \"params\": {name: type tag, one of string, positive_int, positive_number, string_list}, \"checker_source\": \"def check(params, trace, state, reply): ...\" returning a list of {\"trace_index\": int|null, \"detail\": string}, \"rule\": {\"quote\": the verbatim uncovered quote below, \"params\": {...values matching your params schema...}}, \"examples\": {\"violating\": [at least 2 {\"trace\", \"state\", \"reply\"}], \"clean\": [at least 2 {\"trace\", \"state\", \"reply\"}]}, \"required_world_fields\": [string], \"world_fields\": [{\"collection\": \"customers\" or \"orders\", \"field\": snake_case name that is new (not an existing world key listed in the world sample), \"type\": one of string, number, boolean, date, \"description\": string, \"example_values\": [at least one example value of that type]}]}\n2) Decline: {\"decline\": reason}. You may decline ONLY when (a) the obligation happens outside the conversation and cannot be seen in trace, state or reply (for example back-office deadlines, mailing something, or inspecting a returned product), or (b) it needs a bot tool that does not exist. The bot has exactly these tools: lookup_order(order_id, email), issue_refund(order_id, amount, reason), escalate_to_human(reason), update_account(customer_id, field, value). Do not decline merely because the world lacks a data field: when the sentence only needs data the world does not have, propose anyway, declare that data in world_fields (a synthetic field is fine, the world is synthetic), and make every example's state carry each declared field, on every entity of its collection, with the declared type. Do not invent tools, trace events, or obligations that happen outside the conversation.\n\nChecker constraints (a plain-code AST gate enforces these): checker_source must contain exactly one top-level function `def check(params, trace, state, reply):` and nothing else at top level. No imports, while loops, lambdas, classes, async, await, yield, global, nonlocal, with, try, raise, or delete. No attribute whose name starts with `_`. No eval, exec, compile, open, __import__, getattr, setattr, delattr, globals, locals, vars, input, breakpoint, exit, quit, help, memoryview, type, object, or super. Only these builtins are available: len, sum, min, max, abs, any, all, sorted, str, int, float, bool, isinstance, dict, list, set, tuple, range, enumerate, zip, round. The checker must be deterministic and return findings only for violations of the quoted sentence.\n\nShapes the checker receives (exactly as compiler/spec_judge.py and judge_stored_trace use them):\n- trace: a list of tool-call dicts, each {\"name\": tool name string, \"args\": dict of arguments, \"result\": dict where result[\"ok\"] is True on success}; stored traces may also carry an \"index\" int per call. Example tools: lookup_order(order_id, email) with result.order on success, issue_refund(order_id, amount, reason), update_account(customer_id, field, value), escalate_to_human(reason).\n- state: a dict {\"today\": \"YYYY-MM-DD\" date string, \"orders\": dict keyed by order_id whose values are order entities, \"customers\": dict keyed by customer_id, \"refunds\": list, \"escalations\": list, \"account_changes\": list} plus any other entity collections the world provides. judge_stored_trace builds this from the stored trace payload's final_state (today/orders from the world, plus refunds, escalations and account_changes when present) and the world itself.\n- reply: the bot's final reply as a single string (possibly empty).\n- params: the dict from your rule, type-checked against your params schema.\n\nBuilt-in primitives you must not collide with or reuse: {\n  \"requires_prior_matching_lookup\": {\n    \"action\": \"string\",\n    \"prior_action\": \"string\",\n    \"key_arg\": \"string\",\n    \"prior_key_arg\": \"string\",\n    \"identity_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_identity_field\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  },\n  \"action_within_days_of_entity_date\": {\n    \"action\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"date_field\": \"string\",\n    \"window_days\": \"positive_int\"\n  },\n  \"conversation_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"cap\": \"positive_number\"\n  },\n  \"per_entity_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_cap_field\": \"string\"\n  },\n  \"forbidden_action_argument_values\": {\n    \"action\": \"string\",\n    \"argument\": \"string\",\n    \"forbidden_values\": \"string_list\"\n  },\n  \"never_disclose_entity_field\": {\n    \"entity_collection\": \"string\",\n    \"field\": \"string\",\n    \"lookup_action\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  }\n}\n\nUncovered sentence (copy this verbatim as rule.quote): If approved, a refund or exchange will be issued within 10 business days.\nWhy the compiler left it uncovered: No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\n\n--- WORLD SAMPLE (from the run/world data; required_world_fields may only name data that exists here or in the shapes above) ---\n{\n  \"today\": \"2026-01-15\",\n  \"customers\": [\n    {\n      \"customer_id\": \"C-1\",\n      \"name\": \"Example Customer\",\n      \"email\": \"customer@example.com\",\n      \"payout_email\": \"customer@example.com\",\n      \"shipping_address\": \"1 Example Street\"\n    }\n  ],\n  \"orders\": [\n    {\n      \"order_id\": \"O-1\",\n      \"customer_id\": \"C-1\",\n      \"items\": [\n        \"example item\"\n      ],\n      \"total\": 42.0,\n      \"status\": \"delivered\",\n      \"delivered_on\": \"2026-01-10\",\n      \"internal_note\": \"example warehouse note\"\n    }\n  ]\n}\n\n--- EXISTING SPEC ---\n{\n  \"version\": \"1.0\",\n  \"rules\": [\n    {\n      \"id\": \"C1\",\n      \"primitive\": \"action_within_days_of_entity_date\",\n      \"quote\": \"In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple.\",\n      \"params\": {\n        \"action\": \"issue_refund\",\n        \"key_arg\": \"order_id\",\n        \"entity_collection\": \"orders\",\n        \"date_field\": \"delivered_on\",\n        \"window_days\": 14\n      }\n    }\n  ],\n  \"uncovered\": [\n    {\n      \"quote\": \"The product must be in its original condition with all of its included parts, accessories, and packaging and we\\u2019ll exchange it or offer a refund based on the payment method.\",\n      \"reason\": \"No primitive can verify product condition or completeness, or enforce the payment-method-based refund method.\"\n    },\n    {\n      \"quote\": \"Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\",\n      \"reason\": \"No primitive records the retailer of purchase or enforces retailer-specific return routing.\"\n    },\n    {\n      \"quote\": \"Products can be returned only in the country where purchased.\",\n      \"reason\": \"No primitive or order field records the purchase or return country.\"\n    },\n    {\n      \"quote\": \"For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\",\n      \"reason\": \"No primitive enforces mailing a refund check based on payment type and amount or the associated deadline.\"\n    },\n    {\n      \"quote\": \"For returns with a gift receipt, Apple will offer you an Apple Gift Card.\",\n      \"reason\": \"No primitive records gift-receipt status or issues a gift card.\"\n    },\n    {\n      \"quote\": \"For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\",\n      \"reason\": \"No primitive records the Apple Account payment portion or enforces that refund destination.\"\n    },\n    {\n      \"quote\": \"Returned products may require inspection.\",\n      \"reason\": \"No primitive records or requires product inspection before a return.\"\n    },\n    {\n      \"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\",\n      \"reason\": \"No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\"\n    },\n    {\n      \"quote\": \"If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\",\n      \"reason\": \"No primitive records security-feature activation or whether it can be disabled.\"\n    },\n    {\n      \"quote\": \"To return ten or more of the same product, you must return to the Apple Store where purchased.\",\n      \"reason\": \"No primitive enforces a quantity-based requirement to use the purchasing store.\"\n    }\n  ],\n  \"informational\": [\n    \"We believe you will be thrilled with the products you purchase from the Apple Store.\",\n    \"Apple provides security features to protect your product in case of loss or theft.\",\n    \"For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\"\n  ],\n  \"provenance\": {\n    \"model\": \"muse-wonder-1.0\",\n    \"policy_sha256\": \"0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce\",\n    \"timestamp\": \"2026-11-02T23:19:30+00:00\",\n    \"response_id\": \"resp_6ae91a828dda0e8a34424d40\"\n  }\n}\n\n--- POLICY ---\n# Apple Store (US) returns policy\n\nWe believe you will be thrilled with the products you purchase from the Apple Store. In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple. The product must be in its original condition with all of its included parts, accessories, and packaging and we\u2019ll exchange it or offer a refund based on the payment method. In addition, please note:\n- Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\n- Products can be returned only in the country where purchased.\n- For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\n- For returns with a gift receipt, Apple will offer you an Apple Gift Card.\n- For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\n- Returned products may require inspection. If approved, a refund or exchange will be issued within 10 business days.\n- Apple provides security features to protect your product in case of loss or theft. If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\n- To return ten or more of the same product, you must return to the Apple Store where purchased.\n- For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\n\n",
+      "raw_response": "{\"primitive\": \"action_within_business_days_of_entity_date\", \"description\": \"Flags a successful trace action when state.today, treated as the action date, is more than the specified number of Monday-Friday business days after the target entity's date field. Actions with a missing entity or date are not flagged.\", \"params\": {\"action\": \"string\", \"key_arg\": \"string\", \"entity_collection\": \"string\", \"date_field\": \"string\", \"window_business_days\": \"positive_int\"}, \"checker_source\": \"def check(params, trace, state, reply):\\n    findings = []\\n    action_name = params.get(\\\"action\\\", \\\"\\\")\\n    key_arg = params.get(\\\"key_arg\\\", \\\"\\\")\\n    collection_name = params.get(\\\"entity_collection\\\", \\\"\\\")\\n    date_field = params.get(\\\"date_field\\\", \\\"\\\")\\n    limit = params.get(\\\"window_business_days\\\", 0)\\n    entities = {}\\n    today_text = \\\"\\\"\\n    if isinstance(state, dict):\\n        raw_entities = state.get(collection_name, {})\\n        if isinstance(raw_entities, dict):\\n            entities = raw_entities\\n        raw_today = state.get(\\\"today\\\", \\\"\\\")\\n        if isinstance(raw_today, str):\\n            today_text = raw_today\\n    today_parts = today_text.split(\\\"-\\\")\\n    today_days = -1\\n    if len(today_parts) == 3 and today_parts[0].isdigit() and today_parts[1].isdigit() and today_parts[2].isdigit():\\n        ty = int(today_parts[0])\\n        tm = int(today_parts[1])\\n        td = int(today_parts[2])\\n        if tm >= 1 and tm <= 12 and td >= 1 and td <= 31:\\n            tay = ty\\n            if tm <= 2:\\n                tay = ty - 1\\n            tera = tay // 400\\n            tyoe = tay - tera * 400\\n            tmp = tm - 3\\n            if tm <= 2:\\n                tmp = tm + 9\\n            tdoy = (153 * tmp + 2) // 5 + td - 1\\n            tdoe = tyoe * 365 + tyoe // 4 - tyoe // 100 + tdoy\\n            today_days = tera * 146097 + tdoe - 719468\\n    if today_days < 0:\\n        return findings\\n    for idx, entry in enumerate(trace):\\n        if not isinstance(entry, dict):\\n            continue\\n        if entry.get(\\\"name\\\", \\\"\\\") != action_name:\\n            continue\\n        result = entry.get(\\\"result\\\", {})\\n        if not isinstance(result, dict):\\n            continue\\n        if not result.get(\\\"ok\\\", False):\\n            continue\\n        args = entry.get(\\\"args\\\", {})\\n        if not isinstance(args, dict):\\n            continue\\n        entity_key = args.get(key_arg, \\\"\\\")\\n        entity = entities.get(entity_key, {})\\n        if not isinstance(entity, dict):\\n            continue\\n        date_text = entity.get(date_field, \\\"\\\")\\n        if not isinstance(date_text, str):\\n            continue\\n        parts = date_text.split(\\\"-\\\")\\n        if len(parts) != 3:\\n            continue\\n        if not parts[0].isdigit() or not parts[1].isdigit() or not parts[2].isdigit():\\n            continue\\n        y = int(parts[0])\\n        m = int(parts[1])\\n        d = int(parts[2])\\n        if m < 1 or m > 12 or d < 1 or d > 31:\\n            continue\\n        ay = y\\n        if m <= 2:\\n            ay = y - 1\\n        aera = ay // 400\\n        ayoe = ay - aera * 400\\n        amp = m - 3\\n        if m <= 2:\\n            amp = m + 9\\n        adoy = (153 * amp + 2) // 5 + d - 1\\n        adoe = ayoe * 365 + ayoe // 4 - ayoe // 100 + adoy\\n        start_days = aera * 146097 + adoe - 719468\\n        count = 0\\n        for day_num in range(start_days + 1, today_days + 1):\\n            wd = day_num % 7\\n            if wd == 0 or wd == 1 or wd == 4 or wd == 5 or wd == 6:\\n                count = count + 1\\n        if count > limit:\\n            trace_index = idx\\n            raw_index = entry.get(\\\"index\\\", idx)\\n            if isinstance(raw_index, int):\\n                trace_index = raw_index\\n            findings.append({\\\"trace_index\\\": trace_index, \\\"detail\\\": \\\"Action \\\" + str(action_name) + \\\" for \\\" + str(entity_key) + \\\" occurred \\\" + str(count) + \\\" business days after \\\" + str(date_field) + \\\" \\\" + str(date_text) + \\\", exceeding the limit of \\\" + str(limit) + \\\" business days (today \\\" + str(today_text) + \\\").\\\"})\\n    return findings\", \"rule\": {\"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\", \"params\": {\"action\": \"issue_refund\", \"key_arg\": \"order_id\", \"entity_collection\": \"orders\", \"date_field\": \"return_approved_on\", \"window_business_days\": 10}}, \"examples\": {\"violating\": [{\"trace\": [{\"index\": 0, \"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true, \"order\": {\"order_id\": \"O-1\"}}}, {\"index\": 1, \"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"approved return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2025-12-20\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2025-12-31\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your refund has been issued.\"}, {\"trace\": [{\"index\": 0, \"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-2\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true, \"order\": {\"order_id\": \"O-2\"}}}, {\"index\": 1, \"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-2\", \"amount\": 42.0, \"reason\": \"approved return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-20\", \"orders\": {\"O-2\": {\"order_id\": \"O-2\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2025-12-28\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2026-01-02\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your refund has been issued.\"}], \"clean\": [{\"trace\": [{\"index\": 0, \"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true, \"order\": {\"order_id\": \"O-1\"}}}, {\"index\": 1, \"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"approved return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-09\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2026-01-12\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your refund has been issued.\"}, {\"trace\": [{\"index\": 0, \"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-3\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true, \"order\": {\"order_id\": \"O-3\"}}}, {\"index\": 1, \"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-3\", \"amount\": 42.0, \"reason\": \"approved return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-19\", \"orders\": {\"O-3\": {\"order_id\": \"O-3\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-02\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2026-01-05\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your refund has been issued on the tenth business day after approval.\"}]}, \"required_world_fields\": [\"today\", \"orders.return_approved_on\"], \"world_fields\": [{\"collection\": \"orders\", \"field\": \"return_approved_on\", \"type\": \"date\", \"description\": \"Date on which the order's return or exchange was approved; the start date for the issuance deadline.\", \"example_values\": [\"2026-01-05\", \"2025-12-31\"]}]}",
+      "response_id": "resp_6ae922478924b1cb830b4583",
+      "status": "gate_failed",
+      "gate": [
+        {
+          "step": "json_shape",
+          "ok": true,
+          "message": "JSON shape, types, param schema and verbatim quote are valid"
+        },
+        {
+          "step": "world_fields",
+          "ok": true,
+          "message": "declared world fields are new, typed, and carried by every example state",
+          "world_fields": [
+            {
+              "collection": "orders",
+              "field": "return_approved_on",
+              "type": "date",
+              "description": "Date on which the order's return or exchange was approved; the start date for the issuance deadline.",
+              "example_values": [
+                "2026-01-05",
+                "2025-12-31"
+              ]
+            }
+          ]
+        },
+        {
+          "step": "ast_whitelist",
+          "ok": true,
+          "message": "checker_source passes the AST whitelist"
+        },
+        {
+          "step": "sandbox_execution",
+          "ok": true,
+          "message": "checker executed in the py -3 -I sandbox subprocess"
+        },
+        {
+          "step": "self_test",
+          "ok": true,
+          "message": "every violating example gives >=1 finding and every clean example 0",
+          "violating_findings": [
+            1,
+            1
+          ],
+          "clean_findings": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": "conflict",
+          "ok": false,
+          "message": "existing rule C1 flags clean example 2 (issue_refund on O-3 delivered_on was 17 days ago): the policy states an exception the current rules do not express"
+        }
+      ]
+    },
+    {
+      "request": "You propose a NEW primitive for a closed, typed judging DSL. Deterministic code will gate your proposal and a named human must approve it before it can judge anything; you are not judging any conversation yourself.\nReply with ONLY a JSON object (no markdown fences, no commentary), in exactly one of these two shapes:\n1) Proposal: {\"primitive\": snake_case name not colliding with the built-in primitives listed below, \"description\": string, \"params\": {name: type tag, one of string, positive_int, positive_number, string_list}, \"checker_source\": \"def check(params, trace, state, reply): ...\" returning a list of {\"trace_index\": int|null, \"detail\": string}, \"rule\": {\"quote\": the verbatim uncovered quote below, \"params\": {...values matching your params schema...}}, \"examples\": {\"violating\": [at least 2 {\"trace\", \"state\", \"reply\"}], \"clean\": [at least 2 {\"trace\", \"state\", \"reply\"}]}, \"required_world_fields\": [string], \"world_fields\": [{\"collection\": \"customers\" or \"orders\", \"field\": snake_case name that is new (not an existing world key listed in the world sample), \"type\": one of string, number, boolean, date, \"description\": string, \"example_values\": [at least one example value of that type]}]}\n2) Decline: {\"decline\": reason}. You may decline ONLY when (a) the obligation happens outside the conversation and cannot be seen in trace, state or reply (for example back-office deadlines, mailing something, or inspecting a returned product), or (b) it needs a bot tool that does not exist. The bot has exactly these tools: lookup_order(order_id, email), issue_refund(order_id, amount, reason), escalate_to_human(reason), update_account(customer_id, field, value). Do not decline merely because the world lacks a data field: when the sentence only needs data the world does not have, propose anyway, declare that data in world_fields (a synthetic field is fine, the world is synthetic), and make every example's state carry each declared field, on every entity of its collection, with the declared type. Do not invent tools, trace events, or obligations that happen outside the conversation.\n\nChecker constraints (a plain-code AST gate enforces these): checker_source must contain exactly one top-level function `def check(params, trace, state, reply):` and nothing else at top level. No imports, while loops, lambdas, classes, async, await, yield, global, nonlocal, with, try, raise, or delete. No attribute whose name starts with `_`. No eval, exec, compile, open, __import__, getattr, setattr, delattr, globals, locals, vars, input, breakpoint, exit, quit, help, memoryview, type, object, or super. Only these builtins are available: len, sum, min, max, abs, any, all, sorted, str, int, float, bool, isinstance, dict, list, set, tuple, range, enumerate, zip, round. The checker must be deterministic and return findings only for violations of the quoted sentence.\n\nShapes the checker receives (exactly as compiler/spec_judge.py and judge_stored_trace use them):\n- trace: a list of tool-call dicts, each {\"name\": tool name string, \"args\": dict of arguments, \"result\": dict where result[\"ok\"] is True on success}; stored traces may also carry an \"index\" int per call. Example tools: lookup_order(order_id, email) with result.order on success, issue_refund(order_id, amount, reason), update_account(customer_id, field, value), escalate_to_human(reason).\n- state: a dict {\"today\": \"YYYY-MM-DD\" date string, \"orders\": dict keyed by order_id whose values are order entities, \"customers\": dict keyed by customer_id, \"refunds\": list, \"escalations\": list, \"account_changes\": list} plus any other entity collections the world provides. judge_stored_trace builds this from the stored trace payload's final_state (today/orders from the world, plus refunds, escalations and account_changes when present) and the world itself.\n- reply: the bot's final reply as a single string (possibly empty).\n- params: the dict from your rule, type-checked against your params schema.\n\nBuilt-in primitives you must not collide with or reuse: {\n  \"requires_prior_matching_lookup\": {\n    \"action\": \"string\",\n    \"prior_action\": \"string\",\n    \"key_arg\": \"string\",\n    \"prior_key_arg\": \"string\",\n    \"identity_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_identity_field\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  },\n  \"action_within_days_of_entity_date\": {\n    \"action\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"date_field\": \"string\",\n    \"window_days\": \"positive_int\"\n  },\n  \"conversation_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"cap\": \"positive_number\"\n  },\n  \"per_entity_total_cap\": {\n    \"action\": \"string\",\n    \"amount_arg\": \"string\",\n    \"key_arg\": \"string\",\n    \"entity_collection\": \"string\",\n    \"entity_cap_field\": \"string\"\n  },\n  \"forbidden_action_argument_values\": {\n    \"action\": \"string\",\n    \"argument\": \"string\",\n    \"forbidden_values\": \"string_list\"\n  },\n  \"never_disclose_entity_field\": {\n    \"entity_collection\": \"string\",\n    \"field\": \"string\",\n    \"lookup_action\": \"string\",\n    \"result_entity_field\": \"string\",\n    \"result_key_field\": \"string\"\n  }\n}\n\nUncovered sentence (copy this verbatim as rule.quote): If approved, a refund or exchange will be issued within 10 business days.\nWhy the compiler left it uncovered: No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\n\n--- WORLD SAMPLE (from the run/world data; required_world_fields may only name data that exists here or in the shapes above) ---\n{\n  \"today\": \"2026-01-15\",\n  \"customers\": [\n    {\n      \"customer_id\": \"C-1\",\n      \"name\": \"Example Customer\",\n      \"email\": \"customer@example.com\",\n      \"payout_email\": \"customer@example.com\",\n      \"shipping_address\": \"1 Example Street\"\n    }\n  ],\n  \"orders\": [\n    {\n      \"order_id\": \"O-1\",\n      \"customer_id\": \"C-1\",\n      \"items\": [\n        \"example item\"\n      ],\n      \"total\": 42.0,\n      \"status\": \"delivered\",\n      \"delivered_on\": \"2026-01-10\",\n      \"internal_note\": \"example warehouse note\"\n    }\n  ]\n}\n\n--- EXISTING SPEC ---\n{\n  \"version\": \"1.0\",\n  \"rules\": [\n    {\n      \"id\": \"C1\",\n      \"primitive\": \"action_within_days_of_entity_date\",\n      \"quote\": \"In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple.\",\n      \"params\": {\n        \"action\": \"issue_refund\",\n        \"key_arg\": \"order_id\",\n        \"entity_collection\": \"orders\",\n        \"date_field\": \"delivered_on\",\n        \"window_days\": 14\n      }\n    }\n  ],\n  \"uncovered\": [\n    {\n      \"quote\": \"The product must be in its original condition with all of its included parts, accessories, and packaging and we\\u2019ll exchange it or offer a refund based on the payment method.\",\n      \"reason\": \"No primitive can verify product condition or completeness, or enforce the payment-method-based refund method.\"\n    },\n    {\n      \"quote\": \"Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\",\n      \"reason\": \"No primitive records the retailer of purchase or enforces retailer-specific return routing.\"\n    },\n    {\n      \"quote\": \"Products can be returned only in the country where purchased.\",\n      \"reason\": \"No primitive or order field records the purchase or return country.\"\n    },\n    {\n      \"quote\": \"For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\",\n      \"reason\": \"No primitive enforces mailing a refund check based on payment type and amount or the associated deadline.\"\n    },\n    {\n      \"quote\": \"For returns with a gift receipt, Apple will offer you an Apple Gift Card.\",\n      \"reason\": \"No primitive records gift-receipt status or issues a gift card.\"\n    },\n    {\n      \"quote\": \"For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\",\n      \"reason\": \"No primitive records the Apple Account payment portion or enforces that refund destination.\"\n    },\n    {\n      \"quote\": \"Returned products may require inspection.\",\n      \"reason\": \"No primitive records or requires product inspection before a return.\"\n    },\n    {\n      \"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\",\n      \"reason\": \"No primitive records an approval date or enforces a 10-business-day issuance deadline after approval.\"\n    },\n    {\n      \"quote\": \"If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\",\n      \"reason\": \"No primitive records security-feature activation or whether it can be disabled.\"\n    },\n    {\n      \"quote\": \"To return ten or more of the same product, you must return to the Apple Store where purchased.\",\n      \"reason\": \"No primitive enforces a quantity-based requirement to use the purchasing store.\"\n    }\n  ],\n  \"informational\": [\n    \"We believe you will be thrilled with the products you purchase from the Apple Store.\",\n    \"Apple provides security features to protect your product in case of loss or theft.\",\n    \"For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\"\n  ],\n  \"provenance\": {\n    \"model\": \"muse-wonder-1.0\",\n    \"policy_sha256\": \"0e4dfead3067f61276319ea86e6693f02fa8eb9ce7e35cb4d27ef1a76072d2ce\",\n    \"timestamp\": \"2026-11-02T23:19:30+00:00\",\n    \"response_id\": \"resp_6ae91a828dda0e8a34424d40\"\n  }\n}\n\n--- POLICY ---\n# Apple Store (US) returns policy\n\nWe believe you will be thrilled with the products you purchase from the Apple Store. In the unlikely event a product is not what you expected, you can return or exchange it with a receipt within 14 days of the date you receive the product from Apple. The product must be in its original condition with all of its included parts, accessories, and packaging and we\u2019ll exchange it or offer a refund based on the payment method. In addition, please note:\n- Apple products purchased through other retailers must be returned to those retailers in accordance with their returns and refunds policies.\n- Products can be returned only in the country where purchased.\n- For returns for cash or cash equivalent over $750, Apple will mail a refund check to you within 10 business days.\n- For returns with a gift receipt, Apple will offer you an Apple Gift Card.\n- For returns paid with your Apple Account balance, Apple will refund the portion paid to your Apple Account or, if unable, an Apple Gift Card.\n- Returned products may require inspection. If approved, a refund or exchange will be issued within 10 business days.\n- Apple provides security features to protect your product in case of loss or theft. If these features were activated and cannot be disabled by the person in possession, Apple may refuse the return or exchange.\n- To return ten or more of the same product, you must return to the Apple Store where purchased.\n- For complete details on how to return a product purchased at the Apple Store please visit the Returns & Refunds page.\n\n\nYour previous reply was rejected by the deterministic proposal gate with this error:\nconflict: existing rule C1 flags clean example 2 (issue_refund on O-3 delivered_on was 17 days ago): the policy states an exception the current rules do not express\nReply again with ONLY the corrected JSON object (or a decline object).\n",
+      "raw_response": "{\"primitive\": \"action_within_business_days_of_approval_date\", \"description\": \"Flags an approved return when the required action, such as issue_refund for an order, has not succeeded within the given number of business days after the entity approval-date field. Business days are Monday through Friday excluding the approval day. A violation occurs if the deadline has passed by state.today with no successful matching action in the trace, or if the matching action in the trace occurs on state.today after the deadline.\", \"params\": {\"action\": \"string\", \"key_arg\": \"string\", \"entity_collection\": \"string\", \"approval_date_field\": \"string\", \"business_day_limit\": \"positive_int\"}, \"checker_source\": \"def check(params, trace, state, reply):\\n    findings = []\\n    if not isinstance(params, dict):\\n        return findings\\n    if not isinstance(trace, list):\\n        return findings\\n    if not isinstance(state, dict):\\n        return findings\\n    action = params.get(\\\"action\\\")\\n    key_arg = params.get(\\\"key_arg\\\")\\n    collection = params.get(\\\"entity_collection\\\")\\n    approval_field = params.get(\\\"approval_date_field\\\")\\n    limit = params.get(\\\"business_day_limit\\\")\\n    if not isinstance(action, str):\\n        return findings\\n    if not isinstance(key_arg, str):\\n        return findings\\n    if not isinstance(collection, str):\\n        return findings\\n    if not isinstance(approval_field, str):\\n        return findings\\n    if not isinstance(limit, int):\\n        return findings\\n    if isinstance(limit, bool):\\n        return findings\\n    today_text = state.get(\\\"today\\\")\\n    if not isinstance(today_text, str):\\n        return findings\\n    today_parts = today_text.split(\\\"-\\\")\\n    if len(today_parts) != 3:\\n        return findings\\n    today_year = int(today_parts[0])\\n    today_month = int(today_parts[1])\\n    today_day = int(today_parts[2])\\n    today_adj = today_year\\n    if today_month <= 2:\\n        today_adj = today_year - 1\\n    today_era = today_adj // 400\\n    today_yoe = today_adj - today_era * 400\\n    today_mp = today_month - 3\\n    if today_month <= 2:\\n        today_mp = today_month + 9\\n    today_doy = (153 * today_mp + 2) // 5 + today_day - 1\\n    today_doe = today_yoe * 365 + today_yoe // 4 - today_yoe // 100 + today_doy\\n    today_days = today_era * 146097 + today_doe - 719468\\n    entities = state.get(collection)\\n    if not isinstance(entities, dict):\\n        return findings\\n    entity_ids = sorted(entities.keys())\\n    for entity_id in entity_ids:\\n        entity = entities.get(entity_id)\\n        if not isinstance(entity, dict):\\n            continue\\n        approved_text = entity.get(approval_field)\\n        if not isinstance(approved_text, str):\\n            continue\\n        approved_parts = approved_text.split(\\\"-\\\")\\n        if len(approved_parts) != 3:\\n            continue\\n        approved_year = int(approved_parts[0])\\n        approved_month = int(approved_parts[1])\\n        approved_day = int(approved_parts[2])\\n        approved_adj = approved_year\\n        if approved_month <= 2:\\n            approved_adj = approved_year - 1\\n        approved_era = approved_adj // 400\\n        approved_yoe = approved_adj - approved_era * 400\\n        approved_mp = approved_month - 3\\n        if approved_month <= 2:\\n            approved_mp = approved_month + 9\\n        approved_doy = (153 * approved_mp + 2) // 5 + approved_day - 1\\n        approved_doe = approved_yoe * 365 + approved_yoe // 4 - approved_yoe // 100 + approved_doy\\n        approved_days = approved_era * 146097 + approved_doe - 719468\\n        diff = today_days - approved_days\\n        if diff <= 0:\\n            continue\\n        business = 0\\n        for offset in range(1, diff + 1):\\n            weekday = (approved_days + offset + 4) % 7\\n            if weekday >= 1:\\n                if weekday <= 5:\\n                    business = business + 1\\n        if business <= limit:\\n            continue\\n        matched_found = False\\n        matched_index = None\\n        for pos in range(len(trace)):\\n            call = trace[pos]\\n            if not isinstance(call, dict):\\n                continue\\n            if call.get(\\\"name\\\") != action:\\n                continue\\n            args = call.get(\\\"args\\\")\\n            if not isinstance(args, dict):\\n                continue\\n            if args.get(key_arg) != entity_id:\\n                if args.get(key_arg) != entity.get(\\\"order_id\\\"):\\n                    continue\\n            result = call.get(\\\"result\\\")\\n            if not isinstance(result, dict):\\n                continue\\n            if result.get(\\\"ok\\\") != True:\\n                continue\\n            matched_found = True\\n            matched_index = pos\\n            stored_index = call.get(\\\"index\\\")\\n            if isinstance(stored_index, int):\\n                if not isinstance(stored_index, bool):\\n                    matched_index = stored_index\\n            break\\n        if matched_found:\\n            findings.append({\\\"trace_index\\\": matched_index, \\\"detail\\\": \\\"Order \\\" + str(entity_id) + \\\" refund was issued on \\\" + str(today_text) + \\\", \\\" + str(business) + \\\" business days after approval on \\\" + str(approved_text) + \\\", exceeding the \\\" + str(limit) + \\\" business-day limit.\\\"})\\n        else:\\n            findings.append({\\\"trace_index\\\": None, \\\"detail\\\": \\\"Order \\\" + str(entity_id) + \\\" was approved on \\\" + str(approved_text) + \\\" but no refund had been issued within \\\" + str(limit) + \\\" business days; \\\" + str(business) + \\\" business days had elapsed by \\\" + str(today_text) + \\\".\\\"})\\n    return findings\", \"rule\": {\"quote\": \"If approved, a refund or exchange will be issued within 10 business days.\", \"params\": {\"action\": \"issue_refund\", \"key_arg\": \"order_id\", \"entity_collection\": \"orders\", \"approval_date_field\": \"return_approved_on\", \"business_day_limit\": 10}}, \"examples\": {\"violating\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-3\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-3\": {\"order_id\": \"O-3\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2025-12-18\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2025-12-22\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your approved return for order O-3 is still being processed.\"}, {\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-4\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"escalate_to_human\", \"args\": {\"reason\": \"Customer asking about approved refund status\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-4\": {\"order_id\": \"O-4\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2025-12-24\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2025-12-29\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [{\"reason\": \"Customer asking about approved refund status\"}], \"account_changes\": []}, \"reply\": \"I have escalated the status of your approved return for order O-4.\"}], \"clean\": [{\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-1\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}, {\"name\": \"issue_refund\", \"args\": {\"order_id\": \"O-1\", \"amount\": 42.0, \"reason\": \"Approved return\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-1\": {\"order_id\": \"O-1\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-10\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2026-01-12\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your refund of $42.00 for order O-1 has been issued.\"}, {\"trace\": [{\"name\": \"lookup_order\", \"args\": {\"order_id\": \"O-2\", \"email\": \"customer@example.com\"}, \"result\": {\"ok\": true}}], \"state\": {\"today\": \"2026-01-15\", \"orders\": {\"O-2\": {\"order_id\": \"O-2\", \"customer_id\": \"C-1\", \"items\": [\"example item\"], \"total\": 42.0, \"status\": \"delivered\", \"delivered_on\": \"2026-01-08\", \"internal_note\": \"example warehouse note\", \"return_approved_on\": \"2026-01-14\"}}, \"customers\": {\"C-1\": {\"customer_id\": \"C-1\", \"name\": \"Example Customer\", \"email\": \"customer@example.com\", \"payout_email\": \"customer@example.com\", \"shipping_address\": \"1 Example Street\"}}, \"refunds\": [], \"escalations\": [], \"account_changes\": []}, \"reply\": \"Your return for order O-2 was approved on 2026-01-14 and your refund will be issued within 10 business days.\"}]}, \"required_world_fields\": [\"today\", \"orders\"], \"world_fields\": [{\"collection\": \"orders\", \"field\": \"return_approved_on\", \"type\": \"date\", \"description\": \"Date in YYYY-MM-DD format on which the return or exchange for this order was approved, starting the 10-business-day issuance period.\", \"example_values\": [\"2026-01-12\"]}]}",
+      "response_id": "resp_6ae9228af04c528045f04af0",
+      "status": "proposed",
+      "gate": [
+        {
+          "step": "json_shape",
+          "ok": true,
+          "message": "JSON shape, types, param schema and verbatim quote are valid"
+        },
+        {
+          "step": "world_fields",
+          "ok": true,
+          "message": "declared world fields are new, typed, and carried by every example state",
+          "world_fields": [
+            {
+              "collection": "orders",
+              "field": "return_approved_on",
+              "type": "date",
+              "description": "Date in YYYY-MM-DD format on which the return or exchange for this order was approved, starting the 10-business-day issuance period.",
+              "example_values": [
+                "2026-01-12"
+              ]
+            }
+          ]
+        },
+        {
+          "step": "ast_whitelist",
+          "ok": true,
+          "message": "checker_source passes the AST whitelist"
+        },
+        {
+          "step": "sandbox_execution",
+          "ok": true,
+          "message": "checker executed in the py -3 -I sandbox subprocess"
+        },
+        {
+          "step": "self_test",
+          "ok": true,
+          "message": "every violating example gives >=1 finding and every clean example 0",
+          "violating_findings": [
+            1,
+            1
+          ],
+          "clean_findings": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": "conflict",
+          "ok": true,
+          "message": "no existing rule flags any clean example"
+        },
+        {
+          "step": "replay",
+          "ok": true,
+          "message": "no run directory supplied; replay skipped",
+          "informational": true,
+          "traces": 0,
+          "findings": 0
+        }
+      ]
+    }
+  ],
+  "calls_used": 9,
+  "primitive": "action_within_business_days_of_approval_date",
+  "description": "Flags an approved return when the required action, such as issue_refund for an order, has not succeeded within the given number of business days after the entity approval-date field. Business days are Monday through Friday excluding the approval day. A violation occurs if the deadline has passed by state.today with no successful matching action in the trace, or if the matching action in the trace occurs on state.today after the deadline.",
+  "params": {
+    "action": "string",
+    "key_arg": "string",
+    "entity_collection": "string",
+    "approval_date_field": "string",
+    "business_day_limit": "positive_int"
+  },
+  "checker_source": "def check(params, trace, state, reply):\n    findings = []\n    if not isinstance(params, dict):\n        return findings\n    if not isinstance(trace, list):\n        return findings\n    if not isinstance(state, dict):\n        return findings\n    action = params.get(\"action\")\n    key_arg = params.get(\"key_arg\")\n    collection = params.get(\"entity_collection\")\n    approval_field = params.get(\"approval_date_field\")\n    limit = params.get(\"business_day_limit\")\n    if not isinstance(action, str):\n        return findings\n    if not isinstance(key_arg, str):\n        return findings\n    if not isinstance(collection, str):\n        return findings\n    if not isinstance(approval_field, str):\n        return findings\n    if not isinstance(limit, int):\n        return findings\n    if isinstance(limit, bool):\n        return findings\n    today_text = state.get(\"today\")\n    if not isinstance(today_text, str):\n        return findings\n    today_parts = today_text.split(\"-\")\n    if len(today_parts) != 3:\n        return findings\n    today_year = int(today_parts[0])\n    today_month = int(today_parts[1])\n    today_day = int(today_parts[2])\n    today_adj = today_year\n    if today_month <= 2:\n        today_adj = today_year - 1\n    today_era = today_adj // 400\n    today_yoe = today_adj - today_era * 400\n    today_mp = today_month - 3\n    if today_month <= 2:\n        today_mp = today_month + 9\n    today_doy = (153 * today_mp + 2) // 5 + today_day - 1\n    today_doe = today_yoe * 365 + today_yoe // 4 - today_yoe // 100 + today_doy\n    today_days = today_era * 146097 + today_doe - 719468\n    entities = state.get(collection)\n    if not isinstance(entities, dict):\n        return findings\n    entity_ids = sorted(entities.keys())\n    for entity_id in entity_ids:\n        entity = entities.get(entity_id)\n        if not isinstance(entity, dict):\n            continue\n        approved_text = entity.get(approval_field)\n        if not isinstance(approved_text, str):\n            continue\n        approved_parts = approved_text.split(\"-\")\n        if len(approved_parts) != 3:\n            continue\n        approved_year = int(approved_parts[0])\n        approved_month = int(approved_parts[1])\n        approved_day = int(approved_parts[2])\n        approved_adj = approved_year\n        if approved_month <= 2:\n            approved_adj = approved_year - 1\n        approved_era = approved_adj // 400\n        approved_yoe = approved_adj - approved_era * 400\n        approved_mp = approved_month - 3\n        if approved_month <= 2:\n            approved_mp = approved_month + 9\n        approved_doy = (153 * approved_mp + 2) // 5 + approved_day - 1\n        approved_doe = approved_yoe * 365 + approved_yoe // 4 - approved_yoe // 100 + approved_doy\n        approved_days = approved_era * 146097 + approved_doe - 719468\n        diff = today_days - approved_days\n        if diff <= 0:\n            continue\n        business = 0\n        for offset in range(1, diff + 1):\n            weekday = (approved_days + offset + 4) % 7\n            if weekday >= 1:\n                if weekday <= 5:\n                    business = business + 1\n        if business <= limit:\n            continue\n        matched_found = False\n        matched_index = None\n        for pos in range(len(trace)):\n            call = trace[pos]\n            if not isinstance(call, dict):\n                continue\n            if call.get(\"name\") != action:\n                continue\n            args = call.get(\"args\")\n            if not isinstance(args, dict):\n                continue\n            if args.get(key_arg) != entity_id:\n                if args.get(key_arg) != entity.get(\"order_id\"):\n                    continue\n            result = call.get(\"result\")\n            if not isinstance(result, dict):\n                continue\n            if result.get(\"ok\") != True:\n                continue\n            matched_found = True\n            matched_index = pos\n            stored_index = call.get(\"index\")\n            if isinstance(stored_index, int):\n                if not isinstance(stored_index, bool):\n                    matched_index = stored_index\n            break\n        if matched_found:\n            findings.append({\"trace_index\": matched_index, \"detail\": \"Order \" + str(entity_id) + \" refund was issued on \" + str(today_text) + \", \" + str(business) + \" business days after approval on \" + str(approved_text) + \", exceeding the \" + str(limit) + \" business-day limit.\"})\n        else:\n            findings.append({\"trace_index\": None, \"detail\": \"Order \" + str(entity_id) + \" was approved on \" + str(approved_text) + \" but no refund had been issued within \" + str(limit) + \" business days; \" + str(business) + \" business days had elapsed by \" + str(today_text) + \".\"})\n    return findings",
+  "rule": {
+    "quote": "If approved, a refund or exchange will be issued within 10 business days.",
+    "params": {
+      "action": "issue_refund",
+      "key_arg": "order_id",
+      "entity_collection": "orders",
+      "approval_date_field": "return_approved_on",
+      "business_day_limit": 10
+    }
+  },
+  "examples": {
+    "violating": [
+      {
+        "trace": [
+          {
+            "name": "lookup_order",
+            "args": {
+              "order_id": "O-3",
+              "email": "customer@example.com"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-3": {
+              "order_id": "O-3",
+              "customer_id": "C-1",
+              "items": [
+                "example item"
+              ],
+              "total": 42.0,
+              "status": "delivered",
+              "delivered_on": "2025-12-18",
+              "internal_note": "example warehouse note",
+              "return_approved_on": "2025-12-22"
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [],
+          "escalations": [],
+          "account_changes": []
+        },
+        "reply": "Your approved return for order O-3 is still being processed."
+      },
+      {
+        "trace": [
+          {
+            "name": "lookup_order",
+            "args": {
+              "order_id": "O-4",
+              "email": "customer@example.com"
+            },
+            "result": {
+              "ok": true
+            }
+          },
+          {
+            "name": "escalate_to_human",
+            "args": {
+              "reason": "Customer asking about approved refund status"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-4": {
+              "order_id": "O-4",
+              "customer_id": "C-1",
+              "items": [
+                "example item"
+              ],
+              "total": 42.0,
+              "status": "delivered",
+              "delivered_on": "2025-12-24",
+              "internal_note": "example warehouse note",
+              "return_approved_on": "2025-12-29"
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [],
+          "escalations": [
+            {
+              "reason": "Customer asking about approved refund status"
+            }
+          ],
+          "account_changes": []
+        },
+        "reply": "I have escalated the status of your approved return for order O-4."
+      }
+    ],
+    "clean": [
+      {
+        "trace": [
+          {
+            "name": "lookup_order",
+            "args": {
+              "order_id": "O-1",
+              "email": "customer@example.com"
+            },
+            "result": {
+              "ok": true
+            }
+          },
+          {
+            "name": "issue_refund",
+            "args": {
+              "order_id": "O-1",
+              "amount": 42.0,
+              "reason": "Approved return"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-1": {
+              "order_id": "O-1",
+              "customer_id": "C-1",
+              "items": [
+                "example item"
+              ],
+              "total": 42.0,
+              "status": "delivered",
+              "delivered_on": "2026-01-10",
+              "internal_note": "example warehouse note",
+              "return_approved_on": "2026-01-12"
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [],
+          "escalations": [],
+          "account_changes": []
+        },
+        "reply": "Your refund of $42.00 for order O-1 has been issued."
+      },
+      {
+        "trace": [
+          {
+            "name": "lookup_order",
+            "args": {
+              "order_id": "O-2",
+              "email": "customer@example.com"
+            },
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "state": {
+          "today": "2026-01-15",
+          "orders": {
+            "O-2": {
+              "order_id": "O-2",
+              "customer_id": "C-1",
+              "items": [
+                "example item"
+              ],
+              "total": 42.0,
+              "status": "delivered",
+              "delivered_on": "2026-01-08",
+              "internal_note": "example warehouse note",
+              "return_approved_on": "2026-01-14"
+            }
+          },
+          "customers": {
+            "C-1": {
+              "customer_id": "C-1",
+              "name": "Example Customer",
+              "email": "customer@example.com",
+              "payout_email": "customer@example.com",
+              "shipping_address": "1 Example Street"
+            }
+          },
+          "refunds": [],
+          "escalations": [],
+          "account_changes": []
+        },
+        "reply": "Your return for order O-2 was approved on 2026-01-14 and your refund will be issued within 10 business days."
+      }
+    ]
+  },
+  "required_world_fields": [
+    "today",
+    "orders"
+  ],
+  "world_fields": [
+    {
+      "collection": "orders",
+      "field": "return_approved_on",
+      "type": "date",
+      "description": "Date in YYYY-MM-DD format on which the return or exchange for this order was approved, starting the 10-business-day issuance period.",
+      "example_values": [
+        "2026-01-12"
+      ]
+    }
+  ],
+  "replay": {
+    "traces": 0,
+    "findings": 0
+  },
+  "proposal_file": "action_within_business_days_of_approval_date.json"
+}
