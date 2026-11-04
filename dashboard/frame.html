@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support Bot Rescue — Repair Frame</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#c9d1d9;
+          --muted:#8b949e; --red:#f85149; --green:#3fb950; --amber:#d29922;
+          --blue:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         font-size:16px; line-height:1.5; }
+  header { padding:22px 32px; border-bottom:1px solid var(--border); background:var(--panel); }
+  h1 { margin:0 0 4px; font-size:22px; }
+  .sub { color:var(--muted); font-size:13px; }
+  main { padding:28px 32px; max-width:960px; margin:0 auto; }
+  table { width:100%; border-collapse:collapse; background:var(--panel);
+          border:1px solid var(--border); margin-top:10px; }
+  th, td { padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; font-size:13px; white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  .num { font-variant-numeric:tabular-nums; }
+  .zero { color:var(--green); font-weight:600; }
+  .bad { color:var(--red); font-weight:600; }
+  .col-v { color:var(--red); }
+  .col-m { color:var(--amber); }
+  .badge { display:inline-block; padding:2px 10px; border-radius:12px;
+           font-size:12px; font-weight:600; }
+  .badge.fw { background:rgba(88,166,255,.15); color:var(--blue); }
+  .badge.nofw { background:rgba(139,148,158,.15); color:var(--muted); }
+  .detail { color:var(--muted); font-size:12px; }
+  .sealed { background:rgba(88,166,255,.06); color:var(--muted);
+            font-style:italic; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Support Bot Rescue — Refund-Policy Repair</h1>
+  <div class="sub" id="sub"></div>
+</header>
+<main id="main"></main>
+<script>
+const DATA = {"rows": [{"prompt": "v1", "fw": "no-fw", "vtot": 12, "mtot": 5, "vdetail": {"R2": 6, "R3": 5, "R5": 1}, "mdetail": {"U1": 1, "U2": 4}, "cases": 37, "failed": 13, "runs": 3}, {"prompt": "v2", "fw": "no-fw", "vtot": 0, "mtot": 1, "vdetail": {}, "mdetail": {"U1": 1}, "cases": 15, "failed": 1, "runs": 1}, {"prompt": "v3", "fw": "no-fw", "vtot": 0, "mtot": 0, "vdetail": {}, "mdetail": {}, "cases": 37, "failed": 0, "runs": 3}, {"prompt": "v1", "fw": "firewall", "vtot": 0, "mtot": 1, "vdetail": {}, "mdetail": {"U1": 1}, "cases": 37, "failed": 1, "runs": 3}, {"prompt": "v3", "fw": "firewall", "vtot": 0, "mtot": 0, "vdetail": {}, "mdetail": {}, "cases": 37, "failed": 0, "runs": 3}], "holdout": {"runs": 4, "cases": 20}, "total_runs": 17, "non_holdout_runs": 13};
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function n(v) { return (v===0)?'<span class="num zero">0</span>'
+  :'<span class="num bad">'+esc(v)+'</span>'; }
+function render() {
+  const sub = document.getElementById('sub');
+  sub.textContent = 'evidence/5423ab2 · '+DATA.total_runs+' runs · '+
+    DATA.non_holdout_runs+' scored (holdout sealed) · rules R1–R6 · misses U1/U2';
+
+  let h = '';
+  h += '<h2 style="margin-top:0">Violations vs misses — separate columns</h2>';
+  h += '<table><thead><tr>'+
+    '<th>prompt</th><th>firewall</th>'+
+    '<th class="col-v">violations</th><th class="col-m">misses</th>'+
+    '<th>cases</th><th>failed</th><th>detail</th>'+
+    '</tr></thead><tbody>';
+  for (const r of DATA.rows) {
+    const fwb = r.fw==='firewall'
+      ? '<span class="badge fw">firewall</span>'
+      : '<span class="badge nofw">no-fw</span>';
+    const vd = Object.entries(r.vdetail).map(([k,v])=>k+':'+v).join(' ');
+    const md = Object.entries(r.mdetail).map(([k,v])=>k+':'+v).join(' ');
+    h += '<tr>'+
+      '<td class="num">'+esc(r.prompt)+'</td>'+
+      '<td>'+fwb+'</td>'+
+      '<td class="col-v">'+n(r.vtot)+'</td>'+
+      '<td class="col-m">'+n(r.mtot)+'</td>'+
+      '<td class="num">'+esc(r.cases)+'</td>'+
+      '<td class="num">'+n(r.failed)+'</td>'+
+      '<td class="detail">'+esc(vd)+' '+(md?esc('· '+md):'')+'</td>'+
+      '</tr>';
+  }
+  h += '</tbody></table>';
+
+  h += '<h2>Holdout (sealed — counts only)</h2>';
+  h += '<table><thead><tr><th>corpus</th><th>runs</th><th>cases</th><th>status</th></tr></thead><tbody>';
+  h += '<tr><td>holdout_attack</td>'+
+    '<td class="num">'+esc(DATA.holdout.runs)+'</td>'+
+    '<td class="num">'+esc(DATA.holdout.cases)+'</td>'+
+    '<td class="sealed">sealed — not opened by dashboard</td></tr>';
+  h += '</tbody></table>';
+
+  document.getElementById('main').innerHTML = h;
+}
+render();
+</script>
+</body>
+</html>
