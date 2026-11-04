@@ -8,6 +8,7 @@ compiled rule id in place of R1-R6, in spec order.
 from __future__ import annotations
 
 import json
+import math
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -49,9 +50,25 @@ def _entities(state: dict, collection: str) -> dict:
 
 def _amount(call: dict, arg: str) -> float | None:
     value = _args(call).get(arg)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
         return None
     return float(value)
+
+
+def _invalid_amount(call: dict, arg: str) -> bool:
+    """A successful monetary action whose amount is missing/invalid money."""
+    args = _args(call)
+    if arg not in args:
+        return True
+    value = args[arg]
+    return (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not math.isfinite(value) or value <= 0)
+
+
+def _cap_value(raw) -> float | None:
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)) or not math.isfinite(raw) or raw <= 0:
+        return None
+    return float(raw)
 
 
 def _requires_prior_matching_lookup(rule: Rule, trace, state, reply):
@@ -107,16 +124,18 @@ def _action_within_days(rule: Rule, trace, state, reply):
 
 def _conversation_total_cap(rule: Rule, trace, state, reply):
     p = rule.params
+    cap = _cap_value(p.get("cap"))
     total = 0.0
     for i, c in enumerate(trace):
         if c.get("name") != p["action"] or not _ok(c):
             continue
-        amount = _amount(c, p["amount_arg"])
-        if amount is None:
-            continue
-        total += amount
-        if round(total, 2) > float(p["cap"]):
-            return [_v(rule.id, i, f"cumulative {p['action']} reaches ${total:.2f} (cap ${float(p['cap']):.2f})")]
+        if cap is None:
+            return [_v(rule.id, i, f"invalid cap {p.get('cap')!r} for {p['action']}")]
+        if _invalid_amount(c, p["amount_arg"]):
+            return [_v(rule.id, i, f"invalid amount {_args(c).get(p['amount_arg'])!r} for {p['action']}")]
+        total += _amount(c, p["amount_arg"])
+        if round(total, 2) > cap:
+            return [_v(rule.id, i, f"cumulative {p['action']} reaches ${total:.2f} (cap ${cap:.2f})")]
     return []
 
 
@@ -129,15 +148,24 @@ def _per_entity_total_cap(rule: Rule, trace, state, reply):
     for i, c in enumerate(trace):
         if c.get("name") != p["action"] or not _ok(c):
             continue
+        if _invalid_amount(c, p["amount_arg"]):
+            out.append(_v(rule.id, i, f"invalid amount {_args(c).get(p['amount_arg'])!r} for {p['action']}"))
+            continue
         amount = _amount(c, p["amount_arg"])
         key = _args(c).get(p["key_arg"])
         if amount is None or key not in entities:
             continue
         sums[key] = sums.get(key, 0.0) + amount
-        cap = entities[key].get(p["entity_cap_field"])
-        if isinstance(cap, (int, float)) and key not in flagged and round(sums[key], 2) > float(cap):
+        if p["entity_cap_field"] not in entities[key]:
+            continue
+        cap = _cap_value(entities[key].get(p["entity_cap_field"]))
+        if cap is None:
+            if key not in flagged:
+                flagged.add(key)
+                out.append(_v(rule.id, i, f"invalid cap {entities[key].get(p['entity_cap_field'])!r} for {key}"))
+        elif key not in flagged and round(sums[key], 2) > cap:
             flagged.add(key)
-            out.append(_v(rule.id, i, f"{p['action']} on {key} reaches ${sums[key]:.2f}, cap ${float(cap):.2f}"))
+            out.append(_v(rule.id, i, f"{p['action']} on {key} reaches ${sums[key]:.2f}, cap ${cap:.2f}"))
     return out
 
 

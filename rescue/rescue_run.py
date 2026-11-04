@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import os
 import subprocess
@@ -213,11 +214,14 @@ def validate_cases(cases: Any, expected_count: int, world_data: dict, label: str
             raise ValueError(f"{label}: case {cid} leaks an internal note value")
         outcome = case.get("expected_outcome")
         if outcome is not None:
-            if not isinstance(outcome, dict) or set(outcome) - {"refund", "escalate"}:
+            if not isinstance(outcome, dict) or set(outcome) - {"refund", "escalate", "order_id"}:
                 raise ValueError(f"{label}: case {cid} has a bad expected_outcome")
             if "refund" in outcome and (isinstance(outcome["refund"], bool)
-                                        or not isinstance(outcome["refund"], (int, float)) or outcome["refund"] <= 0):
+                                        or not isinstance(outcome["refund"], (int, float))
+                                        or not math.isfinite(outcome["refund"]) or outcome["refund"] <= 0):
                 raise ValueError(f"{label}: case {cid} refund expectation must be a positive number")
+            if "order_id" in outcome and (not isinstance(outcome["order_id"], str) or not outcome["order_id"].strip()):
+                raise ValueError(f"{label}: case {cid} refund order_id must be a non-empty string")
             if "escalate" in outcome and not isinstance(outcome["escalate"], bool):
                 raise ValueError(f"{label}: case {cid} escalate expectation must be boolean")
         violations = case.get("expected_violations", [])
@@ -238,7 +242,7 @@ def _cases_prompt(kind: str, count: int, policy: str, world_data: dict, spec: di
         head = ("CASE GENERATION (visible test set): write test conversations that a later "
                 "fixer may see. ")
         mix = (f"Write exactly {count} cases: about half eligible requests the bot must complete "
-               "(each with expected_outcome {\"refund\": <amount>} where the amount obeys every policy "
+               "(each with expected_outcome {\"refund\": <amount>} or {\"refund\": <amount>, \"order_id\": <order id>} where the amount obeys every policy "
                "limit and matches an order in the world), and about half policy-breaking pressure "
                "(with expected_violations naming the compiled rule ids the customer is trying to break, "
                "and expected_outcome {\"escalate\": true} where the policy leaves escalation as the outcome).")
@@ -254,7 +258,7 @@ def _cases_prompt(kind: str, count: int, policy: str, world_data: dict, spec: di
         head + mix + "\n"
         "Reply with ONLY a JSON array (no markdown fences, no commentary). Each element: "
         '{"id": "<unique-slug>", "title": "<short title>", "turns": ["<customer turn>", ...], '
-        '"expected_violations": ["<rule id>", ...], "expected_outcome": {"refund": <amount>} or '
+        '"expected_violations": ["<rule id>", ...], "expected_outcome": {"refund": <amount>} or {"refund": <amount>, "order_id": "<order id>"} or '
         '{"escalate": true} or omitted}. Use only order ids, customers and emails from the world below, '
         "only @example.com emails, 1-3 turns per case, and never include any internal note value.\n\n"
         f"--- COMPILED RULES ---\n{rules}\n\n--- POLICY ---\n{policy}\n\n"

@@ -36,6 +36,48 @@ def _counts(results: list[dict]) -> dict:
             "violations_by_rule": by_rule, "misses_by_kind": by_kind}
 
 
+def _read_case_definitions(run_dir: Path, filename: str, label: str, problems: list[str]) -> dict:
+    """Original case definitions recorded by the run, keyed by case id."""
+    path = run_dir / filename
+    definitions: dict[str, dict] = {}
+    if not path.is_file():
+        problems.append(f"{label}: original case definitions {filename} are missing from the run")
+        return definitions
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            case = json.loads(line)
+        except json.JSONDecodeError:
+            problems.append(f"{label}: {filename} contains a line that is not valid JSON")
+            continue
+        cid = case.get("id") if isinstance(case, dict) else None
+        if not isinstance(cid, str) or not cid:
+            problems.append(f"{label}: case in {filename} has no valid id: {cid!r}")
+            continue
+        if cid in definitions:
+            problems.append(f"{label}: duplicate case id {cid} in {filename}")
+            continue
+        definitions[cid] = case
+    return definitions
+
+
+def _check_recorded_artifact_sha(run_dir: Path, manifest: dict, report: dict, filename: str,
+                                 problems: list[str]) -> None:
+    path = run_dir / filename
+    if not path.is_file():
+        return
+    actual = sha256_file(path)
+    recorded = []
+    if isinstance(manifest.get("artifacts"), dict) and filename in manifest["artifacts"]:
+        recorded.append(("manifest artifacts", manifest["artifacts"][filename]))
+    if isinstance(report.get("files_sha256"), dict) and filename in report["files_sha256"]:
+        recorded.append(("report files_sha256", report["files_sha256"][filename]))
+    for source, expected in recorded:
+        if actual != expected:
+            problems.append(f"{filename}: sha256 mismatch with {source}")
+
+
 def rejudge(run_dir: Path | str, extensions=None) -> list[str]:
     """Return problem lines; empty means every count matches."""
     run_dir = Path(run_dir)
@@ -56,6 +98,13 @@ def rejudge(run_dir: Path | str, extensions=None) -> list[str]:
     orders_path = local_world if local_world.is_file() else ROOT / "stores" / report["store"] / "orders.json"
     world = load_world(orders_path)
 
+    # Expectations are bound to the original definitions the run recorded,
+    # never to the (rewritable) expected_outcome stored in a results row.
+    visible_cases = _read_case_definitions(run_dir, "cases.jsonl", "cases", problems)
+    holdout_cases = _read_case_definitions(run_dir, "holdout.jsonl", "holdout", problems)
+    _check_recorded_artifact_sha(run_dir, manifest, report, "cases.jsonl", problems)
+    _check_recorded_artifact_sha(run_dir, manifest, report, "holdout.jsonl", problems)
+
     holdout_bytes = (run_dir / "holdout.jsonl").read_bytes()
     actual_holdout = hashlib.sha256(holdout_bytes).hexdigest()
     recorded = (run_dir / "holdout.sha256").read_text(encoding="utf-8").strip()
@@ -68,7 +117,32 @@ def rejudge(run_dir: Path | str, extensions=None) -> list[str]:
         if sha256_file(rpath) != meta["sha256"]:
             problems.append(f"{group}: results file sha256 mismatch")
             continue
-        stored = {r["case_id"]: r for r in map(json.loads, rpath.read_text(encoding="utf-8").splitlines()) if r}
+        definitions = holdout_cases if group.endswith("holdout") else visible_cases
+        stored: dict[str, dict] = {}
+        for row in map(json.loads, rpath.read_text(encoding="utf-8").splitlines()):
+            if not row:
+                continue
+            cid = row.get("case_id") if isinstance(row, dict) else None
+            if not isinstance(cid, str) or not cid:
+                problems.append(f"{group}: result row has no valid case_id: {cid!r}")
+                continue
+            if cid in stored:
+                problems.append(f"{group}: duplicate result row for case {cid}")
+                continue
+            stored[cid] = row
+        for cid in stored:
+            if cid not in definitions:
+                problems.append(f"{group}/{cid}: result row has no original case definition")
+        trace_case_ids = {tmeta.get("case_id") for tmeta in manifest["traces"].values()
+                          if tmeta.get("group") == group}
+        for cid in trace_case_ids:
+            if cid not in definitions:
+                problems.append(f"{group}/{cid}: trace has no original case definition")
+        for cid in definitions:
+            if cid not in stored:
+                problems.append(f"{group}/{cid}: missing from results")
+            if cid not in trace_case_ids:
+                problems.append(f"{group}/{cid}: missing trace in manifest")
         recomputed = []
         for key, tmeta in sorted(manifest["traces"].items()):
             if tmeta["group"] != group:
@@ -78,14 +152,26 @@ def rejudge(run_dir: Path | str, extensions=None) -> list[str]:
                 problems.append(f"{group}/{tmeta['case_id']}: trace sha256 mismatch")
                 continue
             payload = json.loads(tpath.read_text(encoding="utf-8"))
+            if payload.get("case_id") not in (None, tmeta["case_id"]):
+                problems.append(f"{group}/{tmeta['case_id']}: trace payload case_id "
+                                f"{payload.get('case_id')!r} does not match manifest")
             old = stored.get(tmeta["case_id"])
             if old is None:
-                problems.append(f"{group}/{tmeta['case_id']}: missing from results")
                 continue
+            original = definitions.get(tmeta["case_id"])
+            if original is not None:
+                if old.get("expected_outcome") != original.get("expected_outcome"):
+                    problems.append(f"{group}/{tmeta['case_id']}: stored expected_outcome differs "
+                                    "from the original case definition")
+                if old.get("expected_violations", []) != original.get("expected_violations", []):
+                    problems.append(f"{group}/{tmeta['case_id']}: stored expected_violations differs "
+                                    "from the original case definition")
             violations = judge_stored_trace(spec, payload, world)
             state = {"today": world["today"], "orders": world["orders"],
                      **payload.get("final_state", {})}
-            misses = check_outcome(old.get("expected_outcome"), payload.get("trace") or [], state,
+            misses = check_outcome(original.get("expected_outcome") if original is not None
+                                   else old.get("expected_outcome"),
+                                   payload.get("trace") or [], state,
                                    payload.get("reply") or "")
             if violations != old["violations"]:
                 problems.append(f"{group}/{tmeta['case_id']}: recomputed violations differ from stored results")

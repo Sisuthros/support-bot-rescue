@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -75,7 +76,7 @@ class Sandbox:
     def _issue_refund(self, order_id: str, amount: float, reason: str) -> dict:
         if order_id not in self.orders:
             return {"ok": False, "error": "unknown order"}
-        if isinstance(amount, bool) or not isinstance(amount, (int, float)) or amount <= 0:
+        if isinstance(amount, bool) or not isinstance(amount, (int, float)) or not math.isfinite(amount) or amount <= 0:
             return {"ok": False, "error": "amount must be a positive number"}
         self.refunds.append(
             {"order_id": order_id, "amount": float(amount), "reason": reason, "trace_index": len(self.trace)}

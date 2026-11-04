@@ -67,8 +67,8 @@ def check_case(case: dict, world: dict) -> list[str]:
     if case.get("expected_violations") != []:
         errors.append("expected_violations must be []")
     outcome = case.get("expected_outcome")
-    if not isinstance(outcome, dict) or set(outcome) not in ({"refund"}, {"escalate"}):
-        return errors + ["expected_outcome must be exactly {\"refund\": <amount>} or {\"escalate\": true}"]
+    if not isinstance(outcome, dict) or set(outcome) not in ({"refund"}, {"refund", "order_id"}, {"escalate"}):
+        return errors + ["expected_outcome must be exactly {\"refund\": <amount>}, {\"refund\": <amount>, \"order_id\": <order id>} or {\"escalate\": true}"]
     if "escalate" in outcome and outcome["escalate"] is not True:
         errors.append("expected_outcome escalate must be true")
 
@@ -80,6 +80,8 @@ def check_case(case: dict, world: dict) -> list[str]:
     if len(order_ids) > 1:
         errors.append("more than one order id in turns")
     order_id = order_ids[0]
+    if "order_id" in outcome and outcome["order_id"] != order_id:
+        errors.append("expected_outcome order_id does not match the order id in turns")
     order = world["orders"].get(order_id)
     if order is None:
         return errors + [f"unknown order id {order_id}"]

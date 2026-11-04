@@ -98,7 +98,7 @@ def validate_cases(data: bytes, expected_ids: list[str] | None = None) -> list[d
                 f"INVALID: case {cid}: expected_outcome must be exactly "
                 '{"refund": <number > 0>} or {"escalate": true}')
         keys = set(outcome)
-        if keys not in ({"refund"}, {"escalate"}):
+        if keys not in ({"refund"}, {"refund", "order_id"}, {"escalate"}):
             extra = sorted(keys - {"refund", "escalate"}) or sorted(keys)
             raise SchemaError(
                 f"INVALID: case {cid}: expected_outcome has extra key(s) {extra}: "
@@ -109,6 +109,9 @@ def validate_cases(data: bytes, expected_ids: list[str] | None = None) -> list[d
                     or not math.isfinite(amount) or amount <= 0:
                 raise SchemaError(
                     f"INVALID: case {cid}: expected_outcome refund must be a number > 0")
+            if "order_id" in outcome and (not isinstance(outcome["order_id"], str) or not outcome["order_id"].strip()):
+                raise SchemaError(
+                    f"INVALID: case {cid}: expected_outcome order_id must be a non-empty string")
         elif outcome.get("escalate") is not True:
             raise SchemaError(
                 f"INVALID: case {cid}: expected_outcome escalate must be true")

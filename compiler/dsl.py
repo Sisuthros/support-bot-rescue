@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -228,7 +229,7 @@ def _check_value(rule_id: str, name: str, value: Any, tag: str) -> None:
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
             raise SpecError(f"rule {rule_id}: param {name!r} must be a positive integer")
     elif tag == "positive_number":
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
             raise SpecError(f"rule {rule_id}: param {name!r} must be a positive number")
     elif tag == "string_list":
         if (not isinstance(value, list) or not value

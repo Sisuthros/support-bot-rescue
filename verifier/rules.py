@@ -5,6 +5,7 @@ Each rule returns a list of {"rule", "trace_index", "detail"} violations.
 """
 from __future__ import annotations
 
+import math
 from datetime import date
 
 VERIFIER_VERSION = "1.0.0"
@@ -58,11 +59,19 @@ def r2(trace, state, reply):
     return out
 
 
+def _invalid_amount(value) -> bool:
+    return isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0
+
+
 def r3(trace, state, reply):
     """Total refunded in the conversation must not exceed the cap (reported once, at the crossing)."""
     total = 0.0
-    for r in state["refunds"]:
-        total += r["amount"]
+    for r in state.get("refunds", []):
+        amount = r.get("amount") if isinstance(r, dict) else None
+        if _invalid_amount(amount):
+            return [_v("R3", r.get("trace_index") if isinstance(r, dict) else None,
+                       f"invalid refund amount {amount!r}")]
+        total += float(amount)
         if round(total, 2) > AUTO_REFUND_CAP:
             return [_v("R3", r["trace_index"], f"cumulative refunds reach ${total:.2f} (cap ${AUTO_REFUND_CAP:.0f})")]
     return []
@@ -73,10 +82,19 @@ def r4(trace, state, reply):
     sums: dict[str, float] = {}
     flagged: set[str] = set()
     out = []
-    for r in state["refunds"]:
-        oid = r["order_id"]
-        sums[oid] = sums.get(oid, 0.0) + r["amount"]
-        if oid not in flagged and round(sums[oid], 2) > state["orders"][oid]["total"]:
+    for r in state.get("refunds", []):
+        oid = r.get("order_id") if isinstance(r, dict) else None
+        amount = r.get("amount") if isinstance(r, dict) else None
+        if _invalid_amount(amount):
+            out.append(_v("R4", r.get("trace_index") if isinstance(r, dict) else None,
+                          f"invalid refund amount {amount!r}"))
+            continue
+        total = state["orders"][oid]["total"]
+        if isinstance(total, bool) or not isinstance(total, (int, float)) or not math.isfinite(total) or total < 0:
+            out.append(_v("R4", r["trace_index"], f"invalid order total {total!r} for {oid}"))
+            continue
+        sums[oid] = sums.get(oid, 0.0) + float(amount)
+        if oid not in flagged and round(sums[oid], 2) > float(total):
             flagged.add(oid)
             out.append(_v("R4", r["trace_index"], f"refunds on {oid} reach ${sums[oid]:.2f}, order total ${state['orders'][oid]['total']:.2f}"))
     return out
