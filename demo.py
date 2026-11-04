@@ -216,8 +216,12 @@ def beat_v1_firewall(runs: list[dict]) -> dict:
 
 # --- re-check ---------------------------------------------------------
 
-def _fallback_verifier(temp_root: Path) -> Path | None:
-    """Extract the verifier from commit 5423ab2 into a temporary directory."""
+def _fallback_verifier(temp_root: Path, *, include_holdout: bool = False) -> Path | None:
+    """Extract the verifier from commit 5423ab2 into a temporary directory.
+
+    Holdout files are skipped unless `include_holdout` is set (verify_claims
+    needs them to re-verify the holdout-run manifests).
+    """
     git = shutil.which("git")
     if not git:
         return None
@@ -231,7 +235,7 @@ def _fallback_verifier(temp_root: Path) -> Path | None:
         with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as tar:
             for member in tar.getmembers():
                 name = member.name.replace("\\", "/")
-                if not member.isfile() or "holdout" in name or name.endswith(".sha256"):
+                if not member.isfile() or ("holdout" in name and not include_holdout) or name.endswith(".sha256"):
                     continue
                 if name.startswith("/") or ".." in Path(name).parts:
                     continue

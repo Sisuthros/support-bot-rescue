@@ -115,6 +115,8 @@ def _verify_manifests(manifest_paths: list[Path]) -> tuple[int, list[str]]:
 
     Reuses demo.py's existing fallback (`demo._fallback_verifier`, a git
     archive extraction of commit 5423ab2); no new mechanism is invented.
+    The extraction includes holdout files, so the holdout-run manifests
+    can be re-verified without the ../sbr-5423ab2 worktree.
     Results are cached in memory so overlapping checks run each once.
     """
     import demo
@@ -126,7 +128,7 @@ def _verify_manifests(manifest_paths: list[Path]) -> tuple[int, list[str]]:
         if verifier is None:
             temp_root = ROOT / f".tmp-demo-5423ab2-{uuid.uuid4().hex}"
             temp_root.mkdir(parents=True)
-            verifier = demo._fallback_verifier(temp_root)
+            verifier = demo._fallback_verifier(temp_root, include_holdout=True)
         try:
             if verifier is None:
                 for path in todo:
