@@ -11,6 +11,15 @@ def test_every_check_passes_on_the_real_repo():
         assert message.startswith(f"{claim_id}:")
 
 
+def test_c1_passes_in_a_clean_clone_without_the_sibling_worktree(monkeypatch, tmp_path):
+    import demo
+
+    monkeypatch.setattr(demo, "WORKTREE_VERIFIER", tmp_path / "no-worktree" / "verify_manifest.py")
+    monkeypatch.setattr(verify_claims, "_manifest_cache", {})
+    ok, message = verify_claims.check_c1()
+    assert ok, message
+
+
 def test_tampered_copy_fails(monkeypatch, tmp_path):
     report = json.loads(verify_claims.C24_REPORT_PATH.read_text(encoding="utf-8"))
     report["wall_seconds"] = report["wall_seconds"] + 1000
