@@ -1,5 +1,7 @@
 # Support Bot Rescue — build roles and evidence boundaries
 
+Every role name in this file (Lumen, Lumina, Prisma, Photon, Aurora, Clasu, Codex) is an AI agent. The sole human entrant is Ville Myllyniemi.
+
 **Canonical coordination contract for the active `feature/firewall` build.** The human-facing plans and role handoffs live under `D:\projektit\kinsemble\offers\meta-hackathon\build\`. This file assigns ownership; it does not grant access to the sealed holdouts or authorize public submission.
 
 ## Owners

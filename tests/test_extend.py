@@ -152,7 +152,7 @@ def test_coverage_via_extension_and_headline(tmp_path):
     entry = next(e for e in cov["sentences"] if e["sentence"] == QUOTE)
     assert entry["label"] == "enforced"
     assert entry["via_extension"] == "refund_over_limit"
-    assert cov["headline"].endswith(" (1 via human-approved extensions)")
+    assert cov["headline"].endswith(" (1 via approved extensions)")
 
 
 def test_apply_numbering_and_provenance(tmp_path):

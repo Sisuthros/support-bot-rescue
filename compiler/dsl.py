@@ -80,7 +80,7 @@ class Rule:
 
 @dataclass(frozen=True)
 class Extension:
-    """A human-approved extension primitive, with its gated checker source."""
+    """An approved extension primitive (approver recorded in the proposal), with its gated checker source."""
 
     name: str
     params: dict[str, str]

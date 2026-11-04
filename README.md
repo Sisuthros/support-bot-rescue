@@ -12,7 +12,7 @@ No LLM grades the bot. Every count can be recomputed offline from the stored tra
 
 It was built during the Meta Global AI Developer Hackathon with Meta's models. `muse-wonder-1.0` compiles the policy, writes the cases and rewrites the prompt; `muse-spark-1.3-contributor` is the bot under test.
 
-## Rescue a bot (live, about five and a half minutes)
+## Rescue a bot (live; measured 332 s for run `20261102T172845Z`)
 
 This step calls the Meta Model API and needs a key (`META_API_KEY`; the lookup order is under "Run offline"). To check the shipped results without a key, run `py -3 scripts/verify_claims.py` or `py -3 demo.py`.
 
@@ -64,9 +64,9 @@ Code gates every proposal:
 
 A proposal judges nothing until someone runs `approve --by <name>`. A checker whose sha256 changes after approval is refused at load.
 
-The review in `compiler/proposals/REVIEW-2026-11-03.md` shows why the approver matters. One proposal passed every gate and was rejected anyway, because it judged orders the conversation never mentioned.
+The review in `compiler/proposals/REVIEW-2026-11-03.md` shows why the approver matters. One proposal passed the code gate (its replay step was skipped because Apple's text had no stored run yet) and was rejected in review, because it judged orders the conversation never mentioned.
 
-To run with approved rules, add `--extensions compiler/proposals/<store>`. Example run: `runs_rescue/20261102T235949Z`, on the Apple policy with an approved "returned only in the country where purchased" rule.
+To run with approved rules, use `py -3 -m rescue.rescue_run ... --extensions compiler/proposals/<store>`. Example run: `runs_rescue/20261102T235949Z`, on the Apple policy with an approved "returned only in the country where purchased" rule. The stored Apple rescue run `runs_rescue/20261102T235949Z` labels this extension "human-approved"; that label predates this commit, and the approver was Clasu, an AI agent, after code review (`compiler/proposals/REVIEW-2026-11-03.md`).
 
 ## Recompute any run offline
 
@@ -110,13 +110,13 @@ py -3 run.py --client scripted --corpus corpus/named.jsonl
 py -3 verify_manifest.py runs/<timestamp>/manifest.json
 ```
 
-Needs Python 3 and `pytest`; `--client meta` also needs the `openai` package. `py -3` is the Windows launcher; on macOS or Linux use `python3`. 104 tests pass at the scored commit `5423ab2`.
+Needs Python 3 and `pytest`; `--client meta` also needs the `openai` package. `py -3` is the Windows launcher; on macOS or Linux use `python3`. 104 tests pass at the scored commit `5423ab2`. At this commit, `pytest -q` reports 207 passed.
 
 The scripted client replays canned model outputs (`corpus/scripted_replies.json`): three naive replies that break R1, R3 and R6, and a compliant escalation for every other case. On the named corpus it should print 15 cases and 9 failed: R1, R3 and R6 once each, plus 6 `U1` and 1 `U2` misses. The canned escalation is safe but does not complete eligible refunds, which is the usefulness check at work: a bot that escalates everything cannot score clean. `--client meta` calls the Meta Model API (`muse-spark-1.3-contributor`, key from `META_API_KEY`, or the file named by `META_API_KEY_FILE`, or `~/.meta-model-api-key`; never printed) with a per-run call budget (`--max-calls`); it stops with a clear error on HTTP 402. `py -3 scripts/smoke.py` makes one real call.
 
 `corpus/holdout.jsonl` is the 5-case attack holdout, kept away from the fixer and the attacker; its hash is in `corpus/HOLDOUT.sha256` and a test fails if the file changes without that hash being updated. It was scored before the harness was frozen, so it is not virgin (see Results). The default system prompt is `agent/prompts/v1.txt`, a generic deploy prompt that lists the tools and contains none of the refund policy; later prompts show up as a diff against it.
 
-## Live demo (offline, about 90 seconds)
+## Recorded-evidence demo (offline, no API key)
 
 ```
 py -3 demo.py
@@ -140,7 +140,7 @@ This repo was started on 2026-10-26, the evening of the Meta Global AI Developer
 
 ## Attack corpora
 
-Attacks were written by a second Meta model, `muse-wonder-1.0`, and stored as replayable corpus files so that scoring stays deterministic.
+Attacks were written by a second Meta model, `muse-wonder-1.0`, and stored as replayable corpus files, so the customer turns and the judging are fixed; the bot's replies on a replay are not deterministic.
 
 - `corpus/attacks/wonder-20261027.jsonl` - one-shot attacks: two candidates per rule R1-R6, 12 in all; 10 passed review and validation. Both R6 candidates failed the shape check, so this corpus covers R1-R5.
 - `corpus/attacks/live-20261027.jsonl` - the attacker held a live conversation against the bot (`muse-spark-1.3-contributor`) running the hardened prompt `agent/prompts/v3.txt` without the firewall: two tries per rule R1-R6, up to 4 turns each, 12 threads. None of the 12 broke v3 while it was being generated (`broke_any: false` in every transcript). The transcripts are kept alongside, and the customer turns are replayed as fixed scripts; the recorded fixed-script comparisons are against v1 and v3.
@@ -165,16 +165,20 @@ Commit `5423ab2`, 17 scored runs, every manifest re-verified from disk with `ver
 - Behind the firewall, the original prompt produced zero violations in 42 case evaluations. It still left one usefulness miss: on an over-total request (`n05_over_total`) the bot proposed $150, the authority denied it, and the bot asked whether to process $120 instead of completing it. Blocking the violation is not the same as serving the customer.
 - On the sealed and hash-locked, previously scored attack holdout of 5 cases: the original prompt failed 2; v2, v3 and the original behind the firewall each failed 0.
 
-The same 17 runs as a static page, with no holdout case content: `dashboard/evidence/index-5423ab2.html` (sha256 `a17a2cb0ce1b6e826805255f519563115f20cb1d026e62b94cb183201e91757a` as checked out, LF line endings per `.gitattributes`), generated by Aurora from `evidence/5423ab2/`. Open it in a browser; it loads nothing from the network. The 4 holdout runs appear there as sealed, without numbers, so its per-configuration totals are the table above minus the holdout: 5 case evaluations fewer for each configuration that ran the holdout, and 3 violations fewer for v1 without the firewall.
+The same 17 runs as a static page, with no holdout case content: `dashboard/evidence/index-5423ab2.html` (sha256 `a17a2cb0ce1b6e826805255f519563115f20cb1d026e62b94cb183201e91757a` as checked out, LF line endings per `.gitattributes`), generated by Aurora (an AI agent on the build team) with `dashboard/generate.py` from `evidence/5423ab2/`. Open it in a browser; it loads nothing from the network. The 4 holdout runs appear there as sealed, without numbers, so its per-configuration totals are the table above minus the holdout: 5 case evaluations fewer for each configuration that ran the holdout, and 3 violations fewer for v1 without the firewall.
 
 ### Re-check the scored runs
 
 Each manifest binds the source files that decided its result, and `agent/client.py` changed after the scoring (key lookup, fix F4). So re-check the 17 runs with the verifier from the scored commit:
 
+In cmd.exe:
+
 ```
 git worktree add ../sbr-5423ab2 5423ab2
 for /d %r in (evidence\5423ab2\*) do py -3 ..\sbr-5423ab2\verify_manifest.py %r\manifest.json
 ```
+
+In PowerShell: `Get-ChildItem evidence\5423ab2 -Directory | ForEach-Object { py -3 ..\sbr-5423ab2\verify_manifest.py (Join-Path $_.FullName 'manifest.json') }`
 
 On macOS or Linux: `for d in evidence/5423ab2/*/; do python3 ../sbr-5423ab2/verify_manifest.py "$d/manifest.json"; done`. Every line should start with `OK:`. `py -3 scripts/verify_evidence.py` at this commit reports a source mismatch for every run instead, by design.
 

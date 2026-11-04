@@ -165,6 +165,6 @@ def compute_coverage(policy_text: str, spec: Any = None) -> dict[str, Any]:
                 f"{counts['informational']} informational sentences, {counts['unaccounted']} unaccounted")
     extension_count = sum(1 for entry in entries if entry.get("via_extension"))
     if extension_count:
-        headline += f" ({extension_count} via human-approved extensions)"
+        headline += f" ({extension_count} via approved extensions)"
     return {"headline": headline, "sentences": entries, "total": len(entries),
             "counts": dict(counts)}
