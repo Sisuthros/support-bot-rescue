@@ -10,6 +10,12 @@ Give it a store's written refund policy, and Support Bot Rescue does the rest:
 
 No LLM grades the bot. Every count can be recomputed offline from the stored traces.
 
+## Stored result (recompute it offline)
+
+- Northwind: the original prompt failed 5 of 12 visible cases and 3 of 6 sealed cases; the fixed prompt failed 0 of 12 and 0 of 6.
+- Maple & Co: the hardened prompt scored 0 policy violations and 0 usefulness misses in 79 case evaluations.
+- Run `py -3 scripts/verify_claims.py` without an API key to recompute the stored counts.
+
 It was built during the Meta Global AI Developer Hackathon with Meta's models. `muse-wonder-1.0` compiles the policy, writes the cases and rewrites the prompt; `muse-spark-1.3-contributor` is the bot under test.
 
 ## Rescue a bot (live; measured 332 s for run `20261102T172845Z`)
