@@ -202,3 +202,7 @@ On macOS or Linux: `for d in evidence/5423ab2/*/; do python3 ../sbr-5423ab2/veri
 `py -3 fixer/fix.py --run runs/<timestamp>` reads the policy, the prompt recorded in the run's manifest and only the failing traces (violations and misses) of a named-corpus run, asks `muse-wonder-1.0` (through `agent/client.py`, one-call budget) for a replacement prompt, and writes `agent/prompts/v2.txt` plus `agent/prompts/v2.rationale.md`. Use `--out agent/prompts/v3.txt` (with `--prompt` if the manifest prompt is not the intended starting point) to write the next version instead. It refuses holdout runs and never reads `corpus/holdout.jsonl`. Re-run a corpus with the new prompt via `py -3 run.py --client meta --corpus corpus/named.jsonl --prompt agent/prompts/v2.txt`; the manifest records `prompt_path` and `prompt_sha256`.
 
 The hardened prompt v3 in Results came out of this loop: `muse-wonder-1.0` wrote it from v2 and the failing traces of a named-corpus run (`agent/prompts/v3.rationale.md`), and every v3 manifest records `prompt_author_model: muse-wonder-1.0`.
+
+## License
+
+Code: AGPL-3.0-only (see LICENSE). Commercial licence available from the copyright holder (github.com/Sisuthros). Third-party policy text and test data: see NOTICE.

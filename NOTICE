@@ -1,0 +1,23 @@
+NOTICE
+
+Code in this repository is licensed under AGPL-3.0-only (SPDX: AGPL-3.0-only).
+
+Copyright (c) 2026 Ville Myllyniemi. A commercial licence for use outside the AGPL terms is available from the copyright holder; contact via github.com/Sisuthros.
+
+Third-party and test-data material in this repository:
+
+Apple returns text: `stores/public-apple-us/policy.md` is text from Apple's
+public US returns page (https://www.apple.com/shop/help/returns_refund,
+section "Returns"), fetched 2026-11-03 ~01:40 EET (Europe/Helsinki); the
+raw HTML sha256 is
+7e4ff4c29739c26f933e94fe1254e6397872a1e508f09457052b24e8f311a07b, as
+recorded in `stores/public-apple-us/SOURCE.md`. It is included verbatim as
+compiler test input, remains Apple's, and is not covered by the AGPL-3.0-only licence.
+
+Court quotation: the submission text contains a short quotation from
+Moffatt v. Air Canada, 2024 BCCRT 149, a public tribunal decision.
+
+Invented test data: the store "Northwind Outfitters" in `stores/northwind/`
+and the store "Brightwave" in `stores/brightwave/`, and any associated
+orders, are invented test data with no real customer data. "Maple & Co",
+in `maple/`, is likewise invented test data with no real customer data.
