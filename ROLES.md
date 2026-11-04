@@ -1,6 +1,6 @@
 # Support Bot Rescue — build roles and evidence boundaries
 
-Every role name in this file (Lumen, Lumina, Prisma, Photon, Aurora, Clasu, Codex) is an AI agent. The sole human entrant is Ville Myllyniemi.
+Every role name in this file (Lumen, Lumina, Prisma, Photon, Aurora, Clasu, Codex) is an AI agent. The sole human entrant is the repository owner, Sisuthros.
 
 **Canonical coordination contract for the active `feature/firewall` build.** The human-facing plans and role handoffs live under `D:\projektit\kinsemble\offers\meta-hackathon\build\`. This file assigns ownership; it does not grant access to the sealed holdouts or authorize public submission.
 
@@ -11,7 +11,7 @@ Every role name in this file (Lumen, Lumina, Prisma, Photon, Aurora, Clasu, Code
 - **Prisma — adversarial design and independent architecture review.** Owns the smallest replayable attacker design and a review of the firewall diff. Wonder may generate candidate customer attacks live against Spark, but Prisma reviews the saved candidate before it joins the named corpus. Keep a deterministic replay path; never expose holdout cases to the attacker, fixer or coder.
 - **Aurora — evidence dashboard.** Owns a static, self-contained page generated from `runs/*/manifest.json` and `results.jsonl`. Show policy violations and usefulness misses separately, preserve denominators and run IDs, and never display sealed case bodies. No server, network fetch or mutation of runner/verifier/fixer code.
 - **Lumina — video narrative.** Owns the three-minute arc and uses only verified, path-addressable run evidence. No SAM claim and no universal security language. If a result is not sealed and rechecked, omit it or label it as a diagram/next step.
-- **Clasu — build coordinator (Claude Code, an AI agent on Ville's machine; not a second human).** Owns the Codex/Muse Wonder invocation, build-phase/official-rule reconciliation, review schedule, exact run collection and final internal handoff. Public deployment, submission, publication or third-party messaging remains a separate human approval gate.
+- **Clasu — build coordinator (Claude Code, an AI agent on the entrant's machine; not a second human).** Owns the Codex/Muse Wonder invocation, build-phase/official-rule reconciliation, review schedule, exact run collection and final internal handoff. Public deployment, submission, publication or third-party messaging remains a separate human approval gate.
 - **Codex on Muse Wonder — bounded implementation agent.** Implements only the accepted plan on the designated build branch, test-first for behavior changes. It must not read or tune against sealed holdout contents, change expectations to turn red green, invent a receipt, or decide that its own output is approved.
 
 ## Model roles
