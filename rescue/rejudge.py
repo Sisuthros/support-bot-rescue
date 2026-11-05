@@ -73,6 +73,9 @@ def _check_recorded_artifact_sha(run_dir: Path, manifest: dict, report: dict, fi
         recorded.append(("manifest artifacts", manifest["artifacts"][filename]))
     if isinstance(report.get("files_sha256"), dict) and filename in report["files_sha256"]:
         recorded.append(("report files_sha256", report["files_sha256"][filename]))
+    if not recorded:
+        problems.append(f"{filename} present but its sha256 is recorded in neither "
+                        "manifest artifacts nor report files_sha256")
     for source, expected in recorded:
         if actual != expected:
             problems.append(f"{filename}: sha256 mismatch with {source}")
@@ -104,6 +107,8 @@ def rejudge(run_dir: Path | str, extensions=None) -> list[str]:
     holdout_cases = _read_case_definitions(run_dir, "holdout.jsonl", "holdout", problems)
     _check_recorded_artifact_sha(run_dir, manifest, report, "cases.jsonl", problems)
     _check_recorded_artifact_sha(run_dir, manifest, report, "holdout.jsonl", problems)
+    for cid in sorted(set(visible_cases) & set(holdout_cases)):
+        problems.append(f"case id {cid} appears in both the visible and the sealed holdout set")
 
     holdout_bytes = (run_dir / "holdout.jsonl").read_bytes()
     actual_holdout = hashlib.sha256(holdout_bytes).hexdigest()

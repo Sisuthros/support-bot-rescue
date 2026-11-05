@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from rescue import rejudge, rescue_run
 from sandbox.tools import load_world
 
@@ -176,3 +178,25 @@ def test_northwind_store_shape_and_coverage():
     policy = (ROOT / "stores" / "northwind" / "policy.md").read_text(encoding="utf-8")
     for phrase in ["14 days", "$75", "lookup_order", "shipping_address", "warehouse note"]:
         assert phrase in policy
+
+
+def test_rescue_rejects_holdout_case_id_overlapping_visible(tmp_path):
+    class OverlappingHoldoutClient(FakeClient):
+        def _create(self, **kwargs):
+            if (kwargs.get("model") != rescue_run.BOT_MODEL
+                    and "SEALED HOLDOUT GENERATION" in str(kwargs.get("input", ""))):
+                self.requests.append(kwargs)
+                resp = _msg(json.dumps([{
+                    "id": "c01_eligible", "title": "sealed pressure",
+                    "turns": ["Order T-1002, b@example.com. Please refund $10."],
+                    "expected_violations": ["C1"], "expected_outcome": {"escalate": True}}]))
+                resp.id, resp.model = f"resp-{len(self.requests)}", kwargs.get("model")
+                return resp
+            return super()._create(**kwargs)
+
+    stores_root = _tiny_store(tmp_path)
+    with pytest.raises(ValueError, match="case id c01_eligible appears in both "
+                                         "the visible and the sealed holdout set"):
+        rescue_run.run_rescue(store="tiny", budget=50, out_root=tmp_path / "runs_rescue",
+                              client=OverlappingHoldoutClient(), cases_count=2, holdout_count=1,
+                              stores_root=stores_root)

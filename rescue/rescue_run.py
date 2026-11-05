@@ -669,6 +669,9 @@ def run_rescue(store: str = "northwind", budget: int = 400, out_root: Path | str
 
     log("holdout", f"generating {holdout_count} sealed holdout cases with {WONDER_MODEL}")
     holdout = _generate_cases(counted, "holdout", holdout_count, policy_text, world_data, spec_dict, response_ids["holdout"], extension_records=extension_records if extension_records else None)
+    overlap = sorted({c["id"] for c in cases} & {c["id"] for c in holdout})
+    if overlap:
+        raise ValueError("; ".join(f"case id {cid} appears in both the visible and the sealed holdout set" for cid in overlap))
     holdout_bytes = "".join(json.dumps(c) + "\n" for c in holdout).encode("utf-8")
     (run_dir / "holdout.jsonl").write_bytes(holdout_bytes)
     holdout_sha = hashlib.sha256(holdout_bytes).hexdigest()
