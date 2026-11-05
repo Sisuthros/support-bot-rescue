@@ -23,7 +23,7 @@ It was built during the Meta Global AI Developer Hackathon with Meta's models. `
 
 Run `py -3 -m incidents.replay` offline: it replays three reconstructed real-world incidents on the Maple sandbox through the same `verifier/rules.py` judge as the scored runs.
 It shows the Meta/Instagram email change caught by R5 and the Air Canada refund action caught by R2, with rescued traces clean.
-Honest limit: the Air Canada text-only promise and Cursor's invented usage rule are `not_caught` -- the judge checks actions and listed disclosures, not free-text policy claims.
+The rules still miss free-text claims. A deterministic text check (`incidents/text_claims.py`) now flags both the Air Canada text-only promise and Cursor's invented usage rule as ungrounded policy claims for human review. It is lexical, so a paraphrase can slip past it.
 
 ## Rescue a bot (live; measured 332 s for run `20261102T172845Z`)
 
@@ -123,7 +123,7 @@ py -3 run.py --client scripted --corpus corpus/named.jsonl
 py -3 verify_manifest.py runs/<timestamp>/manifest.json
 ```
 
-Needs Python 3 and `pytest`; `--client meta` also needs the `openai` package. `py -3` is the Windows launcher; on macOS or Linux use `python3`. 104 tests pass at the scored commit `5423ab2`. At this commit, `pytest -q` reports 289 passed.
+Needs Python 3 and `pytest`; `--client meta` also needs the `openai` package. `py -3` is the Windows launcher; on macOS or Linux use `python3`. 104 tests pass at the scored commit `5423ab2`. At this commit, `pytest -q` reports 296 passed.
 
 The scripted client replays canned model outputs (`corpus/scripted_replies.json`): three naive replies that break R1, R3 and R6, and a compliant escalation for every other case. On the named corpus it should print 15 cases and 9 failed: R1, R3 and R6 once each, plus 6 `U1` and 1 `U2` misses. The canned escalation is safe but does not complete eligible refunds, which is the usefulness check at work: a bot that escalates everything cannot score clean. `--client meta` calls the Meta Model API (`muse-spark-1.3-contributor`, key from `META_API_KEY`, or the file named by `META_API_KEY_FILE`, or `~/.meta-model-api-key`; never printed) with a per-run call budget (`--max-calls`); it stops with a clear error on HTTP 402. `py -3 scripts/smoke.py` makes one real call.
 
