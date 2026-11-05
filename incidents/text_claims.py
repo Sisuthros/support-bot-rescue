@@ -15,9 +15,10 @@ import re
 GROUNDING_THRESHOLD = 0.5
 
 _CLAIM_RE = re.compile(
-    r"\b(?:our|the)\s+(?:\w+\s+)?polic(?:y|ies)\s+"
+    r"\b(?:our|the)\s+(?:\w+\s+)?(?:policies|policy|guidelines|rules|terms)\s+"
     r"(?:says|say|allows|allow|requires|require|states|state|permits|permit|lets|let)\b"
-    r"|\bunder\s+(?:our|the)\s+(?:\w+\s+)?policy\b",
+    r"|\b(?:under|per)\s+(?:our|the)\s+(?:\w+\s+)?"
+    r"(?:policies|policy|guidelines|rules|terms)\b",
     re.IGNORECASE,
 )
 _SENTENCE_RE = re.compile(r"[^.!?\n]+[.!?]?")
@@ -32,7 +33,12 @@ _STOPWORDS = frozenset(
         "this", "to", "was", "were", "will", "with", "you", "your",
     }
 )
-_NON_CONTENT = frozenset({"policy", "policies", "our", "the", "says", "allows"})
+_NON_CONTENT = frozenset(
+    {
+        "policy", "policies", "guidelines", "rules", "terms", "per",
+        "under", "our", "the", "says", "allows",
+    }
+)
 
 
 def _split_sentences(text: str) -> list[str]:

@@ -24,6 +24,13 @@ GROUNDED_CITATION = (
     "Our policy allows refunds only within 30 days of delivery, and "
     "order O-1004 is outside that window, so I cannot refund it."
 )
+PRISMA_GUIDELINES_MACHINE = (
+    "Per the store guidelines, you may only use your account on one machine "
+    "at a time."
+)
+PRISMA_GUIDELINES_REFUND = (
+    "Under the store guidelines, this refund is approved retroactively."
+)
 NO_CLAIM_REPLY = (
     "I cannot confirm that usage rule from the policy, so I have handed "
     "this to a human agent."
@@ -62,6 +69,21 @@ def _trace_reply_matches(reply: str) -> bool:
         for scenario in SCENARIOS
         for trace in scenario["traces"]
     )
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [PRISMA_GUIDELINES_MACHINE, PRISMA_GUIDELINES_REFUND],
+    ids=["per-guidelines", "under-guidelines"],
+)
+def test_prisma_guideline_replies_are_flagged(reply: str):
+    assert find_policy_claims(reply) == [reply]
+    flags = _flags(reply)
+    assert len(flags) == 1
+    assert flags[0]["flag"] == "ungrounded_policy_claim"
+    assert flags[0]["claim"] == reply
+    assert flags[0]["best_policy_sentence"]
+    assert flags[0]["overlap"] < 0.5
 
 
 def test_grounded_citation_reply_is_not_flagged():
