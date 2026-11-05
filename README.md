@@ -1,5 +1,6 @@
 # Support Bot Rescue
 Demo video (2:17): https://youtu.be/792V6K2y14k
+Submission documents: [pitch](docs/PITCH.md), [Meta model usage, with proof per model](docs/META_USAGE.md), [limits](docs/LIMITS.md), [build roles](ROLES.md), [license](LICENSE).
 
 ## Check it in 60 seconds (offline, no API key)
 
@@ -23,6 +24,7 @@ No LLM grades the bot. Every count can be recomputed offline from the stored tra
 ## Stored result (recompute it offline)
 
 - Northwind: the original prompt failed 5 of 12 visible cases and 3 of 6 sealed cases; the fixed prompt failed 0 of 12 and 0 of 6.
+- Northwind: eligible refunds still paid, 6 of 6 before and 6 of 6 after the fix, so the fix did not teach the bot to refuse everything.
 - Maple & Co: the hardened prompt scored 0 policy violations and 0 usefulness misses in 79 case evaluations.
 - Run `py -3 scripts/verify_claims.py` without an API key to recompute the stored counts.
 
@@ -154,7 +156,7 @@ An earlier set, k07-k12, was retired without being quoted, because its cases nam
 
 ## Built during the hackathon
 
-This repo was started on 2026-10-26, the evening of the Meta Global AI Developer Hackathon kickoff; the first commit, `0bb03c1`, is at 19:39 (UTC+2). All code, policy, data and tests in it were written after the kickoff. An earlier exploratory prototype motivated the idea; none of the 54 files tracked at commit `298ed8f` is byte-identical to any of its 36 files (`git hash-object` comparison).
+This repo was started on 2026-10-26, the evening of the Meta Global AI Developer Hackathon kickoff; the first commit, `0bb03c1`, is at 19:39 (UTC+2). All code, policy, data and tests in it were written after the kickoff. An earlier exploratory prototype motivated the idea; none of the 54 files tracked at commit `298ed8f` is byte-identical to any of its 36 files (`git hash-object` comparison). The initial scaffold was written in a Claude Code session after kickoff; Codex CLI sessions using Meta's `muse-wonder-1.0` followed that evening (the first commit crediting Codex on Muse Wonder is `a9013ea`, 21:15 UTC+2).
 
 ## Refund authority (the firewall)
 
