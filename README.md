@@ -1,6 +1,15 @@
 # Support Bot Rescue
 Demo video (2:17): https://youtu.be/792V6K2y14k
 
+## Check it in 60 seconds (offline, no API key)
+
+    pip install -r requirements.txt
+    py -3 -m pytest -q              # 296 passed
+    py -3 scripts/verify_claims.py  # 18 of 18 claims OK
+    py -3 -m incidents.replay       # 3 real incidents: 2 caught by rules, the 2 text-only claims flagged for review
+
+`py -3` is the Windows launcher; use `python3` on macOS or Linux.
+
 Give it a store's written refund policy, and Support Bot Rescue does the rest:
 - turns the policy into rules that plain code can check;
 - writes test conversations;
