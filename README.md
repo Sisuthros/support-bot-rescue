@@ -1,5 +1,5 @@
 # Support Bot Rescue
-Demo video (2:17): https://youtu.be/rokB8zT2Qbk
+Demo video (2:17): https://youtu.be/792V6K2y14k
 
 Give it a store's written refund policy, and Support Bot Rescue does the rest:
 - turns the policy into rules that plain code can check;
