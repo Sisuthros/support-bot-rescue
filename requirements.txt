@@ -1,3 +1,4 @@
 # The scripted path and the verifier need only the standard library.
+httpx
 openai
 pytest

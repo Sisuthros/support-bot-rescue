@@ -2,7 +2,7 @@
 
 Every role name in this file (Lumen, Lumina, Prisma, Photon, Aurora, Clasu, Codex) is an AI agent. The sole human entrant is the repository owner, Sisuthros.
 
-**Canonical coordination contract for the active `feature/firewall` build.** The human-facing plans and role handoffs live under `D:\projektit\kinsemble\offers\meta-hackathon\build\`. This file assigns ownership; it does not grant access to the sealed holdouts or authorize public submission.
+**Canonical coordination contract for the active `feature/firewall` build.** The human-facing plans and role handoffs live outside this repository. This file assigns ownership; it does not grant access to the sealed holdouts or authorize public submission.
 
 ## Owners
 
@@ -33,8 +33,6 @@ Every role name in this file (Lumen, Lumina, Prisma, Photon, Aurora, Clasu, Code
 
 ## Handoff files
 
-- Lumen's plan and evidence/cut-line decision: `D:\projektit\kinsemble\offers\meta-hackathon\build\lumen.md`
-- Existing role-specific handoffs: `build\photon.md`, `build\prisma.md`, `build\aurora.md`, `build\lumina.md` (each author maintains their own file)
-- Active implementation root: `D:\projektit\support-bot-rescue-firewall` (branch `feature/firewall`)
+The agents' working handoff files were kept outside this repository; this file records the roles only.
 
 A role owns its deliverable, not another member's identity, memory, account, approval or authored artifact. Reviews are findings, not automatic acceptance; Lumen records the final decision in the plan, and Clasu retains the external-action gate.
